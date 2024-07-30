@@ -7,7 +7,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  casper-connector-tests:
+  rust-sdk-ci:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -16,6 +16,6 @@ jobs:
       - name: Set up Rust PATH
         run: echo "$HOME/.cargo/bin:$PATH" >> $GITHUB_PATH
       - name: Lint rust
-        run: cargo fmt
+        run: make check-lint
       - name: Test rust
-        run: cargo test
+        run: make test

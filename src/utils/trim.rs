@@ -132,6 +132,7 @@ mod tests {
         let _: u64 = bytes.trim_end(9);
     }
 
+    #[allow(dead_code)]
     trait TestTrimEnd<T>
     where
         Self: Sized,
