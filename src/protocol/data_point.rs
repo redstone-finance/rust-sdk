@@ -3,12 +3,13 @@ use crate::{
         as_str::{AsAsciiStr, AsHexStr},
         assert::Assert,
         error::Error,
-        specific::{FromBytesRepr, U256},
+        specific::U256,
     },
     protocol::constants::DATA_FEED_ID_BS,
     utils::{trim::Trim, trim_zeros::TrimZeros},
 };
 use std::fmt::{Debug, Formatter};
+use crate::network::from_bytes_repr::FromBytesRepr;
 
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct DataPoint {
@@ -60,13 +61,14 @@ impl Debug for DataPoint {
 mod tests {
     use crate::{
         helpers::hex::hex_to_bytes,
-        network::specific::{FromBytesRepr, U256, VALUE_SIZE},
+        network::specific::{U256, VALUE_SIZE},
         protocol::{
             constants::DATA_FEED_ID_BS,
             data_point::{trim_data_point, trim_data_points, DataPoint},
         },
     };
     use std::ops::Shr;
+    use crate::network::from_bytes_repr::FromBytesRepr;
 
     const DATA_POINT_BYTES_TAIL: &str = "4554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000360cafc94e";
     const VALUE: u128 = 232141080910;
@@ -119,7 +121,7 @@ mod tests {
             test_trim_data_point_of(
                 &DATA_POINT_BYTES_TAIL[..DATA_POINT_BYTES_TAIL.len() - 2 * i],
                 32 - i,
-                U256::from(VALUE).shr(8 * i),
+                U256::from(VALUE).shr(8 * i as u32),
             );
         }
     }

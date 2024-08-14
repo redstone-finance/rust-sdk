@@ -1,3 +1,2 @@
-pub(crate) mod recover;
-
+pub(crate)mod recover;
 mod keccak256;

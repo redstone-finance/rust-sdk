@@ -1,5 +1,6 @@
 use crate::network::{assert::Assert, error::Error::ArrayIsEmpty};
 use std::ops::{Add, Rem, Shr};
+use crate::network::specific::U256;
 
 pub(crate) trait Median {
     type Item;
@@ -11,9 +12,26 @@ trait Avg {
     fn avg(self, other: Self) -> Self;
 }
 
-impl<T> Avg for T
+trait Averageable: Add<Output = Self> + Shr<Output = Self> + From<u8> + Rem<Output = Self> + Copy {}
+
+impl Averageable for i32 {}
+
+#[cfg(feature = "network_radix")]
+impl Avg for U256 {
+    fn avg(self, other: Self) -> Self {
+        let one = 1u32;
+        let two = U256::from(2u8);
+        
+        self.shr(one) + other.shr(one) + (self % two + other % two).shr(one)
+    }
+}
+
+#[cfg(not(feature = "network_radix"))]
+impl Averageable for U256 {}
+
+impl<T> Avg for T 
 where
-    T: Add<Output = T> + Shr<Output = T> + From<u8> + Rem<Output = T> + Copy,
+    T: Averageable,
 {
     fn avg(self, other: Self) -> Self {
         let one = T::from(1);
@@ -73,20 +91,26 @@ mod tests {
     use crate::network::specific::U256;
     use itertools::Itertools;
     use std::fmt::Debug;
+    
+    #[cfg(feature = "network_radix")]
+    use crate::network::radix::u256_ext::U256Ext;
 
-    const U256MAX: U256 = U256::max_value(); // 115792089237316195423570985008687907853269984665640564039457584007913129639935
-
+    #[allow(clippy::legacy_numeric_constants)]
     #[test]
-    fn test_casper_avg() {
-        assert_eq!(U256MAX.avg(U256::from(0u8)), U256MAX / 2);
-        assert_eq!(U256MAX.avg(U256::from(1u8)), U256MAX / 2 + 1);
-        assert_eq!(U256MAX.avg(U256MAX - 1), U256MAX - 1);
-        assert_eq!(U256MAX.avg(U256MAX), U256MAX);
+    fn test_avg() {
+        let u256 = U256::max_value(); // 115792089237316195423570985008687907853269984665640564039457584007913129639935
+        let u256_max_sub_1 = u256 - U256::from(1u32);
+        let u256max_div_2 = u256 / U256::from(2u32);
+        
+        assert_eq!(u256.avg(U256::from(0u8)), u256max_div_2);
+        assert_eq!(u256.avg(U256::from(1u8)), u256max_div_2 + U256::from(1u8));
+        assert_eq!(u256.avg(u256_max_sub_1), u256_max_sub_1);
+        assert_eq!(u256.avg(u256), u256);
 
-        assert_eq!((U256MAX - 1).avg(U256::from(0u8)), U256MAX / 2);
-        assert_eq!((U256MAX - 1).avg(U256::from(1u8)), U256MAX / 2);
-        assert_eq!((U256MAX - 1).avg(U256MAX - 1), U256MAX - 1);
-        assert_eq!((U256MAX - 1).avg(U256MAX), U256MAX - 1);
+        assert_eq!((u256_max_sub_1).avg(U256::from(0u8)), u256max_div_2);
+        assert_eq!((u256_max_sub_1).avg(U256::from(1u8)), u256max_div_2);
+        assert_eq!((u256_max_sub_1).avg(u256_max_sub_1), u256_max_sub_1);
+        assert_eq!((u256_max_sub_1).avg(u256), u256_max_sub_1);
     }
 
     #[test]

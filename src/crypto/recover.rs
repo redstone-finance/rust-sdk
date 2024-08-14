@@ -14,7 +14,7 @@ pub fn recover_address(message: Vec<u8>, signature: Vec<u8>) -> Vec<u8> {
 }
 
 #[cfg(feature = "crypto_secp256k1")]
-pub mod crypto256 {
+pub(crate) mod crypto256 {
     use crate::network::{assert::Unwrap, error::Error};
     use secp256k1::{ecdsa::RecoverableSignature, Message, Secp256k1 as Secp256k1Curve};
 
@@ -40,11 +40,11 @@ pub mod crypto256 {
 }
 
 #[cfg(feature = "crypto_k256")]
-pub mod crypto256 {
+pub(crate) mod crypto256 {
     use crate::network::{assert::Unwrap, error::Error};
     use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 
-    pub fn recover_public_key(
+    pub(crate) fn recover_public_key(
         message_hash: Box<[u8]>,
         signature_bytes: &[u8],
         recovery_byte: u8,
@@ -64,8 +64,8 @@ pub mod crypto256 {
 }
 
 #[cfg(all(not(feature = "crypto_k256"), not(feature = "crypto_secp256k1")))]
-pub mod crypto256 {
-    pub fn recover_public_key(
+pub(crate) mod crypto256 {
+    pub(crate) fn recover_public_key(
         _message_hash: Box<[u8]>,
         _signature_bytes: &[u8],
         _recovery_byte: u8,

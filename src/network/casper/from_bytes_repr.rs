@@ -1,7 +1,8 @@
-use crate::network::specific::{FromBytesRepr, U256};
+use crate::network::from_bytes_repr::{FromBytesRepr, Sanitized};
+use crate::network::specific::U256;
 
 impl FromBytesRepr<Vec<u8>> for U256 {
     fn from_bytes_repr(bytes: Vec<u8>) -> Self {
-        bytes.as_slice().into()
+        bytes.sanitized().as_slice().into()
     }
 }
