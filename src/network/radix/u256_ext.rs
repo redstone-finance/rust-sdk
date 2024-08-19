@@ -1,4 +1,3 @@
-
 use crate::network::specific::U256;
 
 pub trait U256Ext {

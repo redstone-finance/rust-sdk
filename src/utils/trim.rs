@@ -1,9 +1,6 @@
 use crate::network::{
-    assert::Unwrap,
-    error::Error,
-    specific::U256,
+    assert::Unwrap, error::Error, from_bytes_repr::FromBytesRepr, specific::U256,
 };
-use crate::network::from_bytes_repr::FromBytesRepr;
 
 pub trait Trim<T>
 where

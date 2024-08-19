@@ -92,9 +92,11 @@ impl AsAsciiStr for U256 {
 
 #[cfg(test)]
 mod tests {
-    use crate::network::as_str::{AsAsciiStr, AsHexStr};
-    use crate::network::specific::U256;
-    
+    use crate::network::{
+        as_str::{AsAsciiStr, AsHexStr},
+        specific::U256,
+    };
+
     const ETH: u32 = 4543560u32;
 
     #[test]
@@ -109,7 +111,7 @@ mod tests {
     fn test_as_ascii_str() {
         let u256 = U256::from(ETH);
         let result = u256.as_ascii_str();
-        
+
         assert_eq!(result, "ETH");
     }
 }

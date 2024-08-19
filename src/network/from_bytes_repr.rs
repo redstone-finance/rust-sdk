@@ -14,9 +14,9 @@ impl Sanitized for Bytes {
             return self;
         }
 
-        let index =  self.len().max(VALUE_SIZE) - VALUE_SIZE;
+        let index = self.len().max(VALUE_SIZE) - VALUE_SIZE;
         let remainder = &self[0..index];
-        
+
         if remainder != vec![0; index] {
             panic!("Number to big: {:?} digits", self.len())
         }
@@ -27,12 +27,14 @@ impl Sanitized for Bytes {
 
 #[cfg(test)]
 mod tests {
-    use crate::network::from_bytes_repr::FromBytesRepr;
-    use crate::network::specific::{U256, VALUE_SIZE};
-    
+    use crate::network::{
+        from_bytes_repr::FromBytesRepr,
+        specific::{U256, VALUE_SIZE},
+    };
+
     #[cfg(feature = "network_radix")]
     use crate::network::radix::u256_ext::U256Ext;
-    
+
     #[test]
     fn test_from_bytes_repr_single() {
         let vec = vec![1];
@@ -93,7 +95,7 @@ mod tests {
     fn test_from_bytes_repr_max() {
         let vec = vec![255; VALUE_SIZE];
         let result = U256::from_bytes_repr(vec);
-        
+
         assert_eq!(result, U256::max_value());
     }
 
@@ -110,7 +112,7 @@ mod tests {
     fn test_from_bytes_repr_too_long() {
         let x = VALUE_SIZE as u8 + 1;
         let vec = (1..=x).collect();
-        
+
         U256::from_bytes_repr(vec);
     }
 
@@ -120,7 +122,7 @@ mod tests {
         let mut vec = vec![255; VALUE_SIZE + 1];
         vec[0] = 0;
         let result = U256::from_bytes_repr(vec);
-        
+
         assert_eq!(result, U256::max_value());
     }
 }

@@ -71,7 +71,7 @@ impl Debug for DataPackage {
 mod tests {
     use crate::{
         helpers::hex::hex_to_bytes,
-        network::specific::U256,
+        network::{from_bytes_repr::FromBytesRepr, specific::U256},
         protocol::{
             constants::{
                 DATA_FEED_ID_BS, DATA_POINTS_COUNT_BS, DATA_POINT_VALUE_BYTE_SIZE_BS, SIGNATURE_BS,
@@ -81,7 +81,6 @@ mod tests {
             data_point::DataPoint,
         },
     };
-    use crate::network::from_bytes_repr::FromBytesRepr;
 
     const DATA_PACKAGE_BYTES_1: &str = "4554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000360cafc94e018d79bf0ba00000002000000151afa8c5c3caf6004b42c0fb17723e524f993b9ecbad3b9bce5ec74930fa436a3660e8edef10e96ee5f222de7ef5787c02ca467c0ec18daa2907b43ac20c63c11c";
     const DATA_PACKAGE_BYTES_2: &str = "4554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000360cdd851e018d79bf0ba000000020000001473fd9dc72e6814a7de719b403cf4c9eba08934a643fd0666c433b806b31e69904f2226ffd3c8ef75861b11b5e32a1fda4b1458e0da4605a772dfba2a812f3ee1b";

@@ -1,6 +1,5 @@
-use crate::network::{assert::Assert, error::Error::ArrayIsEmpty};
+use crate::network::{assert::Assert, error::Error::ArrayIsEmpty, specific::U256};
 use std::ops::{Add, Rem, Shr};
-use crate::network::specific::U256;
 
 pub(crate) trait Median {
     type Item;
@@ -12,7 +11,10 @@ trait Avg {
     fn avg(self, other: Self) -> Self;
 }
 
-trait Averageable: Add<Output = Self> + Shr<Output = Self> + From<u8> + Rem<Output = Self> + Copy {}
+trait Averageable:
+    Add<Output = Self> + Shr<Output = Self> + From<u8> + Rem<Output = Self> + Copy
+{
+}
 
 impl Averageable for i32 {}
 
@@ -21,7 +23,7 @@ impl Avg for U256 {
     fn avg(self, other: Self) -> Self {
         let one = 1u32;
         let two = U256::from(2u8);
-        
+
         self.shr(one) + other.shr(one) + (self % two + other % two).shr(one)
     }
 }
@@ -29,7 +31,7 @@ impl Avg for U256 {
 #[cfg(not(feature = "network_radix"))]
 impl Averageable for U256 {}
 
-impl<T> Avg for T 
+impl<T> Avg for T
 where
     T: Averageable,
 {
@@ -91,7 +93,7 @@ mod tests {
     use crate::network::specific::U256;
     use itertools::Itertools;
     use std::fmt::Debug;
-    
+
     #[cfg(feature = "network_radix")]
     use crate::network::radix::u256_ext::U256Ext;
 
@@ -101,7 +103,7 @@ mod tests {
         let u256 = U256::max_value(); // 115792089237316195423570985008687907853269984665640564039457584007913129639935
         let u256_max_sub_1 = u256 - U256::from(1u32);
         let u256max_div_2 = u256 / U256::from(2u32);
-        
+
         assert_eq!(u256.avg(U256::from(0u8)), u256max_div_2);
         assert_eq!(u256.avg(U256::from(1u8)), u256max_div_2 + U256::from(1u8));
         assert_eq!(u256.avg(u256_max_sub_1), u256_max_sub_1);

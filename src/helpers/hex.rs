@@ -1,7 +1,9 @@
-use crate::network::specific::{Bytes, U256};
+use crate::network::{
+    from_bytes_repr::FromBytesRepr,
+    specific::{Bytes, U256},
+};
 use hex::{decode, encode};
 use std::{fs::File, io::Read};
-use crate::network::from_bytes_repr::FromBytesRepr;
 
 pub fn hex_to_bytes(hex_str: String) -> Vec<u8> {
     let trimmed_hex = hex_str.trim_start_matches("0x");

@@ -1,5 +1,4 @@
-use crate::network::{_Network, error::Error};
-use crate::network::from_bytes_repr::FromBytesRepr;
+use crate::network::{_Network, error::Error, from_bytes_repr::FromBytesRepr};
 
 pub trait NetworkSpecific {
     type BytesRepr: From<Vec<u8>> + Into<Vec<u8>>;
@@ -24,4 +23,3 @@ pub fn print(_text: String) {
 pub fn revert(error: Error) -> ! {
     Network::revert(error)
 }
-

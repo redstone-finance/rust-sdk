@@ -27,7 +27,7 @@ impl NetworkSpecific for Radix {
     fn revert(error: Error) -> ! {
         #[cfg(not(test))]
         {
-            panic!("{}", error)       
+            panic!("{}", error)
         }
 
         #[cfg(test)]

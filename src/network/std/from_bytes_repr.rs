@@ -1,6 +1,5 @@
 use crate::network::from_bytes_repr::{FromBytesRepr, Sanitized};
 
-
 impl FromBytesRepr<Vec<u8>> for u128 {
     fn from_bytes_repr(bytes: Vec<u8>) -> u128 {
         let mut result: u128 = 0;
