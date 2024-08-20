@@ -15,7 +15,7 @@ impl NetworkSpecific for Radix {
     fn print(_text: String) {
         #[cfg(all(not(test), feature = "print_debug"))]
         {
-            println!("{}", _text);
+            scrypto::prelude::info!("{}", _text);
         }
 
         #[cfg(test)]
@@ -27,7 +27,7 @@ impl NetworkSpecific for Radix {
     fn revert(error: Error) -> ! {
         #[cfg(not(test))]
         {
-            panic!("{}", error)
+            scrypto::prelude::Runtime::panic(error.to_string())
         }
 
         #[cfg(test)]
