@@ -21,7 +21,10 @@ network_casper = ["casper-contract/wee_alloc", "casper-types", "network"]
 network_radix = ["radix-common", "scrypto", "network"]
 
 # An extension for debug-printing of messages in the Casper extension. Not supported by Casper Contracts deployed to the network.
-print_debug = ["casper-contract/test-support"]
+casper_debug = ["print_debug", "casper-contract/test-support"]
+
+# An extension for debug-printing of messages.
+print_debug = []
 
 # A variant of decrypting the message-signers using secp256k1 library. Cheaper in runtime.
 crypto_secp256k1 = ["secp256k1/recovery", "secp256k1/lowmemory", "secp256k1/alloc"]
@@ -43,4 +46,4 @@ secp256k1 = { version = "^0.29.0", default-features = false, features = [], opti
 hex = { version = "^0.4.3", default-features = false, features = [], optional = true }
 
 [dev-dependencies]
-itertools = { version = "^0.12.1" }
+itertools = { version = "^0.13.0" }
