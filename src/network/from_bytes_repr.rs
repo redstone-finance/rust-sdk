@@ -1,4 +1,4 @@
-use crate::network::specific::{Bytes, VALUE_SIZE};
+use crate::network::specific::VALUE_SIZE;
 
 pub trait FromBytesRepr<T> {
     fn from_bytes_repr(bytes: T) -> Self;
@@ -8,7 +8,7 @@ pub trait Sanitized {
     fn sanitized(self) -> Self;
 }
 
-impl Sanitized for Bytes {
+impl Sanitized for Vec<u8> {
     fn sanitized(self) -> Self {
         if self.len() <= VALUE_SIZE {
             return self;
