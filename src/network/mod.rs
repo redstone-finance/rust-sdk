@@ -1,7 +1,7 @@
 pub mod as_str;
 pub mod assert;
 pub mod error;
-pub(crate) mod from_bytes_repr;
+pub mod from_bytes_repr;
 pub mod print_debug;
 pub mod specific;
 
