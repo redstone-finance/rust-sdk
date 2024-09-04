@@ -8,11 +8,9 @@
 
 pub mod core;
 mod crypto;
+pub mod network;
 mod protocol;
 mod utils;
-
-#[cfg(feature = "network")]
-pub mod network;
 
 #[cfg(feature = "helpers")]
 pub mod helpers;
