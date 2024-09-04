@@ -19,7 +19,7 @@ pub type _Network = radix::Radix;
 
 pub mod flattened;
 #[cfg(all(not(feature = "network_casper"), not(feature = "network_radix")))]
-mod std;
+mod pure;
 
 #[cfg(all(not(feature = "network_casper"), not(feature = "network_radix")))]
-pub type _Network = std::Std;
+pub type _Network = pure::Std;
