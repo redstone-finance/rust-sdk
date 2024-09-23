@@ -1,6 +1,6 @@
 [package]
 name = "redstone"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"
@@ -11,10 +11,10 @@ default = ["pure"]
 # Pure Rust, no specific network extension
 pure = ["primitive-types"]
 
-# An extension for casper network
+# An extension for Casper network
 network_casper = ["casper-contract/wee_alloc", "casper-types"]
 
-# An extension for radix network
+# An extension for Radix network
 network_radix = ["radix-common", "scrypto"]
 
 # An extension for debug-printing of messages in the Casper extension. Not supported by Casper Contracts deployed to the network.
@@ -41,7 +41,7 @@ sha3 = { version = "^0.10.8", default-features = false, features = ["asm"] }
 k256 = { version = "^0.13.3", default-features = false, features = [], optional = true }
 secp256k1 = { version = "^0.29.0", default-features = false, features = [], optional = true }
 hex = { version = "^0.4.3", default-features = false, features = [], optional = true }
-primitive-types = { version = "^0.12.2", optional = true }
+primitive-types = { version = "^0.13.1", optional = true }
 
 [dev-dependencies]
 itertools = { version = "^0.13.0" }
