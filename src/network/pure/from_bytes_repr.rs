@@ -5,6 +5,6 @@ use crate::network::{
 
 impl FromBytesRepr<Vec<u8>> for U256 {
     fn from_bytes_repr(bytes: Vec<u8>) -> Self {
-        bytes.sanitized().as_slice().into()
+        Self::from_big_endian(bytes.sanitized().as_slice())
     }
 }

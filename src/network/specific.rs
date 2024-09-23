@@ -1,8 +1,4 @@
-use crate::network::{_Network, error::Error};
-
-pub trait FromBytesRepr<T> {
-    fn from_bytes_repr(bytes: T) -> Self;
-}
+use crate::network::{_Network, error::Error, from_bytes_repr::FromBytesRepr};
 
 pub trait NetworkSpecific {
     type BytesRepr: From<Vec<u8>> + Into<Vec<u8>>;
@@ -15,14 +11,10 @@ pub trait NetworkSpecific {
     fn revert(error: Error) -> !;
 }
 
+pub(crate) type Network = <_Network as NetworkSpecific>::_Self;
 pub type Bytes = <_Network as NetworkSpecific>::BytesRepr;
 pub type U256 = <_Network as NetworkSpecific>::ValueRepr;
-
-pub(crate) type Network = <_Network as NetworkSpecific>::_Self;
-
-#[cfg(test)]
-#[allow(dead_code)]
-pub(crate) const VALUE_SIZE: usize = Network::VALUE_SIZE;
+pub const VALUE_SIZE: usize = <_Network as NetworkSpecific>::VALUE_SIZE;
 
 pub fn print(_text: String) {
     Network::print(_text)

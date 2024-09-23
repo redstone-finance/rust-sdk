@@ -14,7 +14,7 @@ mod filter_some_tests {
 
     #[test]
     fn test_filter_some() {
-        let values = vec![None, Some(23u64), None, Some(12), Some(12), None, Some(23)];
+        let values = [None, Some(23u64), None, Some(12), Some(12), None, Some(23)];
 
         assert_eq!(values.filter_some(), vec![23, 12, 12, 23])
     }

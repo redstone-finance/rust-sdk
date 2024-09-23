@@ -71,7 +71,7 @@ impl Debug for DataPackage {
 mod tests {
     use crate::{
         helpers::hex::hex_to_bytes,
-        network::specific::{FromBytesRepr, U256},
+        network::{from_bytes_repr::FromBytesRepr, specific::U256},
         protocol::{
             constants::{
                 DATA_FEED_ID_BS, DATA_POINTS_COUNT_BS, DATA_POINT_VALUE_BYTE_SIZE_BS, SIGNATURE_BS,

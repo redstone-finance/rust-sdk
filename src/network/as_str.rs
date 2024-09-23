@@ -8,6 +8,7 @@ pub trait AsHexStr {
 }
 
 impl AsHexStr for &[u8] {
+    #[allow(clippy::format_collect)]
     fn as_hex_str(&self) -> String {
         self.iter().map(|byte| format!("{:02x}", byte)).collect()
     }
@@ -20,9 +21,24 @@ impl AsHexStr for casper_types::bytesrepr::Bytes {
     }
 }
 
+#[cfg(not(feature = "network_radix"))]
 impl AsHexStr for U256 {
     fn as_hex_str(&self) -> String {
         format!("{:X}", self)
+    }
+}
+
+#[cfg(feature = "network_radix")]
+impl AsHexStr for U256 {
+    fn as_hex_str(&self) -> String {
+        let digits = self.to_digits();
+        let mut result = String::new();
+        for &part in &digits {
+            if result.is_empty() || part != 0u64 {
+                result.push_str(&format!("{:02X}", part));
+            }
+        }
+        result
     }
 }
 
@@ -71,5 +87,31 @@ impl AsAsciiStr for U256 {
             .unwrap();
 
         bytes.as_ascii_str()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::network::{
+        as_str::{AsAsciiStr, AsHexStr},
+        specific::U256,
+    };
+
+    const ETH: u32 = 4543560u32;
+
+    #[test]
+    fn test_as_hex_str() {
+        let u256 = U256::from(ETH);
+        let result = u256.as_hex_str();
+
+        assert_eq!(result, "455448");
+    }
+
+    #[test]
+    fn test_as_ascii_str() {
+        let u256 = U256::from(ETH);
+        let result = u256.as_ascii_str();
+
+        assert_eq!(result, "ETH");
     }
 }

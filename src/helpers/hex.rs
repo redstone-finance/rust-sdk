@@ -1,4 +1,7 @@
-use crate::network::specific::{Bytes, FromBytesRepr, U256};
+use crate::network::{
+    from_bytes_repr::FromBytesRepr,
+    specific::{Bytes, U256},
+};
 use hex::{decode, encode};
 use std::{fs::File, io::Read};
 
