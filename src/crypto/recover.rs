@@ -94,7 +94,28 @@ pub(crate) mod crypto256 {
     }
 }
 
+#[cfg(feature = "crypto_solana")]
+pub(crate) mod crypto256 {
+    use super::{EcdsaUncompressedPublicKey, Keccak256Hash, Secp256SigRs};
+    use anchor_lang::solana_program::secp256k1_recover::secp256k1_recover;
+
+    pub(crate) fn recover_public_key(
+        message_hash: Keccak256Hash,
+        signature_bytes: Secp256SigRs,
+        recovery_byte: u8,
+    ) -> EcdsaUncompressedPublicKey {
+        let key = secp256k1_recover(&message_hash, recovery_byte, &signature_bytes)
+            .unwrap().0;
+        let mut uncompressed_key = [0u8; 65];
+        uncompressed_key[0] = 0x04;
+        uncompressed_key[1..].copy_from_slice(&key);
+
+        uncompressed_key
+    }
+}
+
 #[cfg(all(
+    not(feature = "crypto_solana"),
     not(feature = "crypto_k256"),
     not(feature = "crypto_secp256k1"),
     not(all(feature = "crypto_radix", target_arch = "wasm32"))
