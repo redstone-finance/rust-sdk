@@ -77,6 +77,9 @@ mod aggregate_matrix_tests {
         helpers::iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
     };
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     #[test]
     fn test_aggregate_matrix() {
         let matrix = vec![
@@ -153,6 +156,9 @@ mod make_value_signer_matrix {
         network::specific::U256,
         protocol::data_package::DataPackage,
     };
+
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     #[test]
     fn test_make_value_signer_matrix_empty() {

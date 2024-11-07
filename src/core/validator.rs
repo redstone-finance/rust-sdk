@@ -135,6 +135,9 @@ mod tests {
     };
     use itertools::Itertools;
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     #[test]
     fn test_feed_index() {
         let config = Config::test();

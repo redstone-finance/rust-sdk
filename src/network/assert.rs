@@ -81,6 +81,9 @@ mod assert_or_revert_tests {
         error::Error,
     };
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     #[test]
     fn test_assert_or_revert_bool_with_true() {
         assert_or_revert_bool_with(true, || Error::ArrayIsEmpty);
@@ -107,6 +110,9 @@ mod assert_or_revert_tests {
 #[cfg(test)]
 mod unwrap_or_revert_tests {
     use crate::network::{assert::Unwrap, error::Error};
+
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     #[test]
     fn test_unwrap_or_revert_some() {

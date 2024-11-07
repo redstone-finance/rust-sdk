@@ -41,6 +41,7 @@ fn trim_metadata(payload: &mut Vec<u8>) -> usize {
     payload.trim_end(DATA_PACKAGES_COUNT_BS)
 }
 
+#[cfg(not(all(feature = "crypto_radix", target_arch = "wasm32")))]
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
@@ -51,6 +52,9 @@ mod tests {
             payload::{trim_metadata, trim_payload, Payload},
         },
     };
+
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     const PAYLOAD_METADATA_BYTES: &str = "000f000000";
     const PAYLOAD_METADATA_WITH_UNSIGNED_BYTE: &str = "000f55000001";

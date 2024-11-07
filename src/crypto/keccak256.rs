@@ -1,16 +1,29 @@
-use sha3::{Digest, Keccak256};
+use crate::crypto::Keccak256Hash;
+#[cfg(not(all(feature = "crypto_radix", target_arch = "wasm32")))]
+use sha3::Digest;
 
-pub fn keccak256(data: &[u8]) -> Box<[u8]> {
-    Keccak256::new_with_prefix(data)
+#[cfg(not(all(feature = "crypto_radix", target_arch = "wasm32")))]
+pub fn keccak256(data: &[u8]) -> Keccak256Hash {
+    sha3::Keccak256::new_with_prefix(data)
         .finalize()
         .as_slice()
-        .into()
+        .try_into()
+        .unwrap()
 }
 
+#[cfg(all(feature = "crypto_radix", target_arch = "wasm32"))]
+pub fn keccak256(data: &[u8]) -> Keccak256Hash {
+    scrypto::prelude::CryptoUtils::keccak256_hash(data).0
+}
+
+#[cfg(not(all(feature = "crypto_radix", target_arch = "wasm32")))]
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
     use crate::{crypto::keccak256::keccak256, helpers::hex::hex_to_bytes};
+
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     const MESSAGE: &str = "415641580000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d394303d018d79bf0ba000000020000001";
     const MESSAGE_HASH: &str = "f0805644755393876d0e917e553f0c206f8bc68b7ebfe73a79d2a9e7f5a4cea6";

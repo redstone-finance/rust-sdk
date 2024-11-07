@@ -59,6 +59,9 @@ mod tests {
         protocol::{data_package::DataPackage, payload::Payload},
     };
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     #[test]
     fn test_make_processor_result() {
         let data_packages = vec![

@@ -94,6 +94,9 @@ mod tests {
     use itertools::Itertools;
     use std::fmt::Debug;
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     #[cfg(feature = "network_radix")]
     use crate::network::radix::u256_ext::U256Ext;
 
