@@ -47,6 +47,9 @@ mod tests {
         utils::trim::Trim,
     };
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     const MARKER_DECIMAL: u64 = 823907890102272;
 
     fn redstone_marker_bytes() -> Vec<u8> {
@@ -104,8 +107,11 @@ mod tests {
         let (_, result): (_, u64) = test_trim_end(size);
         assert_eq!(result, MARKER_DECIMAL);
 
-        let (_, result): (_, usize) = test_trim_end(size);
-        assert_eq!(result, 823907890102272usize);
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let (_, result): (_, usize) = test_trim_end(size);
+            assert_eq!(result, 823907890102272usize);
+        }
 
         let (_rest, result): (_, Vec<u8>) = test_trim_end(size);
         assert_eq!(result.as_slice().len(), size.min(REDSTONE_MARKER_BS));
@@ -122,9 +128,16 @@ mod tests {
         assert_eq!(x, 18446744073709551615);
     }
 
+    #[cfg(target_arch = "wasm32")]
+    #[should_panic(expected = "Number overflow: 823907890102272")]
+    #[test]
+    fn test_trim_end_u64_overflow_usize_wasm32() {
+        let (_, _): (_, usize) = test_trim_end(REDSTONE_MARKER_BS);
+    }
+
     #[should_panic(expected = "Number overflow: 18591708106338011145")]
     #[test]
-    fn test_trim_end_u64_overflow() {
+    fn test_trim_end_u64_overflow_u64() {
         let mut bytes = vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9];
 
         let _: u64 = bytes.trim_end(9);

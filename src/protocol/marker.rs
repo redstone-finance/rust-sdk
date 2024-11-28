@@ -21,6 +21,9 @@ mod tests {
         protocol::{constants::REDSTONE_MARKER_BS, marker::trim_redstone_marker},
     };
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     const PAYLOAD_TAIL: &str = "1c000f000000000002ed57011e0000";
 
     #[test]

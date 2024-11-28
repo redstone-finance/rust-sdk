@@ -15,6 +15,9 @@ impl Flattened<Bytes> for Vec<Bytes> {
 mod tests {
     use crate::network::{flattened::Flattened, specific::Bytes};
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     #[test]
     fn test_bytes_flattened() {
         #[allow(clippy::useless_conversion)]

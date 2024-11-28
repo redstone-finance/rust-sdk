@@ -97,6 +97,9 @@ mod tests {
         specific::U256,
     };
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     const ETH: u32 = 4543560u32;
 
     #[test]

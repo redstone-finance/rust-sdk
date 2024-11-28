@@ -72,6 +72,9 @@ mod tests {
     };
     use std::ops::Shr;
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     const DATA_POINT_BYTES_TAIL: &str = "4554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000360cafc94e";
     const VALUE: u128 = 232141080910;
 

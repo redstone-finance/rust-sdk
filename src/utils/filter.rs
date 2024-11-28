@@ -12,6 +12,9 @@ impl<T: Copy> FilterSome<Vec<T>> for [Option<T>] {
 mod filter_some_tests {
     use crate::utils::filter::FilterSome;
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     #[test]
     fn test_filter_some() {
         let values = [None, Some(23u64), None, Some(12), Some(12), None, Some(23)];

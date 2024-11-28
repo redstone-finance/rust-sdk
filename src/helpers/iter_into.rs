@@ -35,6 +35,9 @@ mod iter_into_tests {
         network::specific::U256,
     };
 
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     #[test]
     fn test_iter_into() {
         let values = vec![23u128, 12, 12, 23];
