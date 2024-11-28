@@ -21,8 +21,13 @@ test: clippy
 docs:
 	@for features in $(FEATURE_SETS); do \
         echo "Documenting redstone with features: $$features"; \
-        (rm -rf ./target/doc && $(DOC) --features=$$features && mkdir -p ../target/rust-docs/redstone && cp -r ../target/doc ../target/rust-docs/redstone/$$features); \
+        (rm -rf ./target/doc && $(DOC) --features=$$features && mkdir -p ./target/rust-docs/redstone && cp -r ./target/doc ./target/rust-docs/redstone/$$features); \
     done
+
+	@for features in $(WASM32_FEATURE_SETS); do \
+		echo "Documenting redstone with features: $$features"; \
+		(rm -rf ./target/doc && $(DOC) --features=$$features && mkdir -p ./target/rust-docs/redstone && cp -r ./target/doc ./target/rust-docs/redstone/$$features); \
+	done
 
 coverage:
 	cargo install grcov --version=0.5.15
