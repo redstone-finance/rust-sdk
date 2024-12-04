@@ -24,10 +24,7 @@ impl Trim<FeedId> for Vec<u8> {
     fn trim_end(&mut self, len: usize) -> FeedId {
         let v: Vec<_> = self.trim_end(len);
 
-        let mut buff = [0; 32];
-
-        buff.copy_from_slice(&v);
-        FeedId(buff)
+        v.into()
     }
 }
 

@@ -18,8 +18,8 @@ mod utils;
 pub mod helpers;
 
 /// Type describing feed ids.
-/// We expect feed id to be byte string lik b"EUR"
-/// converted to bytearray and padded with zeros to the right.
+/// We expect FeedId to be byte string like b"EUR"
+/// converted to bytearray and padded with zeroes to the right.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct FeedId(pub [u8; 32]);
 
