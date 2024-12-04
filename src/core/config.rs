@@ -20,7 +20,7 @@ pub struct Config {
 
     /// Identifiers for the data feeds from which values are aggregated.
     ///
-    /// Each data feed id is represented by the network-specific `U256` type.
+    /// Each data feed id is represented by the `FeedId` type.
     pub feed_ids: Vec<FeedId>,
 
     /// The current block time in timestamp format, used for verifying data timeliness.
