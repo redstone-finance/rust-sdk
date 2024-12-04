@@ -72,8 +72,7 @@ pub(crate) mod crypto256 {
 #[cfg(all(feature = "crypto_radix", target_arch = "wasm32"))]
 pub(crate) mod crypto256 {
     use super::{EcdsaUncompressedPublicKey, Keccak256Hash, Secp256SigRs};
-    use crate::network::assert::Unwrap;
-    use crate::network::error::Error;
+    use crate::network::{assert::Unwrap, error::Error};
     use radix_common::crypto::{Hash, IsHash, Secp256k1Signature};
     use scrypto::crypto_utils::CryptoUtils;
 
@@ -105,7 +104,8 @@ pub(crate) mod crypto256 {
         recovery_byte: u8,
     ) -> EcdsaUncompressedPublicKey {
         let key = secp256k1_recover(&message_hash, recovery_byte, &signature_bytes)
-            .unwrap().0;
+            .unwrap()
+            .0;
         let mut uncompressed_key = [0u8; 65];
         uncompressed_key[0] = 0x04;
         uncompressed_key[1..].copy_from_slice(&key);

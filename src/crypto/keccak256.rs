@@ -19,7 +19,7 @@ pub fn keccak256(data: &[u8]) -> Keccak256Hash {
 }
 
 #[cfg(feature = "crypto_solana")]
-pub fn keccak256(data: &[u8]) -> Keccak256Hash{
+pub fn keccak256(data: &[u8]) -> Keccak256Hash {
     anchor_lang::solana_program::keccak::hash(data).0
 }
 

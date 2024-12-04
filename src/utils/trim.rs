@@ -1,5 +1,6 @@
-use crate::network::{
-    assert::Unwrap, error::Error, from_bytes_repr::FromBytesRepr, specific::U256,
+use crate::{
+    network::{assert::Unwrap, error::Error, from_bytes_repr::FromBytesRepr, specific::U256},
+    FeedId,
 };
 
 pub trait Trim<T>
@@ -16,6 +17,17 @@ impl Trim<Vec<u8>> for Vec<u8> {
         } else {
             self.split_off(self.len() - len)
         }
+    }
+}
+
+impl Trim<FeedId> for Vec<u8> {
+    fn trim_end(&mut self, len: usize) -> FeedId {
+        let v: Vec<_> = self.trim_end(len);
+
+        let mut buff = [0; 32];
+
+        buff.copy_from_slice(&v);
+        FeedId(buff)
     }
 }
 

@@ -3,17 +3,17 @@ use crate::{
         as_str::{AsAsciiStr, AsHexStr},
         assert::Assert,
         error::Error,
-        from_bytes_repr::FromBytesRepr,
         specific::U256,
     },
     protocol::constants::DATA_FEED_ID_BS,
-    utils::{trim::Trim, trim_zeros::TrimZeros},
+    utils::trim::Trim,
+    FeedId,
 };
 use std::fmt::{Debug, Formatter};
 
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct DataPoint {
-    pub(crate) feed_id: U256,
+    pub(crate) feed_id: FeedId,
     pub(crate) value: U256,
 }
 
@@ -36,12 +36,9 @@ pub(crate) fn trim_data_points(
 
 fn trim_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
     let value = payload.trim_end(value_size);
-    let feed_id: Vec<u8> = payload.trim_end(DATA_FEED_ID_BS);
+    let feed_id = payload.trim_end(DATA_FEED_ID_BS);
 
-    DataPoint {
-        value,
-        feed_id: U256::from_bytes_repr(feed_id.trim_zeros()),
-    }
+    DataPoint { value, feed_id }
 }
 
 impl Debug for DataPoint {
@@ -61,10 +58,7 @@ impl Debug for DataPoint {
 mod tests {
     use crate::{
         helpers::hex::hex_to_bytes,
-        network::{
-            from_bytes_repr::FromBytesRepr,
-            specific::{U256, VALUE_SIZE},
-        },
+        network::specific::{U256, VALUE_SIZE},
         protocol::{
             constants::DATA_FEED_ID_BS,
             data_point::{trim_data_point, trim_data_points, DataPoint},
@@ -152,7 +146,7 @@ mod tests {
 
         let data_point = DataPoint {
             value: expected_value,
-            feed_id: U256::from_bytes_repr(hex_to_bytes(DATA_POINT_BYTES_TAIL[..6].to_string())),
+            feed_id: hex_to_bytes(DATA_POINT_BYTES_TAIL[..6].to_string()).into(),
         };
 
         assert_eq!(result, data_point);

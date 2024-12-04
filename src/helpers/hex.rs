@@ -1,7 +1,4 @@
-use crate::network::{
-    from_bytes_repr::FromBytesRepr,
-    specific::{Bytes, U256},
-};
+use crate::{network::specific::Bytes, FeedId};
 use hex::{decode, encode};
 use std::{fs::File, io::Read};
 
@@ -21,11 +18,11 @@ pub fn make_bytes(vec: Vec<&str>, fun: fn(&str) -> String) -> Vec<Bytes> {
         .collect()
 }
 
-pub fn make_feed_id(s: &str) -> U256 {
-    U256::from_bytes_repr(hex_to_bytes(encode(s)))
+pub fn make_feed_id(s: &str) -> FeedId {
+    hex_to_bytes(encode(s)).into()
 }
 
-pub fn make_feed_ids(vec: Vec<&str>) -> Vec<U256> {
+pub fn make_feed_ids(vec: Vec<&str>) -> Vec<FeedId> {
     vec.iter().map(|&s| make_feed_id(s)).collect()
 }
 
