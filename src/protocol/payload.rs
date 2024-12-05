@@ -46,7 +46,7 @@ fn trim_metadata(payload: &mut Vec<u8>) -> usize {
 #[cfg(test)]
 mod tests {
     use crate::{
-        helpers::hex::{hex_to_bytes, read_payload_bytes, read_payload_hex},
+        helpers::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex},
         protocol::{
             constants::REDSTONE_MARKER_BS,
             payload::{trim_metadata, trim_payload, Payload},
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn test_trim_payload() {
-        let payload_hex = read_payload_bytes("./sample-data/payload.hex");
+        let payload_hex = sample_payload_bytes();
 
         let mut bytes = payload_hex[..payload_hex.len() - REDSTONE_MARKER_BS].into();
         let payload = trim_payload(&mut bytes);
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn test_make_payload() {
-        let mut payload_hex = read_payload_bytes("./sample-data/payload.hex");
+        let mut payload_hex = sample_payload_bytes();
         let payload = Payload::make(&mut payload_hex);
 
         assert_eq!(payload.data_packages.len(), 15);
@@ -99,7 +99,7 @@ mod tests {
     #[should_panic(expected = "Non empty payload remainder: 12")]
     #[test]
     fn test_make_payload_with_prefix() {
-        let payload_hex = read_payload_hex("./sample-data/payload.hex");
+        let payload_hex = sample_payload_hex();
         let mut bytes = hex_to_bytes("12".to_owned() + &payload_hex);
         let payload = Payload::make(&mut bytes);
 
