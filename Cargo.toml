@@ -1,6 +1,6 @@
 [package]
 name = "redstone"
-version = "1.2.0"
+version = "1.3.0-pre"
 edition = "2021"
 authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"
@@ -32,6 +32,9 @@ crypto_k256 = ["k256/alloc", "k256/sha256", "k256/ecdsa"]
 # A variant of decrypting the message-signers using Radix library.
 crypto_radix = ["scrypto", "radix-common"]
 
+# A variant of decrypting the message-signers using Solana library.
+crypto_solana = ["anchor-lang"]
+
 # A set of helpers for testing & offline usage.
 helpers = ["hex/serde", "hex/alloc"]
 
@@ -45,6 +48,8 @@ k256 = { version = "^0.13.4", default-features = false, features = [], optional 
 secp256k1 = { version = "^0.29.1", default-features = false, features = [], optional = true }
 hex = { version = "^0.4.3", default-features = false, features = [], optional = true }
 primitive-types = { version = "^0.13.1", optional = true }
+anchor-lang = { git = "https://github.com/coral-xyz/anchor", rev = "a7a23eea", optional = true, default-features = false }
+
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "^0.2.15", default-features = false, features = ["js"] }

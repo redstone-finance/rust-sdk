@@ -72,7 +72,7 @@ impl Debug for DataPackage {
 mod tests {
     use crate::{
         helpers::hex::hex_to_bytes,
-        network::{from_bytes_repr::FromBytesRepr, specific::U256},
+        network::specific::U256,
         protocol::{
             constants::{
                 DATA_FEED_ID_BS, DATA_POINTS_COUNT_BS, DATA_POINT_VALUE_BYTE_SIZE_BS, SIGNATURE_BS,
@@ -207,7 +207,7 @@ mod tests {
     fn verify_data_package(result: DataPackage, expected_value: u128, signer_address: &str) {
         let data_package = DataPackage {
             data_points: vec![DataPoint {
-                feed_id: U256::from_bytes_repr(hex_to_bytes(DATA_PACKAGE_BYTES_1[..6].into())),
+                feed_id: hex_to_bytes(DATA_PACKAGE_BYTES_1[..6].into()).into(),
                 value: U256::from(expected_value),
             }],
             timestamp: 1707144580000,

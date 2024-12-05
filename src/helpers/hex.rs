@@ -1,9 +1,7 @@
-use crate::network::{
-    from_bytes_repr::FromBytesRepr,
-    specific::{Bytes, U256},
-};
+use crate::{network::specific::Bytes, FeedId};
 use hex::{decode, encode};
-use std::{fs::File, io::Read};
+
+const SAMPLE_PAYLOAD_HEX: &str = include_str!("../.././sample-data/payload.hex");
 
 pub fn hex_to_bytes(hex_str: String) -> Vec<u8> {
     let trimmed_hex = hex_str.trim_start_matches("0x");
@@ -21,23 +19,20 @@ pub fn make_bytes(vec: Vec<&str>, fun: fn(&str) -> String) -> Vec<Bytes> {
         .collect()
 }
 
-pub fn make_feed_id(s: &str) -> U256 {
-    U256::from_bytes_repr(hex_to_bytes(encode(s)))
+pub fn make_feed_id(s: &str) -> FeedId {
+    hex_to_bytes(encode(s)).into()
 }
 
-pub fn make_feed_ids(vec: Vec<&str>) -> Vec<U256> {
+pub fn make_feed_ids(vec: Vec<&str>) -> Vec<FeedId> {
     vec.iter().map(|&s| make_feed_id(s)).collect()
 }
 
-pub fn read_payload_hex(path: &str) -> String {
-    let mut file = File::open(path).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).expect("Read error");
-    contents
+pub fn sample_payload_hex() -> String {
+    SAMPLE_PAYLOAD_HEX.to_string()
 }
 
-pub fn read_payload_bytes(path: &str) -> Vec<u8> {
-    let contents = read_payload_hex(path);
+pub fn sample_payload_bytes() -> Vec<u8> {
+    let contents = sample_payload_hex();
 
     hex_to_bytes(contents)
 }

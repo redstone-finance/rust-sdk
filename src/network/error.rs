@@ -1,6 +1,9 @@
-use crate::network::{
-    as_str::{AsAsciiStr, AsHexStr},
-    specific::U256,
+use crate::{
+    network::{
+        as_str::{AsAsciiStr, AsHexStr},
+        specific::U256,
+    },
+    FeedId,
 };
 use std::fmt::{Debug, Display, Formatter};
 
@@ -61,7 +64,7 @@ pub enum Error {
     ///
     /// This variant includes the current number of signers, the required threshold, and
     /// potentially a feed_id related to the operation that failed due to insufficient signers.
-    InsufficientSignerCount(usize, usize, U256),
+    InsufficientSignerCount(usize, usize, FeedId),
 
     /// Used when a timestamp is older than allowed by the processor logic.
     ///
@@ -87,7 +90,7 @@ impl Error {
         Error::ContractError(Box::new(value))
     }
 
-    pub(crate) fn code(&self) -> u16 {
+    pub fn code(&self) -> u16 {
         match self {
             Error::ContractError(boxed) => boxed.code() as u16,
             Error::NumberOverflow(_) => 509,

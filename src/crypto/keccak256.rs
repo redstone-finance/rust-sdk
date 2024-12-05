@@ -1,8 +1,10 @@
 use crate::crypto::Keccak256Hash;
 #[cfg(not(all(feature = "crypto_radix", target_arch = "wasm32")))]
+#[cfg(not(feature = "crypto_solana"))]
 use sha3::Digest;
 
 #[cfg(not(all(feature = "crypto_radix", target_arch = "wasm32")))]
+#[cfg(not(feature = "crypto_solana"))]
 pub fn keccak256(data: &[u8]) -> Keccak256Hash {
     sha3::Keccak256::new_with_prefix(data)
         .finalize()
@@ -14,6 +16,11 @@ pub fn keccak256(data: &[u8]) -> Keccak256Hash {
 #[cfg(all(feature = "crypto_radix", target_arch = "wasm32"))]
 pub fn keccak256(data: &[u8]) -> Keccak256Hash {
     scrypto::prelude::CryptoUtils::keccak256_hash(data).0
+}
+
+#[cfg(feature = "crypto_solana")]
+pub fn keccak256(data: &[u8]) -> Keccak256Hash {
+    anchor_lang::solana_program::keccak::hash(data).0
 }
 
 #[cfg(not(all(feature = "crypto_radix", target_arch = "wasm32")))]

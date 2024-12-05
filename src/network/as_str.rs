@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use crate::network::specific::U256;
+use crate::{network::specific::U256, utils::trim_zeros::TrimZeros, FeedId};
 use alloc::{format, string::String};
 
 pub trait AsHexStr {
@@ -42,6 +42,12 @@ impl AsHexStr for U256 {
     }
 }
 
+impl AsAsciiStr for FeedId {
+    fn as_ascii_str(&self) -> String {
+        self.0.to_vec().trim_zeros().as_ascii_str()
+    }
+}
+
 impl AsHexStr for Vec<u8> {
     fn as_hex_str(&self) -> String {
         self.as_slice().as_hex_str()
@@ -67,6 +73,12 @@ impl AsAsciiStr for &[u8] {
 impl AsAsciiStr for Vec<u8> {
     fn as_ascii_str(&self) -> String {
         self.as_slice().as_ascii_str()
+    }
+}
+
+impl AsHexStr for FeedId {
+    fn as_hex_str(&self) -> String {
+        self.0.as_slice().as_hex_str()
     }
 }
 

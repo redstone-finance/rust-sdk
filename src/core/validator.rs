@@ -7,6 +7,7 @@ use crate::{
     },
     protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
     utils::filter::FilterSome,
+    FeedId,
 };
 
 /// A trait defining validation operations for data feeds and signers.
@@ -29,7 +30,7 @@ pub(crate) trait Validator {
     /// # Returns
     ///
     /// * `Option<usize>` - The index of the feed if it exists, or `None` if it does not.
-    fn feed_index(&self, feed_id: U256) -> Option<usize>;
+    fn feed_index(&self, feed_id: FeedId) -> Option<usize>;
 
     /// Retrieves the index of a given signer.
     ///
@@ -81,7 +82,7 @@ pub(crate) trait Validator {
 
 impl Validator for Config {
     #[inline]
-    fn feed_index(&self, feed_id: U256) -> Option<usize> {
+    fn feed_index(&self, feed_id: FeedId) -> Option<usize> {
         self.feed_ids.iter().position(|&elt| elt == feed_id)
     }
 
@@ -221,7 +222,7 @@ mod tests {
         Config::test().validate_signer_count_threshold(0, vec![].as_slice());
     }
 
-    #[should_panic(expected = "Insufficient signer count 1 for #1 (BTC)")]
+    #[should_panic(expected = "Insufficient signer count 1 for #1 (BTC")]
     #[test]
     fn test_validate_signer_count_threshold_shorter_list() {
         Config::test().validate_signer_count_threshold(1, vec![1u8].iter_into_opt().as_slice());
