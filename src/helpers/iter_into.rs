@@ -32,7 +32,7 @@ impl<U: Copy, T: Copy + Into<U>> IterIntoOpt<Vec<Option<U>>> for Vec<T> {
 mod iter_into_tests {
     use crate::{
         helpers::iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
-        network::specific::U256,
+        Value,
     };
 
     #[cfg(target_arch = "wasm32")]
@@ -43,7 +43,7 @@ mod iter_into_tests {
         let values = vec![23u128, 12, 12, 23];
 
         assert_eq!(
-            values.iter_into() as Vec<U256>,
+            values.iter_into() as Vec<Value>,
             vec![23u8.into(), 12u8.into(), 12u8.into(), 23u8.into()]
         )
     }
@@ -64,13 +64,13 @@ mod iter_into_tests {
             vec![Some(23u128), 12.into(), 12.into(), None, 23.into(), None];
 
         assert_eq!(
-            values.opt_iter_into_opt() as Vec<Option<U256>>,
+            values.opt_iter_into_opt() as Vec<Option<Value>>,
             vec![
-                Some(U256::from(23u8)),
-                U256::from(12u8).into(),
-                U256::from(12u8).into(),
+                Some(Value::from(23u8)),
+                Value::from(12u8).into(),
+                Value::from(12u8).into(),
                 None,
-                U256::from(23u8).into(),
+                Value::from(23u8).into(),
                 None
             ]
         )

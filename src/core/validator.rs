@@ -3,11 +3,11 @@ use crate::{
     network::{
         assert::Assert,
         error::Error::{InsufficientSignerCount, TimestampTooFuture, TimestampTooOld},
-        specific::U256,
     },
     protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
+    types::Value,
     utils::filter::FilterSome,
-    FeedId,
+    BlockTimestampMillis, FeedId, SignerAddress,
 };
 
 /// A trait defining validation operations for data feeds and signers.
@@ -34,34 +34,35 @@ pub(crate) trait Validator {
 
     /// Retrieves the index of a given signer.
     ///
-    /// This method accepts a signer identifier in the form of a byte slice and returns an
+    /// This method accepts a signer identifier and returns an
     /// `Option<usize>` indicating the signer's index within a collection of signers. If the signer
     /// is not found, `None` is returned.
     ///
     /// # Arguments
     ///
-    /// * `signer`: `&[u8]` - A byte slice representing the signer's identifier.
+    /// * `signer`: `&SignerAddress` - The signer's identifier.
     ///
     /// # Returns
     ///
     /// * `Option<usize>` - The index of the signer if found, or `None` if not found.
-    fn signer_index(&self, signer: &[u8]) -> Option<usize>;
+    fn signer_index(&self, signer: &SignerAddress) -> Option<usize>;
 
     /// Validates the signer count threshold for a given index within a set of values.
     ///
     /// This method is responsible for ensuring that the number of valid signers meets or exceeds
     /// a specified threshold necessary for a set of data values to be considered valid. It returns
-    /// a vector of `U256` if the values pass the validation, to be processed in other steps.
+    /// a vector of `Value` if the values pass the validation, to be processed in other steps.
     ///
     /// # Arguments
     ///
     /// * `index`: `usize` - The index of the data value being validated.
-    /// * `values`: `&[Option<U256>]` - A slice of optional `U256` values associated with the data.
+    /// * `values`: `&[Option<Value>]` - A slice of optional `Value` values associated with the data.
     ///
     /// # Returns
     ///
     /// * `Vec<U256>` - A vector of `U256` values that meet the validation criteria.
-    fn validate_signer_count_threshold(&self, index: usize, values: &[Option<U256>]) -> Vec<U256>;
+    fn validate_signer_count_threshold(&self, index: usize, values: &[Option<Value>])
+        -> Vec<Value>;
 
     /// Validates the timestamp for a given index.
     ///
@@ -72,12 +73,16 @@ pub(crate) trait Validator {
     /// # Arguments
     ///
     /// * `index`: `usize` - The index of the data value whose timestamp is being validated.
-    /// * `timestamp`: `u64` - The timestamp to be validated.
+    /// * `timestamp`: `BlockTimestampMillis` - The timestamp to be validated.
     ///
     /// # Returns
     ///
-    /// * `u64` - The validated timestamp.
-    fn validate_timestamp(&self, index: usize, timestamp: u64) -> u64;
+    /// * `BlockTimestampMillis` - The validated timestamp.
+    fn validate_timestamp(
+        &self,
+        index: usize,
+        timestamp: BlockTimestampMillis,
+    ) -> BlockTimestampMillis;
 }
 
 impl Validator for Config {
@@ -87,14 +92,16 @@ impl Validator for Config {
     }
 
     #[inline]
-    fn signer_index(&self, signer: &[u8]) -> Option<usize> {
-        self.signers
-            .iter()
-            .position(|elt| elt.to_ascii_lowercase() == signer.to_ascii_lowercase())
+    fn signer_index(&self, signer: &SignerAddress) -> Option<usize> {
+        self.signers.iter().position(|elt| elt == signer)
     }
 
     #[inline]
-    fn validate_signer_count_threshold(&self, index: usize, values: &[Option<U256>]) -> Vec<U256> {
+    fn validate_signer_count_threshold(
+        &self,
+        index: usize,
+        values: &[Option<Value>],
+    ) -> Vec<Value> {
         values.filter_some().assert_or_revert(
             |x| (*x).len() >= self.signer_count_threshold.into(),
             #[allow(clippy::useless_conversion)]
@@ -103,14 +110,18 @@ impl Validator for Config {
     }
 
     #[inline]
-    fn validate_timestamp(&self, index: usize, timestamp: u64) -> u64 {
+    fn validate_timestamp(
+        &self,
+        index: usize,
+        timestamp: BlockTimestampMillis,
+    ) -> BlockTimestampMillis {
         timestamp.assert_or_revert(
-            |&x| x + MAX_TIMESTAMP_DELAY_MS >= self.block_timestamp,
+            |&x| x.add(MAX_TIMESTAMP_DELAY_MS).is_after(self.block_timestamp),
             |timestamp| TimestampTooOld(index, *timestamp),
         );
 
         timestamp.assert_or_revert(
-            |&x| x <= self.block_timestamp + MAX_TIMESTAMP_AHEAD_MS,
+            |&x| x.is_before(self.block_timestamp.add(MAX_TIMESTAMP_AHEAD_MS)),
             |timestamp| TimestampTooFuture(index, *timestamp),
         )
     }
@@ -131,8 +142,8 @@ mod tests {
             hex::{hex_to_bytes, make_feed_id},
             iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
         },
-        network::specific::U256,
         protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
+        Value,
     };
     use itertools::Itertools;
 
@@ -159,16 +170,17 @@ mod tests {
     #[test]
     fn test_signer_index() {
         let config = Config::test();
-        let index = config.signer_index(&hex_to_bytes(TEST_SIGNER_ADDRESS_1.into()));
+        let index = config.signer_index(&hex_to_bytes(TEST_SIGNER_ADDRESS_1.into()).into());
         assert_eq!(index, 0.into());
 
-        let index = config.signer_index(&hex_to_bytes(TEST_SIGNER_ADDRESS_1.to_uppercase()));
+        let index = config.signer_index(&hex_to_bytes(TEST_SIGNER_ADDRESS_1.to_uppercase()).into());
         assert_eq!(index, 0.into());
 
-        let index = config.signer_index(&hex_to_bytes(TEST_SIGNER_ADDRESS_2.into()));
+        let index = config.signer_index(&hex_to_bytes(TEST_SIGNER_ADDRESS_2.into()).into());
         assert_eq!(index, 1.into());
 
-        let index = config.signer_index(&hex_to_bytes(TEST_SIGNER_ADDRESS_2.replace('0', "1")));
+        let index =
+            config.signer_index(&hex_to_bytes(TEST_SIGNER_ADDRESS_2.replace('0', "1")).into());
         assert_eq!(index, None);
     }
 
@@ -176,35 +188,41 @@ mod tests {
     fn test_validate_timestamp() {
         let config = Config::test();
 
-        config.validate_timestamp(0, TEST_BLOCK_TIMESTAMP);
-        config.validate_timestamp(1, TEST_BLOCK_TIMESTAMP + 60000);
-        config.validate_timestamp(2, TEST_BLOCK_TIMESTAMP + MAX_TIMESTAMP_AHEAD_MS);
-        config.validate_timestamp(3, TEST_BLOCK_TIMESTAMP - MAX_TIMESTAMP_DELAY_MS);
-        config.validate_timestamp(4, TEST_BLOCK_TIMESTAMP - 60000);
+        config.validate_timestamp(0, TEST_BLOCK_TIMESTAMP.into());
+        config.validate_timestamp(1, (TEST_BLOCK_TIMESTAMP + 60000).into());
+        config.validate_timestamp(2, (TEST_BLOCK_TIMESTAMP + MAX_TIMESTAMP_AHEAD_MS).into());
+        config.validate_timestamp(3, (TEST_BLOCK_TIMESTAMP - MAX_TIMESTAMP_DELAY_MS).into());
+        config.validate_timestamp(4, (TEST_BLOCK_TIMESTAMP - 60000).into());
     }
 
     #[should_panic(expected = "Timestamp 2000000180001 is too future for #0")]
     #[test]
     fn test_validate_timestamp_too_future() {
-        Config::test().validate_timestamp(0, TEST_BLOCK_TIMESTAMP + MAX_TIMESTAMP_AHEAD_MS + 1);
+        Config::test().validate_timestamp(
+            0,
+            (TEST_BLOCK_TIMESTAMP + MAX_TIMESTAMP_AHEAD_MS + 1).into(),
+        );
     }
 
     #[should_panic(expected = "Timestamp 1999999099999 is too old for #1")]
     #[test]
     fn test_validate_timestamp_too_old() {
-        Config::test().validate_timestamp(1, TEST_BLOCK_TIMESTAMP - MAX_TIMESTAMP_DELAY_MS - 1);
+        Config::test().validate_timestamp(
+            1,
+            (TEST_BLOCK_TIMESTAMP - MAX_TIMESTAMP_DELAY_MS - 1).into(),
+        );
     }
 
     #[should_panic(expected = "Timestamp 0 is too old for #2")]
     #[test]
     fn test_validate_timestamp_zero() {
-        Config::test().validate_timestamp(2, 0);
+        Config::test().validate_timestamp(2, 0.into());
     }
 
     #[should_panic(expected = "Timestamp 4000000000000 is too future for #3")]
     #[test]
     fn test_validate_timestamp_big() {
-        Config::test().validate_timestamp(3, TEST_BLOCK_TIMESTAMP + TEST_BLOCK_TIMESTAMP);
+        Config::test().validate_timestamp(3, (TEST_BLOCK_TIMESTAMP + TEST_BLOCK_TIMESTAMP).into());
     }
 
     #[should_panic(expected = "Timestamp 2000000000000 is too future for #4")]
@@ -212,8 +230,8 @@ mod tests {
     fn test_validate_timestamp_no_block_timestamp() {
         let mut config = Config::test();
 
-        config.block_timestamp = 0;
-        config.validate_timestamp(4, TEST_BLOCK_TIMESTAMP);
+        config.block_timestamp = 0.into();
+        config.validate_timestamp(4, TEST_BLOCK_TIMESTAMP.into());
     }
 
     #[should_panic(expected = "Insufficient signer count 0 for #0 (ETH)")]
@@ -268,7 +286,7 @@ mod tests {
         );
     }
 
-    fn validate_with_all_permutations(numbers: Vec<Option<U256>>, expected_value: Vec<U256>) {
+    fn validate_with_all_permutations(numbers: Vec<Option<Value>>, expected_value: Vec<Value>) {
         let perms: Vec<Vec<_>> = numbers.iter().permutations(numbers.len()).collect();
         let mut config = Config::test();
 

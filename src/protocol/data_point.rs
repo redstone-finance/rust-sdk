@@ -3,9 +3,9 @@ use crate::{
         as_str::{AsAsciiStr, AsHexStr},
         assert::Assert,
         error::Error,
-        specific::U256,
     },
     protocol::constants::DATA_FEED_ID_BS,
+    types::Value,
     utils::trim::Trim,
     FeedId,
 };
@@ -14,7 +14,7 @@ use std::fmt::{Debug, Formatter};
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct DataPoint {
     pub(crate) feed_id: FeedId,
-    pub(crate) value: U256,
+    pub(crate) value: Value,
 }
 
 pub(crate) fn trim_data_points(
@@ -35,17 +35,21 @@ pub(crate) fn trim_data_points(
 }
 
 fn trim_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
-    let value = payload.trim_end(value_size);
+    let value: Vec<_> = payload.trim_end(value_size);
     let feed_id = payload.trim_end(DATA_FEED_ID_BS);
 
-    DataPoint { value, feed_id }
+    DataPoint {
+        value: value.into(),
+        feed_id,
+    }
 }
 
 impl Debug for DataPoint {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // todo: fix
         write!(
             f,
-            "DataPoint {{\n      feed_id: {:?} (0x{}), value: {}\n   }}",
+            "DataPoint {{\n      feed_id: {:?} (0x{}), value: {:?}\n   }}",
             self.feed_id.as_ascii_str(),
             self.feed_id.as_hex_str(),
             self.value,
@@ -58,11 +62,12 @@ impl Debug for DataPoint {
 mod tests {
     use crate::{
         helpers::hex::hex_to_bytes,
-        network::specific::{U256, VALUE_SIZE},
         protocol::{
             constants::DATA_FEED_ID_BS,
             data_point::{trim_data_point, trim_data_points, DataPoint},
         },
+        types::VALUE_SIZE,
+        Value,
     };
     use std::ops::Shr;
 
@@ -120,12 +125,12 @@ mod tests {
             test_trim_data_point_of(
                 &DATA_POINT_BYTES_TAIL[..DATA_POINT_BYTES_TAIL.len() - 2 * i],
                 32 - i,
-                U256::from(VALUE).shr(8 * i as u32),
+                Value::from_u256(primitive_types::U256::from(VALUE).shr(8 * i as u32)),
             );
         }
     }
 
-    fn test_trim_data_point_of(value: &str, size: usize, expected_value: U256) {
+    fn test_trim_data_point_of(value: &str, size: usize, expected_value: Value) {
         let mut bytes = hex_to_bytes(value.into());
         let result = trim_data_point(&mut bytes, size);
 
@@ -135,7 +140,7 @@ mod tests {
     fn verify_rest_and_result(
         value: &str,
         size: usize,
-        expected_value: U256,
+        expected_value: Value,
         rest: Vec<u8>,
         result: DataPoint,
     ) {

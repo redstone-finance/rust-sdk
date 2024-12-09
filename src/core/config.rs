@@ -1,4 +1,4 @@
-use crate::{network::specific::Bytes, FeedId};
+use crate::{BlockTimestampMillis, FeedId, SignerAddress};
 
 /// Configuration for a RedStone payload processor.
 ///
@@ -16,7 +16,7 @@ pub struct Config {
     ///
     /// Each signer is identified by a unique, network-specific byte string (`Bytes`),
     /// which represents their address.
-    pub signers: Vec<Bytes>,
+    pub signers: Vec<SignerAddress>,
 
     /// Identifiers for the data feeds from which values are aggregated.
     ///
@@ -27,5 +27,5 @@ pub struct Config {
     ///
     /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970) and allows
     /// for determining whether the data is current in the context of blockchain time.
-    pub block_timestamp: u64,
+    pub block_timestamp: BlockTimestampMillis,
 }

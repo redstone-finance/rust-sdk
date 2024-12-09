@@ -26,7 +26,7 @@ impl Config {
                 hex_to_bytes(TEST_SIGNER_ADDRESS_2.into()).into(),
             ],
             feed_ids: make_feed_ids(feed_ids),
-            block_timestamp: TEST_BLOCK_TIMESTAMP,
+            block_timestamp: TEST_BLOCK_TIMESTAMP.into(),
         }
     }
 }
@@ -39,8 +39,8 @@ impl DataPackage {
         timestamp: Option<u64>,
     ) -> Self {
         DataPackage {
-            signer_address: hex_to_bytes(signer_address.into()),
-            timestamp: timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP),
+            signer_address: hex_to_bytes(signer_address.into()).into(),
+            timestamp: timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP).into(),
             data_points: vec![DataPoint {
                 feed_id: make_feed_id(feed_id),
                 value: value.into(),
