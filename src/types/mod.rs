@@ -10,8 +10,9 @@ pub use signer_address::SignerAddress;
 pub use timestamp_millis::TimestampMillis;
 pub use value::Value;
 
-/// We dont expect value to be larger from u256. Adjust this once this no longer hold :)
-pub const VALUE_SIZE: usize = 32;
+/// We dont expect value to be larger than u256.
+///  Adjust this once this no longer hold :)
+pub(crate) const VALUE_SIZE: usize = 32;
 
 pub trait Sanitized {
     fn sanitized(self) -> Self;

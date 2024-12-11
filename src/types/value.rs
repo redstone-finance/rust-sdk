@@ -1,11 +1,11 @@
 use crate::types::Sanitized;
 
 /// Type describing values we are getting from and to network.
-///  We expect it to be at most u256 and reserve that many bytes for it.
+/// We expect it to be at most u256 and reserve that many bytes for it.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Value(pub [u8; 32]);
 
-macro_rules! from_number {
+macro_rules! impl_from_number {
     ($(
         $number_type:ident
     ),*) => {
@@ -18,8 +18,7 @@ macro_rules! from_number {
          )*
     };
 }
-
-from_number!(u8, u16, u32, u64, u128);
+impl_from_number!(u8, u16, u32, u64, u128);
 
 impl Value {
     pub fn to_u256(self) -> primitive_types::U256 {
