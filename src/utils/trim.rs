@@ -1,5 +1,8 @@
 use crate::{
-    network::{assert::Unwrap, error::Error, from_bytes_repr::FromBytesRepr, specific::U256},
+    network::{
+        assert::{Assert, Unwrap},
+        error::Error,
+    },
     FeedId,
 };
 
@@ -28,32 +31,37 @@ impl Trim<FeedId> for Vec<u8> {
     }
 }
 
-impl Trim<U256> for Vec<u8> {
-    fn trim_end(&mut self, len: usize) -> U256 {
-        U256::from_bytes_repr(self.trim_end(len))
-    }
-}
-
 impl Trim<usize> for Vec<u8> {
     fn trim_end(&mut self, len: usize) -> usize {
-        let y: U256 = self.trim_end(len);
-        y.try_into().unwrap_or_revert(|_| Error::NumberOverflow(y))
+        let y: u64 = self.trim_end(len);
+        y.try_into()
+            .unwrap_or_revert(|_| Error::NumberOverflow(y.to_be_bytes().to_vec().into()))
     }
 }
 
 impl Trim<u64> for Vec<u8> {
     fn trim_end(&mut self, len: usize) -> u64 {
-        let y: U256 = self.trim_end(len);
-        y.try_into().unwrap_or_revert(|_| Error::NumberOverflow(y))
+        let y: Vec<u8> = self.trim_end(len);
+        let y: Vec<u8> = y.into_iter().skip_while(|&b| b == 0).collect();
+
+        let y = y.assert_or_revert(
+            |y| y.len() <= 8,
+            |y| Error::NumberOverflow(y.clone().into()),
+        );
+
+        let mut buff = [0; 8];
+        buff[8 - y.len()..].copy_from_slice(&y);
+
+        u64::from_be_bytes(buff)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        network::specific::U256,
         protocol::constants::{REDSTONE_MARKER, REDSTONE_MARKER_BS},
         utils::trim::Trim,
+        FeedId,
     };
 
     #[cfg(target_arch = "wasm32")]
@@ -67,8 +75,8 @@ mod tests {
 
     #[test]
     fn test_trim_end_number() {
-        let (rest, result): (_, U256) = test_trim_end(3);
-        assert_eq!(result, (256u32.pow(2) * 30).into());
+        let (rest, result): (_, FeedId) = test_trim_end(3);
+        assert_eq!(result, REDSTONE_MARKER[6..].to_vec().into());
         assert_eq!(rest.as_slice(), &REDSTONE_MARKER[..6]);
 
         let (_, result): (_, u64) = test_trim_end(3);
@@ -83,8 +91,8 @@ mod tests {
 
     #[test]
     fn test_trim_end_number_null() {
-        let (rest, result): (_, U256) = test_trim_end(0);
-        assert_eq!(result, 0u32.into());
+        let (rest, result): (_, FeedId) = test_trim_end(0);
+        assert_eq!(result, vec![0].into());
         assert_eq!(rest.as_slice(), &REDSTONE_MARKER);
 
         let (_, result): (_, u64) = test_trim_end(0);
@@ -106,8 +114,8 @@ mod tests {
     }
 
     fn test_trim_end_whole_size(size: usize) {
-        let (rest, result): (_, U256) = test_trim_end(size);
-        assert_eq!(result, MARKER_DECIMAL.into());
+        let (rest, result): (_, FeedId) = test_trim_end(size);
+        assert_eq!(result, REDSTONE_MARKER.to_vec().into());
         assert_eq!(
             rest.as_slice().len(),
             REDSTONE_MARKER_BS - size.min(REDSTONE_MARKER_BS)

@@ -3,9 +3,9 @@ use crate::{
         aggregator::aggregate_values, config::Config, processor_result::ProcessorResult,
         validator::Validator,
     },
-    network::specific::Bytes,
     print_debug,
     protocol::payload::Payload,
+    Bytes,
 };
 
 /// The main processor of the RedStone payload.
@@ -15,10 +15,9 @@ use crate::{
 ///
 /// * `config` - Configuration of the payload processing.
 /// * `payload_bytes` - Network-specific byte-list of the payload to be processed.
-pub fn process_payload(config: Config, payload_bytes: Bytes) -> ProcessorResult {
-    #[allow(clippy::useless_conversion)]
-    let mut bytes: Vec<u8> = payload_bytes.into();
-    let payload = Payload::make(&mut bytes);
+pub fn process_payload(config: Config, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
+    let mut bytes = payload_bytes.into();
+    let payload = Payload::make(&mut bytes.0);
     print_debug!("{:?}", payload);
 
     make_processor_result(config, payload)
@@ -96,7 +95,7 @@ mod tests {
         assert_eq!(
             result,
             ProcessorResult {
-                min_timestamp: TEST_BLOCK_TIMESTAMP - 2,
+                min_timestamp: (TEST_BLOCK_TIMESTAMP - 2).into(),
                 values: vec![12u8, 31].iter_into()
             }
         );

@@ -1,7 +1,4 @@
-use crate::{
-    network::{error::Error, specific::revert},
-    print_debug,
-};
+use crate::{network::error::Error, print_debug};
 use std::fmt::Debug;
 
 pub trait Assert<F> {
@@ -37,7 +34,7 @@ fn assert_or_revert_bool_with<E: FnOnce() -> Error>(check: bool, error: E) {
 
     let error = error();
     print_debug!("REVERT({}) - {}!", &error.code(), error);
-    revert(error);
+    panic!("{}", error);
 }
 
 pub trait Unwrap<R> {

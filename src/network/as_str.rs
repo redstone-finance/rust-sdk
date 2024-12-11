@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use crate::{network::specific::U256, utils::trim_zeros::TrimZeros, FeedId};
+use crate::{utils::trim_zeros::TrimZeros, FeedId};
 use alloc::{format, string::String};
 
 pub trait AsHexStr {
@@ -18,27 +18,6 @@ impl AsHexStr for &[u8] {
 impl AsHexStr for casper_types::bytesrepr::Bytes {
     fn as_hex_str(&self) -> String {
         self.as_slice().as_hex_str()
-    }
-}
-
-#[cfg(not(feature = "network_radix"))]
-impl AsHexStr for U256 {
-    fn as_hex_str(&self) -> String {
-        format!("{:X}", self)
-    }
-}
-
-#[cfg(feature = "network_radix")]
-impl AsHexStr for U256 {
-    fn as_hex_str(&self) -> String {
-        let digits = self.to_digits();
-        let mut result = String::new();
-        for &part in &digits {
-            if result.is_empty() || part != 0u64 {
-                result.push_str(&format!("{:02X}", part));
-            }
-        }
-        result
     }
 }
 
@@ -78,35 +57,15 @@ impl AsAsciiStr for Vec<u8> {
 
 impl AsHexStr for FeedId {
     fn as_hex_str(&self) -> String {
-        self.0.as_slice().as_hex_str()
-    }
-}
-
-#[cfg(feature = "network_casper")]
-impl AsAsciiStr for casper_types::bytesrepr::Bytes {
-    fn as_ascii_str(&self) -> String {
-        self.as_slice().as_ascii_str()
-    }
-}
-
-impl AsAsciiStr for U256 {
-    fn as_ascii_str(&self) -> String {
-        let hex_string = self.as_hex_str();
-        let bytes = (0..hex_string.len())
-            .step_by(2)
-            .map(|i| u8::from_str_radix(&hex_string[i..i + 2], 16))
-            .collect::<Result<Vec<u8>, _>>()
-            .unwrap();
-
-        bytes.as_ascii_str()
+        self.0.to_vec().trim_zeros().as_slice().as_hex_str()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::network::{
-        as_str::{AsAsciiStr, AsHexStr},
-        specific::U256,
+    use crate::{
+        network::as_str::{AsAsciiStr, AsHexStr},
+        types::FeedId,
     };
 
     #[cfg(target_arch = "wasm32")]
@@ -116,7 +75,7 @@ mod tests {
 
     #[test]
     fn test_as_hex_str() {
-        let u256 = U256::from(ETH);
+        let u256: FeedId = ETH.to_be_bytes().to_vec().into();
         let result = u256.as_hex_str();
 
         assert_eq!(result, "455448");
@@ -124,7 +83,7 @@ mod tests {
 
     #[test]
     fn test_as_ascii_str() {
-        let u256 = U256::from(ETH);
+        let u256: FeedId = ETH.to_be_bytes().to_vec().into();
         let result = u256.as_ascii_str();
 
         assert_eq!(result, "ETH");

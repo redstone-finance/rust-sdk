@@ -1,6 +1,5 @@
 use crate::{
     crypto::recover::recover_address,
-    network::as_str::AsHexStr,
     protocol::{
         constants::{
             DATA_FEED_ID_BS, DATA_POINTS_COUNT_BS, DATA_POINT_VALUE_BYTE_SIZE_BS, SIGNATURE_BS,
@@ -9,13 +8,14 @@ use crate::{
         data_point::{trim_data_points, DataPoint},
     },
     utils::trim::Trim,
+    SignerAddress, TimestampMillis,
 };
 use std::fmt::{Debug, Formatter};
 
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct DataPackage {
-    pub(crate) signer_address: Vec<u8>,
-    pub(crate) timestamp: u64,
+    pub(crate) signer_address: SignerAddress,
+    pub(crate) timestamp: TimestampMillis,
     pub(crate) data_points: Vec<DataPoint>,
 }
 
@@ -49,8 +49,8 @@ fn trim_data_package(payload: &mut Vec<u8>) -> DataPackage {
 
     DataPackage {
         data_points,
-        timestamp,
-        signer_address,
+        timestamp: TimestampMillis::from_millis(timestamp),
+        signer_address: SignerAddress::from(signer_address),
     }
 }
 
@@ -58,10 +58,9 @@ impl Debug for DataPackage {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "DataPackage {{\n   signer_address: 0x{}, timestamp: {},\n   data_points: {:?}\n}}",
-            self.signer_address.as_hex_str(),
-            self.timestamp,
-            self.data_points
+            // todo: fix hex display
+            "DataPackage {{\n   signer_address: 0x{:?}, timestamp: {:?},\n   data_points: {:?}\n}}",
+            self.signer_address, self.timestamp, self.data_points
         )
     }
 }
@@ -72,7 +71,6 @@ impl Debug for DataPackage {
 mod tests {
     use crate::{
         helpers::hex::hex_to_bytes,
-        network::specific::U256,
         protocol::{
             constants::{
                 DATA_FEED_ID_BS, DATA_POINTS_COUNT_BS, DATA_POINT_VALUE_BYTE_SIZE_BS, SIGNATURE_BS,
@@ -81,6 +79,7 @@ mod tests {
             data_package::{trim_data_package, trim_data_packages, DataPackage},
             data_point::DataPoint,
         },
+        Value,
     };
 
     #[cfg(target_arch = "wasm32")]
@@ -208,10 +207,10 @@ mod tests {
         let data_package = DataPackage {
             data_points: vec![DataPoint {
                 feed_id: hex_to_bytes(DATA_PACKAGE_BYTES_1[..6].into()).into(),
-                value: U256::from(expected_value),
+                value: Value::from(expected_value),
             }],
-            timestamp: 1707144580000,
-            signer_address: hex_to_bytes(signer_address.into()),
+            timestamp: 1707144580000.into(),
+            signer_address: hex_to_bytes(signer_address.into()).into(),
         };
 
         assert_eq!(result, data_package);

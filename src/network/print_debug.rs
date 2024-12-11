@@ -4,11 +4,11 @@ extern crate alloc;
 macro_rules! print_debug {
     ($fmt:expr) => {
         #[cfg(feature = "print_debug")]
-        $crate::network::specific::print(format!($fmt))
+        todo!("This will be fixed")
     };
     ($fmt:expr, $($args:tt)*) => {
         #[cfg(feature = "print_debug")]
-        $crate::network::specific::print(format!($fmt, $($args)*))
+        todo!("This will be fixed")
     };
 }
 

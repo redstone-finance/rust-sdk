@@ -1,9 +1,7 @@
 use crate::{
-    network::{
-        as_str::{AsAsciiStr, AsHexStr},
-        specific::U256,
-    },
-    FeedId,
+    network::as_str::{AsAsciiStr, AsHexStr},
+    types::Value,
+    FeedId, TimestampMillis,
 };
 use std::fmt::{Debug, Display, Formatter};
 
@@ -28,7 +26,7 @@ pub enum Error {
     ///
     /// Used when operations on `U256` numbers exceed their maximum value, potentially leading
     /// to incorrect calculations or state.
-    NumberOverflow(U256),
+    NumberOverflow(Value),
 
     /// Used when an expected non-empty array or vector is found to be empty.
     ///
@@ -70,13 +68,13 @@ pub enum Error {
     ///
     /// Includes the position or identifier of the timestamp and the threshold value,
     /// indicating that the provided timestamp is too far in the past.
-    TimestampTooOld(usize, u64),
+    TimestampTooOld(usize, TimestampMillis),
 
     /// Indicates that a timestamp is further in the future than allowed.
     ///
     /// Similar to `TimestampTooOld`, but for future timestamps exceeding the contract's
     /// acceptance window.
-    TimestampTooFuture(usize, u64),
+    TimestampTooFuture(usize, TimestampMillis),
 
     /// Represents errors that need to clone `ContractErrorContent`, which is not supported by default.
     ///
@@ -113,7 +111,7 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::ContractError(boxed) => write!(f, "Contract error: {}", boxed.message()),
-            Error::NumberOverflow(number) => write!(f, "Number overflow: {}", number),
+            Error::NumberOverflow(number) => write!(f, "Number overflow: {}", number.to_u256()),
             Error::ArrayIsEmpty => write!(f, "Array is empty"),
             Error::CryptographicError(size) => write!(f, "Cryptographic Error: {}", size),
             Error::SizeNotSupported(size) => write!(f, "Size not supported: {}", size),
@@ -133,13 +131,13 @@ impl Display for Error {
             Error::TimestampTooOld(data_package_index, value) => {
                 write!(
                     f,
-                    "Timestamp {} is too old for #{}",
+                    "Timestamp {:?} is too old for #{}",
                     value, data_package_index
                 )
             }
             Error::TimestampTooFuture(data_package_index, value) => write!(
                 f,
-                "Timestamp {} is too future for #{}",
+                "Timestamp {:?} is too future for #{}",
                 value, data_package_index
             ),
             Error::ClonedContractError(_, message) => {
