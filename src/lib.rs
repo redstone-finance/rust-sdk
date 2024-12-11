@@ -13,7 +13,7 @@ mod protocol;
 mod types;
 mod utils;
 
-pub use types::{BlockTimestampMillis, Bytes, FeedId, SignerAddress, Value};
+pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 
 #[cfg(feature = "helpers")]
 pub mod helpers;

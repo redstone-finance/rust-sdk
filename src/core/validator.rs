@@ -7,7 +7,7 @@ use crate::{
     protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
     types::Value,
     utils::filter::FilterSome,
-    BlockTimestampMillis, FeedId, SignerAddress,
+    FeedId, SignerAddress, TimestampMillis,
 };
 
 /// A trait defining validation operations for data feeds and signers.
@@ -78,11 +78,7 @@ pub(crate) trait Validator {
     /// # Returns
     ///
     /// * `BlockTimestampMillis` - The validated timestamp.
-    fn validate_timestamp(
-        &self,
-        index: usize,
-        timestamp: BlockTimestampMillis,
-    ) -> BlockTimestampMillis;
+    fn validate_timestamp(&self, index: usize, timestamp: TimestampMillis) -> TimestampMillis;
 }
 
 impl Validator for Config {
@@ -110,11 +106,7 @@ impl Validator for Config {
     }
 
     #[inline]
-    fn validate_timestamp(
-        &self,
-        index: usize,
-        timestamp: BlockTimestampMillis,
-    ) -> BlockTimestampMillis {
+    fn validate_timestamp(&self, index: usize, timestamp: TimestampMillis) -> TimestampMillis {
         timestamp.assert_or_revert(
             |&x| x.add(MAX_TIMESTAMP_DELAY_MS).is_after(self.block_timestamp),
             |timestamp| TimestampTooOld(index, *timestamp),

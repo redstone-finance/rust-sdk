@@ -1,4 +1,4 @@
-use crate::{types::Value, BlockTimestampMillis};
+use crate::{types::Value, TimestampMillis};
 
 /// Represents the result of processing the RedStone payload.
 ///
@@ -10,7 +10,7 @@ pub struct ProcessorResult {
     ///
     /// This field captures the earliest time point (in milliseconds since the Unix epoch)
     /// among the processed data packages, indicating the starting boundary of the dataset's time range.
-    pub min_timestamp: BlockTimestampMillis,
+    pub min_timestamp: TimestampMillis,
 
     /// A collection of values processed during the operation.
     ///
@@ -19,7 +19,7 @@ pub struct ProcessorResult {
     pub values: Vec<Value>,
 }
 
-impl From<ProcessorResult> for (BlockTimestampMillis, Vec<Value>) {
+impl From<ProcessorResult> for (TimestampMillis, Vec<Value>) {
     fn from(result: ProcessorResult) -> Self {
         (result.min_timestamp, result.values)
     }

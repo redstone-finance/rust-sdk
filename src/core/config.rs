@@ -1,4 +1,4 @@
-use crate::{BlockTimestampMillis, FeedId, SignerAddress};
+use crate::{FeedId, SignerAddress, TimestampMillis};
 
 /// Configuration for a RedStone payload processor.
 ///
@@ -27,5 +27,5 @@ pub struct Config {
     ///
     /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970) and allows
     /// for determining whether the data is current in the context of blockchain time.
-    pub block_timestamp: BlockTimestampMillis,
+    pub block_timestamp: TimestampMillis,
 }

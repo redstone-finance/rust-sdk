@@ -8,14 +8,14 @@ use crate::{
         data_point::{trim_data_points, DataPoint},
     },
     utils::trim::Trim,
-    BlockTimestampMillis, SignerAddress,
+    SignerAddress, TimestampMillis,
 };
 use std::fmt::{Debug, Formatter};
 
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct DataPackage {
     pub(crate) signer_address: SignerAddress,
-    pub(crate) timestamp: BlockTimestampMillis,
+    pub(crate) timestamp: TimestampMillis,
     pub(crate) data_points: Vec<DataPoint>,
 }
 
@@ -49,7 +49,7 @@ fn trim_data_package(payload: &mut Vec<u8>) -> DataPackage {
 
     DataPackage {
         data_points,
-        timestamp: BlockTimestampMillis::from_millis(timestamp),
+        timestamp: TimestampMillis::from_millis(timestamp),
         signer_address: SignerAddress::from(signer_address),
     }
 }

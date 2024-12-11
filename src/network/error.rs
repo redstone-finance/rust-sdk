@@ -1,7 +1,7 @@
 use crate::{
     network::as_str::{AsAsciiStr, AsHexStr},
     types::Value,
-    BlockTimestampMillis, FeedId,
+    FeedId, TimestampMillis,
 };
 use std::fmt::{Debug, Display, Formatter};
 
@@ -68,13 +68,13 @@ pub enum Error {
     ///
     /// Includes the position or identifier of the timestamp and the threshold value,
     /// indicating that the provided timestamp is too far in the past.
-    TimestampTooOld(usize, BlockTimestampMillis),
+    TimestampTooOld(usize, TimestampMillis),
 
     /// Indicates that a timestamp is further in the future than allowed.
     ///
     /// Similar to `TimestampTooOld`, but for future timestamps exceeding the contract's
     /// acceptance window.
-    TimestampTooFuture(usize, BlockTimestampMillis),
+    TimestampTooFuture(usize, TimestampMillis),
 
     /// Represents errors that need to clone `ContractErrorContent`, which is not supported by default.
     ///
