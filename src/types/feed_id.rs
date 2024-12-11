@@ -1,10 +1,12 @@
 use crate::types::Sanitized;
 
+use crate::types::VALUE_SIZE;
+
 /// Type describing feed ids.
 /// We expect FeedId to be byte string like b"EUR"
 /// converted to bytearray and padded with zeroes to the right.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct FeedId(pub [u8; 32]);
+pub struct FeedId(pub [u8; VALUE_SIZE]);
 
 // trim zeros from both sides
 fn trim_zeros(v: Vec<u8>) -> Vec<u8> {
@@ -29,7 +31,7 @@ impl From<Vec<u8>> for FeedId {
         let value = trim_zeros(value);
         let value = value.sanitized();
 
-        let mut buff = [0; 32];
+        let mut buff = [0; VALUE_SIZE];
         buff[0..value.len()].copy_from_slice(&value);
 
         Self(buff)

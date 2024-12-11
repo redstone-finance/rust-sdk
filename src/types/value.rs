@@ -1,9 +1,9 @@
-use crate::types::Sanitized;
+use crate::types::{Sanitized, VALUE_SIZE};
 
 /// Type describing values we are getting from and to network.
 /// We expect it to be at most u256 and reserve that many bytes for it.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Value(pub [u8; 32]);
+pub struct Value(pub [u8; VALUE_SIZE]);
 
 macro_rules! impl_from_number {
     ($(
@@ -34,8 +34,8 @@ impl From<Vec<u8>> for Value {
     fn from(value: Vec<u8>) -> Self {
         let value = value.sanitized();
 
-        let mut buff = [0; 32];
-        buff[32 - value.len()..].copy_from_slice(&value);
+        let mut buff = [0; VALUE_SIZE];
+        buff[VALUE_SIZE - value.len()..].copy_from_slice(&value);
 
         Self(buff)
     }
