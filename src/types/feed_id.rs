@@ -6,24 +6,19 @@ use crate::types::Sanitized;
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct FeedId(pub [u8; 32]);
 
+// trim zeros from both sides
 fn trim_zeros(v: Vec<u8>) -> Vec<u8> {
     if v.is_empty() {
         return v;
     }
-    let l_index = {
-        let mut i = 0;
-        while i < v.len() && v[i] == 0 {
-            i += 1;
-        }
-        i
+    let l_index = match v.iter().position(|&byte| byte != 0) {
+        Some(position) => position,
+        _ => return vec![], // vec of all zeroes
     };
 
-    let r_index = {
-        let mut i = v.len() - 1;
-        while i != 0 && v[i] == 0 {
-            i -= 1;
-        }
-        i
+    let r_index = match v.iter().rposition(|&byte| byte != 0) {
+        Some(position) => position,
+        _ => return vec![], // not possible but vec of all zeroes
     };
 
     v[l_index..=r_index].into()
