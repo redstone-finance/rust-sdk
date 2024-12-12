@@ -1,4 +1,4 @@
-use crate::network::{assert::Assert, error::Error::ArrayIsEmpty, specific::U256};
+use crate::network::{assert::Assert, error::Error::ArrayIsEmpty};
 use std::ops::{Add, Rem, Shr};
 
 pub(crate) trait Median {
@@ -18,18 +18,7 @@ trait Averageable:
 
 impl Averageable for i32 {}
 
-#[cfg(feature = "network_radix")]
-impl Avg for U256 {
-    fn avg(self, other: Self) -> Self {
-        let one = 1u32;
-        let two = U256::from(2u8);
-
-        self.shr(one) + other.shr(one) + (self % two + other % two).shr(one)
-    }
-}
-
-#[cfg(not(feature = "network_radix"))]
-impl Averageable for U256 {}
+impl Averageable for primitive_types::U256 {}
 
 impl<T> Avg for T
 where
@@ -89,16 +78,14 @@ where
 
 #[cfg(test)]
 mod tests {
+
     use super::{Avg, Median};
-    use crate::network::specific::U256;
     use itertools::Itertools;
+    use primitive_types::U256;
     use std::fmt::Debug;
 
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
-
-    #[cfg(feature = "network_radix")]
-    use crate::network::radix::u256_ext::U256Ext;
 
     #[allow(clippy::legacy_numeric_constants)]
     #[test]

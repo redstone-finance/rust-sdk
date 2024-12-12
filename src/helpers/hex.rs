@@ -1,4 +1,4 @@
-use crate::{network::specific::Bytes, FeedId};
+use crate::{Bytes, FeedId};
 use hex::{decode, encode};
 
 const SAMPLE_PAYLOAD_HEX: &str = include_str!("../.././sample-data/payload.hex");

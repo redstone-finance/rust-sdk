@@ -1,12 +1,12 @@
 use crate::{
     core::{config::Config, validator::Validator},
-    network::specific::U256,
     print_debug,
     protocol::data_package::DataPackage,
+    types::Value,
     utils::median::Median,
 };
 
-type Matrix = Vec<Vec<Option<U256>>>;
+type Matrix = Vec<Vec<Option<Value>>>;
 
 /// Aggregates values from a collection of data packages according to the provided configuration.
 ///
@@ -35,18 +35,23 @@ type Matrix = Vec<Vec<Option<U256>>>;
 ///
 /// This function is internal to the crate (`pub(crate)`) and not exposed as part of the public API. It is
 /// designed to be used by other components within the same crate that require value aggregation functionality.
-pub(crate) fn aggregate_values(config: Config, data_packages: Vec<DataPackage>) -> Vec<U256> {
+pub(crate) fn aggregate_values(config: Config, data_packages: Vec<DataPackage>) -> Vec<Value> {
     aggregate_matrix(make_value_signer_matrix(&config, data_packages), config)
 }
 
-fn aggregate_matrix(matrix: Matrix, config: Config) -> Vec<U256> {
+fn aggregate_matrix(matrix: Matrix, config: Config) -> Vec<Value> {
     matrix
         .iter()
         .enumerate()
         .map(|(index, values)| {
-            config
+            let median = config
                 .validate_signer_count_threshold(index, values)
-                .median()
+                .iter()
+                .map(|v| v.to_u256())
+                .collect::<Vec<_>>()
+                .median();
+
+            Value::from_u256(median)
         })
         .collect()
 }
@@ -153,8 +158,8 @@ mod make_value_signer_matrix {
             test_helpers::{AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2},
         },
         helpers::iter_into::IterInto,
-        network::specific::U256,
         protocol::data_package::DataPackage,
+        Value,
     };
 
     #[cfg(target_arch = "wasm32")]
@@ -286,9 +291,9 @@ mod make_value_signer_matrix {
             .iter()
             .map(|row| {
                 (row.iter()
-                    .map(|&value| value.map(U256::from))
+                    .map(|&value| value.map(Value::from))
                     .collect::<Vec<_>>())
-                .iter_into() as Vec<Option<U256>>
+                .iter_into() as Vec<Option<Value>>
             })
             .collect();
 
