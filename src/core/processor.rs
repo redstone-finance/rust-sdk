@@ -1,12 +1,11 @@
 use crate::{
-    core::{
-        aggregator::aggregate_values, config::Config, processor_result::ProcessorResult,
-        validator::Validator,
-    },
-    print_debug,
-    protocol::payload::Payload,
-    Bytes,
+    core::processor_result::ProcessorResult,
+    network::Environment,
+    protocol::{payload::Payload, PayloadDecoder},
+    Bytes, RedstoneConfig,
 };
+
+use crate::core::{aggregator::aggregate_values, config::Config, validator::Validator};
 
 /// The main processor of the RedStone payload.
 ///
@@ -15,15 +14,18 @@ use crate::{
 ///
 /// * `config` - Configuration of the payload processing.
 /// * `payload_bytes` - Network-specific byte-list of the payload to be processed.
-pub fn process_payload(config: Config, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
-    let mut bytes = payload_bytes.into();
-    let payload = Payload::make(&mut bytes.0);
-    print_debug!("{:?}", payload);
-
-    make_processor_result(config, payload)
+pub fn process_payload(
+    config: &impl RedstoneConfig,
+    payload_bytes: impl Into<Bytes>,
+) -> ProcessorResult {
+    config.process_payload(payload_bytes)
 }
 
-fn make_processor_result(config: Config, payload: Payload) -> ProcessorResult {
+trait RedstonePayloadProcessor {
+    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult;
+}
+
+fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) -> ProcessorResult {
     let min_timestamp = payload
         .data_packages
         .iter()
@@ -34,11 +36,23 @@ fn make_processor_result(config: Config, payload: Payload) -> ProcessorResult {
 
     let values = aggregate_values(config, payload.data_packages);
 
-    print_debug!("{} {:?}", min_timestamp, values);
+    Env::print(|| format!("{:?} {:?}", min_timestamp, values));
 
     ProcessorResult {
         values,
         min_timestamp,
+    }
+}
+
+impl<T: RedstoneConfig> RedstonePayloadProcessor for T {
+    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
+        let mut bytes = payload_bytes.into();
+        let payload =
+            PayloadDecoder::<T::Environment, T::RecoverPublicKey>::make_payload(&mut bytes.0);
+
+        T::Environment::print(|| format!("{:?}", payload));
+
+        make_processor_result::<T::Environment>(self.config(), payload)
     }
 }
 
@@ -55,6 +69,7 @@ mod tests {
             },
         },
         helpers::iter_into::IterInto,
+        network::StdEnv,
         protocol::{data_package::DataPackage, payload::Payload},
     };
 
@@ -90,7 +105,7 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result(Config::test(), Payload { data_packages });
+        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
 
         assert_eq!(
             result,
