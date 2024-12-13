@@ -33,7 +33,7 @@ pub trait RedstoneConfig {
 
 /// Standard nonspecialized implementation of the RedstoneConfig.
 /// See [crate::crypto::DefaultCrypto] for more information about crypto ops used.
-/// Constructuble from the `[crate::core::Config]`
+/// Constructuble from the [crate::core::config::Config]
 pub struct StdConfig(Config);
 
 impl From<Config> for StdConfig {
