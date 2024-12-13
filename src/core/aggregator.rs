@@ -6,6 +6,8 @@ use crate::{
     utils::median::Median,
 };
 
+use crate::core::validator::ValidationError;
+
 type Matrix = Vec<Vec<Option<Value>>>;
 
 /// Aggregates values from a collection of data packages according to the provided configuration.
@@ -35,23 +37,26 @@ type Matrix = Vec<Vec<Option<Value>>>;
 ///
 /// This function is internal to the crate (`pub(crate)`) and not exposed as part of the public API. It is
 /// designed to be used by other components within the same crate that require value aggregation functionality.
-pub(crate) fn aggregate_values(config: &Config, data_packages: Vec<DataPackage>) -> Vec<Value> {
+pub(crate) fn aggregate_values(
+    config: &Config,
+    data_packages: Vec<DataPackage>,
+) -> Result<Vec<Value>, ValidationError> {
     aggregate_matrix(make_value_signer_matrix(config, data_packages), config)
 }
 
-fn aggregate_matrix(matrix: Matrix, config: &Config) -> Vec<Value> {
+fn aggregate_matrix(matrix: Matrix, config: &Config) -> Result<Vec<Value>, ValidationError> {
     matrix
         .iter()
         .enumerate()
         .map(|(index, values)| {
             let median = config
-                .validate_signer_count_threshold(index, values)
+                .validate_signer_count_threshold(index, values)?
                 .iter()
                 .map(|v| v.to_u256())
                 .collect::<Vec<_>>()
                 .median();
 
-            Value::from_u256(median)
+            Ok(Value::from_u256(median))
         })
         .collect()
 }
@@ -78,7 +83,7 @@ fn make_value_signer_matrix(config: &Config, data_packages: Vec<DataPackage>) ->
 #[cfg(test)]
 mod aggregate_matrix_tests {
     use crate::{
-        core::{aggregator::aggregate_matrix, config::Config},
+        core::{aggregator::aggregate_matrix, config::Config, validator::ValidationError},
         helpers::iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
     };
 
@@ -98,7 +103,7 @@ mod aggregate_matrix_tests {
 
             let result = aggregate_matrix(matrix.clone(), &config);
 
-            assert_eq!(result, vec![12u8, 22].iter_into());
+            assert_eq!(result, Ok(vec![12u8, 22].iter_into()));
         }
     }
 
@@ -114,7 +119,7 @@ mod aggregate_matrix_tests {
 
         let result = aggregate_matrix(matrix, &config);
 
-        assert_eq!(result, vec![12u8, 21].iter_into());
+        assert_eq!(result, Ok(vec![12u8, 21].iter_into()));
     }
 
     #[should_panic(expected = "Array is empty")]
@@ -125,10 +130,11 @@ mod aggregate_matrix_tests {
 
         let matrix = vec![vec![11u8, 13].iter_into_opt(), vec![None; 2]];
 
-        aggregate_matrix(matrix, &config);
+        let res = aggregate_matrix(matrix, &config);
+
+        assert_eq!(res, Err(ValidationError::InsufficientSignerCount))
     }
 
-    #[should_panic(expected = "Insufficient signer count 1 for #0 (ETH)")]
     #[test]
     fn test_aggregate_matrix_missing_one_value() {
         let matrix = vec![
@@ -136,15 +142,17 @@ mod aggregate_matrix_tests {
             vec![11u8, 12].iter_into_opt(),
         ];
 
-        aggregate_matrix(matrix, &Config::test());
+        let res = aggregate_matrix(matrix, &Config::test());
+
+        assert_eq!(res, Err(ValidationError::InsufficientSignerCount))
     }
 
-    #[should_panic(expected = "Insufficient signer count 0 for #1 (BTC)")]
     #[test]
     fn test_aggregate_matrix_missing_whole_feed() {
         let matrix = vec![vec![11u8, 13].iter_into_opt(), vec![None; 2]];
+        let res = aggregate_matrix(matrix, &Config::test());
 
-        aggregate_matrix(matrix, &Config::test());
+        assert_eq!(res, Err(ValidationError::InsufficientSignerCount))
     }
 }
 

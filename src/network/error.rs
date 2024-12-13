@@ -5,22 +5,23 @@ use crate::{
 };
 use std::fmt::{Debug, Display, Formatter};
 
-pub trait ContractErrorContent: Debug {
-    fn code(&self) -> u8;
-    fn message(&self) -> String;
+#[derive(Debug, Clone)]
+pub struct ContractErrorContent {
+    pub code: u8,
+    pub msg: String,
 }
 
 /// Errors that can be encountered in the deserializing&decrypting the RedStone payload or just contract execution process.
 ///
 /// These errors include issues with contract logic, data types,
 /// cryptographic operations, and conditions specific to the requirements.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Error {
     /// Represents errors that arise from the contract itself.
     ///
     /// This variant is used for encapsulating errors that are specific to the contract's logic
     /// or execution conditions that aren't covered by more specific error types.
-    ContractError(Box<dyn ContractErrorContent>),
+    ContractError(ContractErrorContent),
 
     /// Indicates an overflow error with `U256` numbers.
     ///
@@ -75,22 +76,12 @@ pub enum Error {
     /// Similar to `TimestampTooOld`, but for future timestamps exceeding the contract's
     /// acceptance window.
     TimestampTooFuture(usize, TimestampMillis),
-
-    /// Represents errors that need to clone `ContractErrorContent`, which is not supported by default.
-    ///
-    /// This variant allows for the manual duplication of contract error information, including
-    /// an error code and a descriptive message.
-    ClonedContractError(u8, String),
 }
 
 impl Error {
-    pub fn contract_error<T: ContractErrorContent + 'static>(value: T) -> Error {
-        Error::ContractError(Box::new(value))
-    }
-
     pub fn code(&self) -> u16 {
         match self {
-            Error::ContractError(boxed) => boxed.code() as u16,
+            Error::ContractError(content) => content.code as u16,
             Error::NumberOverflow(_) => 509,
             Error::ArrayIsEmpty => 510,
             Error::WrongRedStoneMarker(_) => 511,
@@ -102,7 +93,6 @@ impl Error {
             Error::CryptographicError(size) => 700 + *size as u16,
             Error::TimestampTooOld(data_package_index, _) => 1000 + *data_package_index as u16,
             Error::TimestampTooFuture(data_package_index, _) => 1050 + *data_package_index as u16,
-            Error::ClonedContractError(code, _) => *code as u16,
         }
     }
 }
@@ -110,7 +100,7 @@ impl Error {
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::ContractError(boxed) => write!(f, "Contract error: {}", boxed.message()),
+            Error::ContractError(boxed) => write!(f, "Contract error: {}", boxed.msg),
             Error::NumberOverflow(number) => write!(f, "Number overflow: {}", number.to_u256()),
             Error::ArrayIsEmpty => write!(f, "Array is empty"),
             Error::CryptographicError(size) => write!(f, "Cryptographic Error: {}", size),
@@ -140,37 +130,6 @@ impl Display for Error {
                 "Timestamp {:?} is too future for #{}",
                 value, data_package_index
             ),
-            Error::ClonedContractError(_, message) => {
-                write!(f, "(Cloned) Contract error: {}", message)
-            }
-        }
-    }
-}
-
-impl Clone for Error {
-    fn clone(&self) -> Self {
-        match self {
-            Error::ContractError(content) => {
-                Error::ClonedContractError(content.code(), content.message())
-            }
-            Error::NumberOverflow(value) => Error::NumberOverflow(*value),
-            Error::ArrayIsEmpty => Error::ArrayIsEmpty,
-            Error::CryptographicError(size) => Error::CryptographicError(*size),
-            Error::SizeNotSupported(size) => Error::SizeNotSupported(*size),
-            Error::WrongRedStoneMarker(bytes) => Error::WrongRedStoneMarker(bytes.clone()),
-            Error::NonEmptyPayloadRemainder(bytes) => {
-                Error::NonEmptyPayloadRemainder(bytes.clone())
-            }
-            Error::InsufficientSignerCount(count, needed, bytes) => {
-                Error::InsufficientSignerCount(*count, *needed, *bytes)
-            }
-            Error::TimestampTooOld(index, timestamp) => Error::TimestampTooOld(*index, *timestamp),
-            Error::TimestampTooFuture(index, timestamp) => {
-                Error::TimestampTooFuture(*index, *timestamp)
-            }
-            Error::ClonedContractError(code, message) => {
-                Error::ClonedContractError(*code, message.as_str().into())
-            }
         }
     }
 }
