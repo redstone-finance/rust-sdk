@@ -1,11 +1,34 @@
-use crate::{types::Value, TimestampMillis};
+use crate::{protocol::DecoderError, types::Value, TimestampMillis};
+
+use crate::core::validator::ValidationError;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ProcessorError {
+    Decoder(DecoderError),
+    Validation(ValidationError),
+    NoDataPackages,
+}
+
+impl From<DecoderError> for ProcessorError {
+    fn from(value: DecoderError) -> Self {
+        Self::Decoder(value)
+    }
+}
+
+impl From<ValidationError> for ProcessorError {
+    fn from(value: ValidationError) -> Self {
+        Self::Validation(value)
+    }
+}
+
+pub type ProcessorResult = Result<ValidatedPayload, ProcessorError>;
 
 /// Represents the result of processing the RedStone payload.
 ///
 /// This structure is used to encapsulate the outcome of a RedStone payload processing operation,
 /// particularly focusing on time-sensitive data and its associated values, according to the `Config`.
 #[derive(Debug, Eq, PartialEq)]
-pub struct ProcessorResult {
+pub struct ValidatedPayload {
     /// The minimum timestamp encountered during processing.
     ///
     /// This field captures the earliest time point (in milliseconds since the Unix epoch)
@@ -19,8 +42,8 @@ pub struct ProcessorResult {
     pub values: Vec<Value>,
 }
 
-impl From<ProcessorResult> for (TimestampMillis, Vec<Value>) {
-    fn from(result: ProcessorResult) -> Self {
-        (result.min_timestamp, result.values)
+impl From<ValidatedPayload> for (TimestampMillis, Vec<Value>) {
+    fn from(validated_payload: ValidatedPayload) -> Self {
+        (validated_payload.min_timestamp, validated_payload.values)
     }
 }
