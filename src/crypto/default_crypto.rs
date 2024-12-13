@@ -3,6 +3,7 @@ use sha3::{Digest, Keccak256};
 
 use crate::{crypto::RecoverPublicKey, Bytes};
 
+/// Default crypto operations. Uses k256 and sha3 crates.
 pub struct DefaultCrypto;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -37,8 +38,7 @@ impl RecoverPublicKey for DefaultCrypto {
         let recovered_key =
             VerifyingKey::recover_from_prehash(message_hash.as_ref(), &signature, recovery_id)
                 .map(|key| key.to_encoded_point(false))
-                .unwrap();
-        // .map_err(|_| CryptoError::RecoverPreHash)?;
+                .map_err(|_| CryptoError::RecoverPreHash)?;
 
         Ok(recovered_key.as_bytes().to_vec().into())
     }

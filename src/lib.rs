@@ -21,7 +21,6 @@ pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 
 /// Configuration for the redstone protocol.
 /// Pluggable with custom environments and possible speciallized crypto operations.
-
 pub trait RedstoneConfig {
     /// Crypto operations needed for address recovery.
     type RecoverPublicKey: RecoverPublicKey;
