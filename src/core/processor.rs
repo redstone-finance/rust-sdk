@@ -9,7 +9,7 @@ use crate::core::{aggregator::aggregate_values, config::Config, validator::Valid
 
 use crate::core::processor_result::ValidatedPayload;
 
-use super::processor_result::ProcessorError;
+use crate::core::processor_result::ProcessorError;
 
 /// The main processor of the RedStone payload.
 ///

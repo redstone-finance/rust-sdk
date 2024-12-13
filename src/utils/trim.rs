@@ -79,7 +79,7 @@ mod tests {
 
     use crate::utils::trim::TryTrim;
 
-    use super::TrimError;
+    use crate::utils::trim::TrimError;
 
     const MARKER_DECIMAL: u64 = 823907890102272;
 
