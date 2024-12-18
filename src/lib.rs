@@ -16,14 +16,14 @@ mod utils;
 use core::config::Config;
 use network::{Environment, StdEnv};
 
-pub use crypto::{CryptoError, DefaultCrypto, RecoverPublicKey};
+pub use crypto::{Crypto, CryptoError, DefaultCrypto};
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 
 /// Configuration for the redstone protocol.
 /// Pluggable with custom environments and possible speciallized crypto operations.
 pub trait RedStoneConfig {
     /// Crypto operations needed for address recovery.
-    type RecoverPublicKey: RecoverPublicKey;
+    type Crypto: Crypto;
     /// Environment in which we execute. Provides logging etc
     type Environment: Environment;
 
@@ -43,7 +43,7 @@ impl From<Config> for StdConfig {
 }
 
 impl RedStoneConfig for StdConfig {
-    type RecoverPublicKey = DefaultCrypto;
+    type Crypto = DefaultCrypto;
     type Environment = StdEnv;
 
     fn config(&self) -> &Config {
