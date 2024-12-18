@@ -34,7 +34,7 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
         .min()
         .unwrap();
 
-    let values = aggregate_values(config, payload.data_packages);
+    let values = aggregate_values(payload.data_packages, config);
 
     Env::print(|| format!("{:?} {:?}", min_timestamp, values));
 
