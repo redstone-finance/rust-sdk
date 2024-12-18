@@ -21,7 +21,7 @@ pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 
 /// Configuration for the redstone protocol.
 /// Pluggable with custom environments and possible speciallized crypto operations.
-pub trait RedstoneConfig {
+pub trait RedStoneConfig {
     /// Crypto operations needed for address recovery.
     type RecoverPublicKey: RecoverPublicKey;
     /// Environment in which we execute. Provides logging etc
@@ -31,7 +31,7 @@ pub trait RedstoneConfig {
     fn config(&self) -> &Config;
 }
 
-/// Standard nonspecialized implementation of the RedstoneConfig.
+/// Standard nonspecialized implementation of the RedStoneConfig.
 /// See [crate::crypto::DefaultCrypto] for more information about crypto ops used.
 /// Constructuble from the [crate::core::config::Config]
 pub struct StdConfig(Config);
@@ -42,7 +42,7 @@ impl From<Config> for StdConfig {
     }
 }
 
-impl RedstoneConfig for StdConfig {
+impl RedStoneConfig for StdConfig {
     type RecoverPublicKey = DefaultCrypto;
     type Environment = StdEnv;
 
