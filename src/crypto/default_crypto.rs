@@ -1,7 +1,7 @@
 use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 use sha3::{Digest, Keccak256};
 
-use crate::{crypto::RecoverPublicKey, Bytes};
+use crate::{crypto::Crypto, Bytes};
 
 /// Default crypto operations. Uses k256 and sha3 crates.
 pub struct DefaultCrypto;
@@ -16,7 +16,7 @@ pub enum CryptoError {
 
 type CryptoResult<T> = Result<T, CryptoError>;
 
-impl RecoverPublicKey for DefaultCrypto {
+impl Crypto for DefaultCrypto {
     type Error = CryptoError;
     type KeccakOutput = [u8; 32];
 

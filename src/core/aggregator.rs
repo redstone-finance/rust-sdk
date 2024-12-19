@@ -38,8 +38,8 @@ type Matrix = Vec<Vec<Option<Value>>>;
 /// This function is internal to the crate (`pub(crate)`) and not exposed as part of the public API. It is
 /// designed to be used by other components within the same crate that require value aggregation functionality.
 pub(crate) fn aggregate_values(
-    config: &Config,
     data_packages: Vec<DataPackage>,
+    config: &Config,
 ) -> Result<Vec<Value>, ValidationError> {
     aggregate_matrix(make_value_signer_matrix(config, data_packages), config)
 }

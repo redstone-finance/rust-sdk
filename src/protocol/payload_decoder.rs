@@ -1,4 +1,5 @@
 use crate::{
+    crypto::Crypto,
     network::Environment,
     protocol::{
         constants::{
@@ -11,7 +12,7 @@ use crate::{
         payload::Payload,
     },
     utils::trim::{Trim, TrimError, TryTrim},
-    RecoverPublicKey, TimestampMillis,
+    TimestampMillis,
 };
 use core::marker::PhantomData;
 
@@ -31,9 +32,9 @@ impl From<TrimError> for DecoderError {
     }
 }
 
-pub struct PayloadDecoder<Env: Environment, RPK: RecoverPublicKey>(PhantomData<(Env, RPK)>);
+pub struct PayloadDecoder<Env: Environment, C: Crypto>(PhantomData<(Env, C)>);
 
-impl<Env: Environment, RPK: RecoverPublicKey> PayloadDecoder<Env, RPK> {
+impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
     pub fn make_payload(payload_bytes: &mut Vec<u8>) -> Result<Payload, DecoderError> {
         trim_redstone_marker(payload_bytes);
         let payload = Self::trim_payload(payload_bytes)?;
@@ -88,7 +89,7 @@ impl<Env: Environment, RPK: RecoverPublicKey> PayloadDecoder<Env, RPK> {
             + DATA_POINTS_COUNT_BS;
 
         let signable_bytes: Vec<_> = tmp.trim_end(size);
-        let signer_address = RPK::recover_address(signable_bytes, signature)
+        let signer_address = C::recover_address(signable_bytes, signature)
             .map_err(|_| DecoderError::RecoveryFailed)?;
 
         let data_points = Self::trim_data_points(payload, data_point_count, value_size)?;

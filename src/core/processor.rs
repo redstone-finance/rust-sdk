@@ -2,7 +2,7 @@ use crate::{
     core::processor_result::ProcessorResult,
     network::Environment,
     protocol::{payload::Payload, PayloadDecoder},
-    Bytes, RedstoneConfig,
+    Bytes, RedStoneConfig,
 };
 
 use crate::core::{aggregator::aggregate_values, config::Config, validator::Validator};
@@ -16,17 +16,41 @@ use crate::core::processor_result::ProcessorError;
 ///
 /// # Arguments
 ///
-/// * `config` - Configuration of the payload processing.
+/// * `config` - Something that implements `RedStoneConfig`. Provides environment and crypto operations.
 /// * `payload_bytes` - Network-specific byte-list of the payload to be processed.
+///
+/// # Returns
+///
+/// * Returns a `ProcessorResult` in case of succesfull payload processing. Will panic in case of bad input.
 pub fn process_payload(
-    config: &impl RedstoneConfig,
+    config: &impl RedStoneConfig,
     payload_bytes: impl Into<Bytes>,
 ) -> ProcessorResult {
     config.process_payload(payload_bytes)
 }
 
-trait RedstonePayloadProcessor {
+/// Internal trait, designed to extend `RedStoneConfig` implementations with ability to process payloads.
+trait RedStonePayloadProcessor {
+    /// Process given payload, panics in case of badly formed payload.
+    ///
+    /// # Arguments
+    /// * `payload_bytes` - Anything that can be transformed into `Bytes`
+    ///
+    /// # Returns
+    ///
+    /// * Returns a `ProcessorResult` in case of succesfull payload processing. Will panic in case of bad input.
     fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult;
+}
+
+impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
+    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
+        let mut bytes = payload_bytes.into();
+        let payload = PayloadDecoder::<T::Environment, T::Crypto>::make_payload(&mut bytes.0)?;
+
+        T::Environment::print(|| format!("{:?}", payload));
+
+        make_processor_result::<T::Environment>(self.config(), payload)
+    }
 }
 
 fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) -> ProcessorResult {
@@ -42,7 +66,7 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
         })
         .ok_or(ProcessorError::NoDataPackages)??;
 
-    let values = aggregate_values(config, payload.data_packages)?;
+    let values = aggregate_values(payload.data_packages, config)?;
 
     Env::print(|| format!("{:?} {:?}", min_timestamp, values));
 
@@ -50,18 +74,6 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
         values,
         min_timestamp,
     })
-}
-
-impl<T: RedstoneConfig> RedstonePayloadProcessor for T {
-    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
-        let mut bytes = payload_bytes.into();
-        let payload =
-            PayloadDecoder::<T::Environment, T::RecoverPublicKey>::make_payload(&mut bytes.0)?;
-
-        T::Environment::print(|| format!("{:?}", payload));
-
-        make_processor_result::<T::Environment>(self.config(), payload)
-    }
 }
 
 #[cfg(feature = "helpers")]

@@ -16,34 +16,34 @@ mod utils;
 use core::config::Config;
 use network::{Environment, StdEnv};
 
-pub use crypto::{CryptoError, DefaultCrypto, RecoverPublicKey};
+pub use crypto::{Crypto, CryptoError, DefaultCrypto};
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 
 /// Configuration for the redstone protocol.
-/// Pluggable with custom environments and possible speciallized crypto operations.
-pub trait RedstoneConfig {
+/// Pluggable with custom environments and possible specialized crypto operations.
+pub trait RedStoneConfig {
     /// Crypto operations needed for address recovery.
-    type RecoverPublicKey: RecoverPublicKey;
+    type Crypto: Crypto;
     /// Environment in which we execute. Provides logging etc
     type Environment: Environment;
 
-    /// returns config for payload decoding and validation.
+    /// Returns config for payload decoding and validation.
     fn config(&self) -> &Config;
 }
 
-/// Standard nonspecialized implementation of the RedstoneConfig.
+/// Standard nonspecialized implementation of the RedStoneConfig.
 /// See [crate::crypto::DefaultCrypto] for more information about crypto ops used.
-/// Constructuble from the [crate::core::config::Config]
-pub struct StdConfig(Config);
+/// Constructuble from the [crate::core::config::Config].
+pub struct StdRedStoneConfig(Config);
 
-impl From<Config> for StdConfig {
+impl From<Config> for StdRedStoneConfig {
     fn from(value: Config) -> Self {
         Self(value)
     }
 }
 
-impl RedstoneConfig for StdConfig {
-    type RecoverPublicKey = DefaultCrypto;
+impl RedStoneConfig for StdRedStoneConfig {
+    type Crypto = DefaultCrypto;
     type Environment = StdEnv;
 
     fn config(&self) -> &Config {
