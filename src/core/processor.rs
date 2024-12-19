@@ -1,29 +1,55 @@
 use crate::{
-    core::{
-        aggregator::aggregate_values, config::Config, processor_result::ProcessorResult,
-        validator::Validator,
-    },
-    print_debug,
-    protocol::payload::Payload,
-    Bytes,
+    core::processor_result::ProcessorResult,
+    network::Environment,
+    protocol::{payload::Payload, PayloadDecoder},
+    Bytes, RedStoneConfig,
 };
+
+use crate::core::{aggregator::aggregate_values, config::Config, validator::Validator};
 
 /// The main processor of the RedStone payload.
 ///
 ///
 /// # Arguments
 ///
-/// * `config` - Configuration of the payload processing.
+/// * `config` - Something that implements `RedStoneConfig`. Provides environment and crypto operations.
 /// * `payload_bytes` - Network-specific byte-list of the payload to be processed.
-pub fn process_payload(config: Config, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
-    let mut bytes = payload_bytes.into();
-    let payload = Payload::make(&mut bytes.0);
-    print_debug!("{:?}", payload);
-
-    make_processor_result(config, payload)
+///
+/// # Returns
+///
+/// * Returns a `ProcessorResult` in case of succesfull payload processing. Will panic in case of bad input.
+pub fn process_payload(
+    config: &impl RedStoneConfig,
+    payload_bytes: impl Into<Bytes>,
+) -> ProcessorResult {
+    config.process_payload(payload_bytes)
 }
 
-fn make_processor_result(config: Config, payload: Payload) -> ProcessorResult {
+/// Internal trait, designed to extend `RedStoneConfig` implementations with ability to process payloads.
+trait RedStonePayloadProcessor {
+    /// Process given payload, panics in case of badly formed payload.
+    ///
+    /// # Arguments
+    /// * `payload_bytes` - Anything that can be transformed into `Bytes`
+    ///
+    /// # Returns
+    ///
+    /// * Returns a `ProcessorResult` in case of succesfull payload processing. Will panic in case of bad input.
+    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult;
+}
+
+impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
+    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
+        let mut bytes = payload_bytes.into();
+        let payload = PayloadDecoder::<T::Environment, T::Crypto>::make_payload(&mut bytes.0);
+
+        T::Environment::print(|| format!("{:?}", payload));
+
+        make_processor_result::<T::Environment>(self.config(), payload)
+    }
+}
+
+fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) -> ProcessorResult {
     let min_timestamp = payload
         .data_packages
         .iter()
@@ -32,9 +58,9 @@ fn make_processor_result(config: Config, payload: Payload) -> ProcessorResult {
         .min()
         .unwrap();
 
-    let values = aggregate_values(config, payload.data_packages);
+    let values = aggregate_values(payload.data_packages, config);
 
-    print_debug!("{} {:?}", min_timestamp, values);
+    Env::print(|| format!("{:?} {:?}", min_timestamp, values));
 
     ProcessorResult {
         values,
@@ -55,6 +81,7 @@ mod tests {
             },
         },
         helpers::iter_into::IterInto,
+        network::StdEnv,
         protocol::{data_package::DataPackage, payload::Payload},
     };
 
@@ -90,7 +117,7 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result(Config::test(), Payload { data_packages });
+        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
 
         assert_eq!(
             result,

@@ -35,11 +35,11 @@ type Matrix = Vec<Vec<Option<Value>>>;
 ///
 /// This function is internal to the crate (`pub(crate)`) and not exposed as part of the public API. It is
 /// designed to be used by other components within the same crate that require value aggregation functionality.
-pub(crate) fn aggregate_values(config: Config, data_packages: Vec<DataPackage>) -> Vec<Value> {
-    aggregate_matrix(make_value_signer_matrix(&config, data_packages), config)
+pub(crate) fn aggregate_values(data_packages: Vec<DataPackage>, config: &Config) -> Vec<Value> {
+    aggregate_matrix(make_value_signer_matrix(config, data_packages), config)
 }
 
-fn aggregate_matrix(matrix: Matrix, config: Config) -> Vec<Value> {
+fn aggregate_matrix(matrix: Matrix, config: &Config) -> Vec<Value> {
     matrix
         .iter()
         .enumerate()
@@ -96,7 +96,7 @@ mod aggregate_matrix_tests {
             let mut config = Config::test();
             config.signer_count_threshold = signer_count_threshold as u8;
 
-            let result = aggregate_matrix(matrix.clone(), config);
+            let result = aggregate_matrix(matrix.clone(), &config);
 
             assert_eq!(result, vec![12u8, 22].iter_into());
         }
@@ -112,7 +112,7 @@ mod aggregate_matrix_tests {
             vec![21u8.into(), None].opt_iter_into_opt(),
         ];
 
-        let result = aggregate_matrix(matrix, config);
+        let result = aggregate_matrix(matrix, &config);
 
         assert_eq!(result, vec![12u8, 21].iter_into());
     }
@@ -125,7 +125,7 @@ mod aggregate_matrix_tests {
 
         let matrix = vec![vec![11u8, 13].iter_into_opt(), vec![None; 2]];
 
-        aggregate_matrix(matrix, config);
+        aggregate_matrix(matrix, &config);
     }
 
     #[should_panic(expected = "Insufficient signer count 1 for #0 (ETH)")]
@@ -136,7 +136,7 @@ mod aggregate_matrix_tests {
             vec![11u8, 12].iter_into_opt(),
         ];
 
-        aggregate_matrix(matrix, Config::test());
+        aggregate_matrix(matrix, &Config::test());
     }
 
     #[should_panic(expected = "Insufficient signer count 0 for #1 (BTC)")]
@@ -144,7 +144,7 @@ mod aggregate_matrix_tests {
     fn test_aggregate_matrix_missing_whole_feed() {
         let matrix = vec![vec![11u8, 13].iter_into_opt(), vec![None; 2]];
 
-        aggregate_matrix(matrix, Config::test());
+        aggregate_matrix(matrix, &Config::test());
     }
 }
 
