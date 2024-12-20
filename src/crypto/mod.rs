@@ -3,10 +3,25 @@ use core::fmt::Debug;
 
 mod default_crypto;
 
-pub use default_crypto::{CryptoError, DefaultCrypto};
+pub use default_crypto::DefaultCrypto;
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum CryptoError {
+    RecoveryByte(u8),
+    Signature(Vec<u8>),
+    RecoverPreHash,
+}
+impl CryptoError {
+    pub fn code(&self) -> u16 {
+        match self {
+            CryptoError::RecoveryByte(byte) => *byte as u16,
+            CryptoError::Signature(vec) => vec.len() as u16,
+            CryptoError::RecoverPreHash => 0,
+        }
+    }
+}
 
 pub trait Crypto {
-    type Error: Debug + PartialEq;
     type KeccakOutput: AsRef<[u8]>;
 
     fn keccak256(input: impl AsRef<[u8]>) -> Self::KeccakOutput;
@@ -15,12 +30,12 @@ pub trait Crypto {
         recovery_byte: u8,
         signature_bytes: impl AsRef<[u8]>,
         message_hash: Self::KeccakOutput,
-    ) -> Result<Bytes, Self::Error>;
+    ) -> Result<Bytes, CryptoError>;
 
     fn recover_address<A: AsRef<[u8]>, B: AsRef<[u8]>>(
         message: A,
         signature: B,
-    ) -> Result<SignerAddress, Self::Error> {
+    ) -> Result<SignerAddress, CryptoError> {
         let recovery_byte = signature.as_ref()[64]; // 65-byte representation
         let msg_hash = Self::keccak256(message);
         let key = Self::recover_public_key(

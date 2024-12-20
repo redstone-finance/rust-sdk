@@ -1,5 +1,6 @@
 use crate::{
-    network::{assert::Assert, error::Error, Environment},
+    crypto::Crypto,
+    network::{error::Error, Environment},
     protocol::{
         constants::{
             DATA_FEED_ID_BS, DATA_PACKAGES_COUNT_BS, DATA_POINTS_COUNT_BS,
@@ -8,83 +9,88 @@ use crate::{
         },
         data_package::DataPackage,
         data_point::DataPoint,
-        marker,
         payload::Payload,
     },
-    utils::trim::Trim,
-    Crypto, TimestampMillis,
+    utils::trim::{Trim, TryTrim},
+    TimestampMillis,
 };
 use core::marker::PhantomData;
 
-use self::marker::trim_redstone_marker;
+use crate::protocol::marker::trim_redstone_marker;
 
 pub struct PayloadDecoder<Env: Environment, C: Crypto>(PhantomData<(Env, C)>);
 
 impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
-    pub fn make_payload(payload_bytes: &mut Vec<u8>) -> Payload {
+    pub fn make_payload(payload_bytes: &mut Vec<u8>) -> Result<Payload, Error> {
         trim_redstone_marker(payload_bytes);
-        let payload = Self::trim_payload(payload_bytes);
+        let payload = Self::trim_payload(payload_bytes)?;
 
-        payload_bytes.assert_or_revert(
-            |payload_bytes| payload_bytes.is_empty(),
-            |payload_bytes| Error::NonEmptyPayloadRemainder(payload_bytes.as_slice().to_vec()),
-        );
+        if !payload_bytes.is_empty() {
+            return Err(Error::NonEmptyPayloadRemainder(payload_bytes.len()));
+        }
 
-        payload
+        Ok(payload)
     }
 
-    fn trim_payload(payload: &mut Vec<u8>) -> Payload {
-        let data_package_count = Self::trim_metadata(payload);
-        let data_packages = Self::trim_data_packages(payload, data_package_count);
+    fn trim_payload(payload: &mut Vec<u8>) -> Result<Payload, Error> {
+        let data_package_count = Self::trim_metadata(payload)?;
+        let data_packages = Self::trim_data_packages(payload, data_package_count)?;
 
-        Payload { data_packages }
+        Ok(Payload { data_packages })
     }
 
-    fn trim_metadata(payload: &mut Vec<u8>) -> usize {
-        let unsigned_metadata_size = payload.trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS);
+    fn trim_metadata(payload: &mut Vec<u8>) -> Result<usize, Error> {
+        let unsigned_metadata_size = payload.try_trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS)?;
         let _: Vec<u8> = payload.trim_end(unsigned_metadata_size);
 
-        payload.trim_end(DATA_PACKAGES_COUNT_BS)
+        let data_package_count = payload.try_trim_end(DATA_PACKAGES_COUNT_BS)?;
+
+        Ok(data_package_count)
     }
 
-    fn trim_data_packages(payload: &mut Vec<u8>, count: usize) -> Vec<DataPackage> {
+    fn trim_data_packages(payload: &mut Vec<u8>, count: usize) -> Result<Vec<DataPackage>, Error> {
         let mut data_packages = Vec::with_capacity(count);
 
         for _ in 0..count {
-            let data_package = Self::trim_data_package(payload);
+            let data_package = Self::trim_data_package(payload)?;
             data_packages.push(data_package);
         }
 
-        data_packages
+        Ok(data_packages)
     }
 
-    fn trim_data_package(payload: &mut Vec<u8>) -> DataPackage {
+    fn trim_data_package(payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
         let signature: Vec<u8> = payload.trim_end(SIGNATURE_BS);
         let mut tmp = payload.clone();
 
-        let data_point_count = payload.trim_end(DATA_POINTS_COUNT_BS);
-        let value_size = payload.trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS);
-        let timestamp = payload.trim_end(TIMESTAMP_BS);
+        let data_point_count = payload.try_trim_end(DATA_POINTS_COUNT_BS)?;
+        let value_size = payload.try_trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS)?;
+        let timestamp = payload.try_trim_end(TIMESTAMP_BS)?;
         let size = data_point_count * (value_size + DATA_FEED_ID_BS)
             + DATA_POINT_VALUE_BYTE_SIZE_BS
             + TIMESTAMP_BS
             + DATA_POINTS_COUNT_BS;
 
         let signable_bytes: Vec<_> = tmp.trim_end(size);
-        let signer_address = C::recover_address(signable_bytes, signature)
-            .expect("Todo: result like error handling");
+        let signer_address = C::recover_address(signable_bytes, signature)?;
 
-        let data_points = Self::trim_data_points(payload, data_point_count, value_size);
+        let data_points = Self::trim_data_points(payload, data_point_count, value_size)?;
 
-        DataPackage {
+        Ok(DataPackage {
             data_points,
             timestamp: TimestampMillis::from_millis(timestamp),
             signer_address,
-        }
+        })
     }
 
-    fn trim_data_points(payload: &mut Vec<u8>, count: usize, value_size: usize) -> Vec<DataPoint> {
-        count.assert_or_revert(|&count| count == 1, |&count| Error::SizeNotSupported(count));
+    fn trim_data_points(
+        payload: &mut Vec<u8>,
+        count: usize,
+        value_size: usize,
+    ) -> Result<Vec<DataPoint>, Error> {
+        if count != 1 {
+            return Err(Error::SizeNotSupported(count));
+        }
 
         let mut data_points = Vec::with_capacity(count);
 
@@ -93,7 +99,7 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
             data_points.push(data_point);
         }
 
-        data_points
+        Ok(data_points)
     }
 
     fn trim_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
@@ -113,7 +119,7 @@ mod tests {
     use crate::{
         crypto::DefaultCrypto,
         helpers::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex},
-        network::StdEnv,
+        network::{error::Error, StdEnv},
         protocol::{
             constants::{
                 DATA_FEED_ID_BS, DATA_POINTS_COUNT_BS, DATA_POINT_VALUE_BYTE_SIZE_BS,
@@ -150,7 +156,7 @@ mod tests {
             let result = TestProcessor::trim_metadata(&mut bytes);
 
             assert_eq!(bytes, hex_to_bytes(prefix.into()));
-            assert_eq!(result, 15);
+            assert_eq!(result, Ok(15));
         }
     }
 
@@ -159,7 +165,7 @@ mod tests {
         let payload_hex = sample_payload_bytes();
 
         let mut bytes = payload_hex[..payload_hex.len() - REDSTONE_MARKER_BS].into();
-        let payload = TestProcessor::trim_payload(&mut bytes);
+        let payload = TestProcessor::trim_payload(&mut bytes).unwrap();
 
         assert_eq!(bytes, Vec::<u8>::new());
         assert_eq!(payload.data_packages.len(), 15);
@@ -168,20 +174,20 @@ mod tests {
     #[test]
     fn test_make_payload() {
         let mut payload_hex = sample_payload_bytes();
-        let payload = TestProcessor::make_payload(&mut payload_hex);
+        let payload = TestProcessor::make_payload(&mut payload_hex).unwrap();
 
         assert_eq!(payload.data_packages.len(), 15);
     }
 
-    #[should_panic(expected = "Non empty payload remainder: 12")]
     #[test]
     fn test_make_payload_with_prefix() {
         let payload_hex = sample_payload_hex();
         let mut bytes = hex_to_bytes("12".to_owned() + &payload_hex);
-        let payload = TestProcessor::make_payload(&mut bytes);
+        let res = TestProcessor::make_payload(&mut bytes);
 
-        assert_eq!(payload.data_packages.len(), 15);
+        assert!(matches!(res, Err(Error::NonEmptyPayloadRemainder(1))));
     }
+
     const DATA_PACKAGE_BYTES_1: &str = "4554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000360cafc94e018d79bf0ba00000002000000151afa8c5c3caf6004b42c0fb17723e524f993b9ecbad3b9bce5ec74930fa436a3660e8edef10e96ee5f222de7ef5787c02ca467c0ec18daa2907b43ac20c63c11c";
     const DATA_PACKAGE_BYTES_2: &str = "4554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000360cdd851e018d79bf0ba000000020000001473fd9dc72e6814a7de719b403cf4c9eba08934a643fd0666c433b806b31e69904f2226ffd3c8ef75861b11b5e32a1fda4b1458e0da4605a772dfba2a812f3ee1b";
 
@@ -218,7 +224,7 @@ mod tests {
     #[test]
     fn test_trim_data_packages_single() {
         let mut bytes = hex_to_bytes(DATA_PACKAGE_BYTES_1.into());
-        let data_packages = TestProcessor::trim_data_packages(&mut bytes, 1);
+        let data_packages = TestProcessor::trim_data_packages(&mut bytes, 1).unwrap();
         assert_eq!(data_packages.len(), 1);
         assert_eq!(bytes, Vec::<u8>::new());
 
@@ -230,7 +236,7 @@ mod tests {
             hex_to_bytes((prefix.to_owned() + DATA_PACKAGE_BYTES_1) + DATA_PACKAGE_BYTES_2);
         let mut bytes = input.clone();
 
-        let data_packages = TestProcessor::trim_data_packages(&mut bytes, count);
+        let data_packages = TestProcessor::trim_data_packages(&mut bytes, count).unwrap();
 
         assert_eq!(data_packages.len(), count);
         assert_eq!(
@@ -295,7 +301,7 @@ mod tests {
 
     fn test_trim_data_package_of(bytes_str: &str, expected_value: u128, signer_address: &str) {
         let mut bytes: Vec<u8> = hex_to_bytes(bytes_str.into());
-        let result = TestProcessor::trim_data_package(&mut bytes);
+        let result = TestProcessor::trim_data_package(&mut bytes).unwrap();
         assert_eq!(
             bytes,
             hex_to_bytes(bytes_str[..bytes_str.len() - 2 * (DATA_PACKAGE_SIZE)].into())
@@ -320,7 +326,7 @@ mod tests {
     #[test]
     fn test_trim_data_points() {
         let mut bytes = hex_to_bytes(DATA_POINT_BYTES_TAIL.into());
-        let result = TestProcessor::trim_data_points(&mut bytes, 1, 32);
+        let result = TestProcessor::trim_data_points(&mut bytes, 1, 32).unwrap();
 
         assert_eq!(result.len(), 1);
 
@@ -333,16 +339,18 @@ mod tests {
         )
     }
 
-    #[should_panic(expected = "Size not supported: 0")]
     #[test]
     fn test_trim_zero_data_points() {
-        TestProcessor::trim_data_points(&mut hex_to_bytes(DATA_POINT_BYTES_TAIL.into()), 0, 32);
+        let res =
+            TestProcessor::trim_data_points(&mut hex_to_bytes(DATA_POINT_BYTES_TAIL.into()), 0, 32);
+        assert_eq!(res, Err(Error::SizeNotSupported(0)));
     }
 
-    #[should_panic(expected = "Size not supported: 2")]
     #[test]
     fn test_trim_two_data_points() {
-        TestProcessor::trim_data_points(&mut hex_to_bytes(DATA_POINT_BYTES_TAIL.into()), 2, 32);
+        let res =
+            TestProcessor::trim_data_points(&mut hex_to_bytes(DATA_POINT_BYTES_TAIL.into()), 2, 32);
+        assert_eq!(res, Err(Error::SizeNotSupported(2)));
     }
 
     #[test]

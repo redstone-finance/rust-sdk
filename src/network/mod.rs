@@ -3,7 +3,6 @@ pub mod assert;
 pub mod error;
 pub mod print_debug;
 
-// Todo: in future rewrite revert into rust-like Result flow
 // Todo: extend with logging capabilities etc.
 
 /// Environment in which the code executes.

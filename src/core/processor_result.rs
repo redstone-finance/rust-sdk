@@ -1,11 +1,13 @@
-use crate::{types::Value, TimestampMillis};
+use crate::{network::error::Error, types::Value, TimestampMillis};
+
+pub type ProcessorResult = Result<ValidatedPayload, Error>;
 
 /// Represents the result of processing the RedStone payload.
 ///
 /// This structure is used to encapsulate the outcome of a RedStone payload processing operation,
 /// particularly focusing on time-sensitive data and its associated values, according to the `Config`.
 #[derive(Debug, Eq, PartialEq)]
-pub struct ProcessorResult {
+pub struct ValidatedPayload {
     /// The minimum timestamp encountered during processing.
     ///
     /// This field captures the earliest time point (in milliseconds since the Unix epoch)
@@ -19,8 +21,8 @@ pub struct ProcessorResult {
     pub values: Vec<Value>,
 }
 
-impl From<ProcessorResult> for (TimestampMillis, Vec<Value>) {
-    fn from(result: ProcessorResult) -> Self {
-        (result.min_timestamp, result.values)
+impl From<ValidatedPayload> for (TimestampMillis, Vec<Value>) {
+    fn from(validated_payload: ValidatedPayload) -> Self {
+        (validated_payload.min_timestamp, validated_payload.values)
     }
 }

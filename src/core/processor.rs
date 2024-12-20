@@ -5,7 +5,9 @@ use crate::{
     Bytes, RedStoneConfig,
 };
 
-use crate::core::{aggregator::aggregate_values, config::Config, validator::Validator};
+use crate::core::{aggregator::aggregate_values, config::Config};
+
+use crate::core::processor_result::ValidatedPayload;
 
 /// The main processor of the RedStone payload.
 ///
@@ -41,7 +43,7 @@ trait RedStonePayloadProcessor {
 impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
     fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
         let mut bytes = payload_bytes.into();
-        let payload = PayloadDecoder::<T::Environment, T::Crypto>::make_payload(&mut bytes.0);
+        let payload = PayloadDecoder::<T::Environment, T::Crypto>::make_payload(&mut bytes.0)?;
 
         T::Environment::print(|| format!("{:?}", payload));
 
@@ -50,22 +52,16 @@ impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
 }
 
 fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) -> ProcessorResult {
-    let min_timestamp = payload
-        .data_packages
-        .iter()
-        .enumerate()
-        .map(|(index, dp)| config.validate_timestamp(index, dp.timestamp))
-        .min()
-        .unwrap();
+    let min_timestamp = payload.get_min_validated_timestamp(config)?;
 
-    let values = aggregate_values(payload.data_packages, config);
+    let values = aggregate_values(payload.data_packages, config)?;
 
     Env::print(|| format!("{:?} {:?}", min_timestamp, values));
 
-    ProcessorResult {
+    Ok(ValidatedPayload {
         values,
         min_timestamp,
-    }
+    })
 }
 
 #[cfg(feature = "helpers")]
@@ -75,7 +71,7 @@ mod tests {
         core::{
             config::Config,
             processor::make_processor_result,
-            processor_result::ProcessorResult,
+            processor_result::ValidatedPayload,
             test_helpers::{
                 BTC, ETH, TEST_BLOCK_TIMESTAMP, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2,
             },
@@ -121,10 +117,10 @@ mod tests {
 
         assert_eq!(
             result,
-            ProcessorResult {
+            Ok(ValidatedPayload {
                 min_timestamp: (TEST_BLOCK_TIMESTAMP - 2).into(),
                 values: vec![12u8, 31].iter_into()
-            }
+            })
         );
     }
 }

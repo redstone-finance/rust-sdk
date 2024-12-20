@@ -1,23 +1,14 @@
 use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 use sha3::{Digest, Keccak256};
 
-use crate::{crypto::Crypto, Bytes};
+use crate::{crypto::Crypto, Bytes, CryptoError};
 
 /// Default crypto operations. Uses k256 and sha3 crates.
 pub struct DefaultCrypto;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum CryptoError {
-    Keccak,
-    RecoveryByte(u8),
-    Signature(Vec<u8>),
-    RecoverPreHash,
-}
-
 type CryptoResult<T> = Result<T, CryptoError>;
 
 impl Crypto for DefaultCrypto {
-    type Error = CryptoError;
     type KeccakOutput = [u8; 32];
 
     fn keccak256(input: impl AsRef<[u8]>) -> Self::KeccakOutput {
