@@ -1,10 +1,4 @@
-use crate::FeedId;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TrimError {
-    U64ToUsize,
-    NumberOverflow,
-}
+use crate::{network::error::Error, FeedId, Value};
 
 pub trait Trim<T>
 where
@@ -17,8 +11,7 @@ pub trait TryTrim<T>
 where
     Self: Sized,
 {
-    type Error;
-    fn try_trim_end(&mut self, len: usize) -> Result<T, Self::Error>;
+    fn try_trim_end(&mut self, len: usize) -> Result<T, Error>;
 }
 
 impl Trim<Vec<u8>> for Vec<u8> {
@@ -40,24 +33,21 @@ impl Trim<FeedId> for Vec<u8> {
 }
 
 impl TryTrim<usize> for Vec<u8> {
-    type Error = TrimError;
-
-    fn try_trim_end(&mut self, len: usize) -> Result<usize, Self::Error> {
+    fn try_trim_end(&mut self, len: usize) -> Result<usize, Error> {
         let y: u64 = self.try_trim_end(len)?;
 
-        y.try_into().map_err(|_| TrimError::U64ToUsize)
+        y.try_into()
+            .map_err(|_| Error::NumberOverflow(Value::from(y)))
     }
 }
 
 impl TryTrim<u64> for Vec<u8> {
-    type Error = TrimError;
-
-    fn try_trim_end(&mut self, len: usize) -> Result<u64, Self::Error> {
+    fn try_trim_end(&mut self, len: usize) -> Result<u64, Error> {
         let y: Vec<u8> = self.trim_end(len);
         let y: Vec<u8> = y.into_iter().skip_while(|&b| b == 0).collect();
 
         if y.len() > 8 {
-            return Err(TrimError::NumberOverflow);
+            return Err(Error::NumberOverflow(y.into()));
         }
         let mut buff = [0; 8];
         buff[8 - y.len()..].copy_from_slice(&y);
@@ -77,9 +67,7 @@ mod tests {
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
-    use crate::utils::trim::TryTrim;
-
-    use crate::utils::trim::TrimError;
+    use crate::{network::error::Error, utils::trim::TryTrim};
 
     const MARKER_DECIMAL: u64 = 823907890102272;
 
@@ -164,7 +152,10 @@ mod tests {
     fn test_trim_end_u64_overflow_usize_wasm32() {
         let (_, output): (_, Result<usize, _>) = test_try_trim_end(REDSTONE_MARKER_BS);
 
-        assert_eq!(output, Err(TrimError::U64ToUsize));
+        assert_eq!(
+            output,
+            Err(Error::NumberOverflow(18446744073709551615_u128.into()))
+        );
     }
 
     #[test]
@@ -173,7 +164,12 @@ mod tests {
 
         let output: Result<u64, _> = bytes.try_trim_end(9);
 
-        assert_eq!(output, Err(TrimError::NumberOverflow));
+        assert_eq!(
+            output,
+            Err(Error::NumberOverflow(
+                vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9].into()
+            ))
+        );
     }
 
     fn test_trim_end<T>(size: usize) -> (Vec<u8>, T)
@@ -185,9 +181,7 @@ mod tests {
         (bytes, rest)
     }
 
-    type TestError<T> = <Vec<u8> as TryTrim<T>>::Error;
-
-    fn test_try_trim_end<T>(size: usize) -> (Vec<u8>, Result<T, TestError<T>>)
+    fn test_try_trim_end<T>(size: usize) -> (Vec<u8>, Result<T, Error>)
     where
         Vec<u8>: TryTrim<T>,
     {

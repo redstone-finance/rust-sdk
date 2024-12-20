@@ -113,27 +113,27 @@ mod unwrap_or_revert_tests {
 
     #[test]
     fn test_unwrap_or_revert_some() {
-        let result = Some(543).unwrap_or_revert(|_| Error::CryptographicError(333));
+        let result = Some(543).unwrap_or_revert(|_| Error::SizeNotSupported(333));
 
         assert_eq!(result, 543);
     }
 
-    #[should_panic(expected = "Cryptographic Error: 333")]
+    #[should_panic(expected = "Size not supported: 333")]
     #[test]
     fn test_unwrap_or_revert_none() {
-        (Option::<u64>::None).unwrap_or_revert(|_| Error::CryptographicError(333));
+        (Option::<u64>::None).unwrap_or_revert(|_| Error::SizeNotSupported(333));
     }
 
     #[test]
     fn test_unwrap_or_revert_ok() {
-        let result = Ok(256).unwrap_or_revert(|_: &Error| Error::CryptographicError(333));
+        let result = Ok(256).unwrap_or_revert(|_: &Error| Error::SizeNotSupported(333));
 
         assert_eq!(result, 256);
     }
 
-    #[should_panic(expected = "Cryptographic Error: 567")]
+    #[should_panic(expected = "Size not supported: 567")]
     #[test]
     fn test_unwrap_or_revert_err() {
-        Result::<&[u8], Error>::Err(Error::CryptographicError(567)).unwrap_or_revert(|e| e.clone());
+        Result::<&[u8], Error>::Err(Error::SizeNotSupported(567)).unwrap_or_revert(|e| e.clone());
     }
 }

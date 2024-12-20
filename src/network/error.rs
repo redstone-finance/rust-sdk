@@ -1,11 +1,11 @@
 use crate::{
     network::as_str::{AsAsciiStr, AsHexStr},
     types::Value,
-    FeedId, TimestampMillis,
+    CryptoError, FeedId, TimestampMillis,
 };
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ContractErrorContent {
     pub code: u8,
     pub msg: String,
@@ -15,7 +15,7 @@ pub struct ContractErrorContent {
 ///
 /// These errors include issues with contract logic, data types,
 /// cryptographic operations, and conditions specific to the requirements.
-#[derive(Debug, Clone)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub enum Error {
     /// Represents errors that arise from the contract itself.
     ///
@@ -38,8 +38,8 @@ pub enum Error {
     /// Represents errors related to cryptographic operations.
     ///
     /// This includes failures in signature verification, hashing, or other cryptographic
-    /// processes, with the usize indicating the position or identifier of the failed operation.
-    CryptographicError(usize),
+    /// processes.
+    CryptographicError(CryptoError),
 
     /// Signifies that an unsupported size was encountered.
     ///
@@ -57,7 +57,7 @@ pub enum Error {
     ///
     /// This could indicate an error in data parsing or that additional, unexpected data
     /// was included in a message or transaction.
-    NonEmptyPayloadRemainder(Vec<u8>),
+    NonEmptyPayloadRemainder(usize),
 
     /// Indicates that the number of signers does not meet the required threshold.
     ///
@@ -78,6 +78,12 @@ pub enum Error {
     TimestampTooFuture(usize, TimestampMillis),
 }
 
+impl From<CryptoError> for Error {
+    fn from(value: CryptoError) -> Self {
+        Self::CryptographicError(value)
+    }
+}
+
 impl Error {
     pub fn code(&self) -> u16 {
         match self {
@@ -90,7 +96,7 @@ impl Error {
                 (2000 + data_package_index * 10 + value) as u16
             }
             Error::SizeNotSupported(size) => 600 + *size as u16,
-            Error::CryptographicError(size) => 700 + *size as u16,
+            Error::CryptographicError(error) => 700 + error.code(),
             Error::TimestampTooOld(data_package_index, _) => 1000 + *data_package_index as u16,
             Error::TimestampTooFuture(data_package_index, _) => 1050 + *data_package_index as u16,
         }
@@ -103,13 +109,13 @@ impl Display for Error {
             Error::ContractError(boxed) => write!(f, "Contract error: {}", boxed.msg),
             Error::NumberOverflow(number) => write!(f, "Number overflow: {}", number.to_u256()),
             Error::ArrayIsEmpty => write!(f, "Array is empty"),
-            Error::CryptographicError(size) => write!(f, "Cryptographic Error: {}", size),
+            Error::CryptographicError(error) => write!(f, "Cryptographic Error: {:?}", error),
             Error::SizeNotSupported(size) => write!(f, "Size not supported: {}", size),
             Error::WrongRedStoneMarker(bytes) => {
                 write!(f, "Wrong RedStone marker: {}", bytes.as_hex_str())
             }
-            Error::NonEmptyPayloadRemainder(bytes) => {
-                write!(f, "Non empty payload remainder: {}", bytes.as_hex_str())
+            Error::NonEmptyPayloadRemainder(len) => {
+                write!(f, "Non empty payload len remainder: {}", len)
             }
             Error::InsufficientSignerCount(data_package_index, value, feed_id) => write!(
                 f,

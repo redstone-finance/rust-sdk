@@ -1,17 +1,11 @@
 use crate::{
     core::config::Config,
+    network::error::Error,
     protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
     types::Value,
     utils::filter::FilterSome,
     FeedId, SignerAddress, TimestampMillis,
 };
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ValidationError {
-    TimestampTooFuture,
-    TimestampTooOld,
-    InsufficientSignerCount,
-}
 /// A trait defining validation operations for data feeds and signers.
 ///
 /// This trait specifies methods for validating aspects of data feeds and signers within a system that
@@ -19,7 +13,6 @@ pub enum ValidationError {
 /// defining the logic behind each validation step, ensuring that data conforms to expected rules and
 /// conditions.
 pub(crate) trait Validator {
-    type Error;
     /// Retrieves the index of a given data feed.
     ///
     /// This method takes a `feed_id` representing the unique identifier of a data feed and
@@ -68,7 +61,7 @@ pub(crate) trait Validator {
         &self,
         index: usize,
         values: &[Option<Value>],
-    ) -> Result<Vec<Value>, Self::Error>;
+    ) -> Result<Vec<Value>, Error>;
 
     /// Validates the timestamp for a given index.
     ///
@@ -88,11 +81,10 @@ pub(crate) trait Validator {
         &self,
         index: usize,
         timestamp: TimestampMillis,
-    ) -> Result<TimestampMillis, Self::Error>;
+    ) -> Result<TimestampMillis, Error>;
 }
 
 impl Validator for Config {
-    type Error = ValidationError;
     #[inline]
     fn feed_index(&self, feed_id: FeedId) -> Option<usize> {
         self.feed_ids.iter().position(|&elt| elt == feed_id)
@@ -106,12 +98,16 @@ impl Validator for Config {
     #[inline]
     fn validate_signer_count_threshold(
         &self,
-        _: usize,
+        index: usize,
         values: &[Option<Value>],
-    ) -> Result<Vec<Value>, ValidationError> {
+    ) -> Result<Vec<Value>, Error> {
         let values = values.filter_some();
         if values.len() < self.signer_count_threshold as usize {
-            return Err(ValidationError::InsufficientSignerCount);
+            return Err(Error::InsufficientSignerCount(
+                index,
+                values.len(),
+                self.feed_ids[index],
+            ));
         }
 
         Ok(values)
@@ -120,17 +116,17 @@ impl Validator for Config {
     #[inline]
     fn validate_timestamp(
         &self,
-        _: usize,
+        index: usize,
         timestamp: TimestampMillis,
-    ) -> Result<TimestampMillis, ValidationError> {
+    ) -> Result<TimestampMillis, Error> {
         if !timestamp
             .add(MAX_TIMESTAMP_DELAY_MS)
             .is_after(self.block_timestamp)
         {
-            return Err(ValidationError::TimestampTooOld);
+            return Err(Error::TimestampTooOld(index, timestamp));
         }
         if !timestamp.is_before(self.block_timestamp.add(MAX_TIMESTAMP_AHEAD_MS)) {
-            return Err(ValidationError::TimestampTooFuture);
+            return Err(Error::TimestampTooFuture(index, timestamp));
         }
 
         Ok(timestamp)
@@ -146,12 +142,13 @@ mod tests {
             test_helpers::{
                 AVAX, BTC, ETH, TEST_BLOCK_TIMESTAMP, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2,
             },
-            validator::{ValidationError, Validator},
+            validator::Validator,
         },
         helpers::{
             hex::{hex_to_bytes, make_feed_id},
             iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
         },
+        network::error::Error,
         protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
         Value,
     };
@@ -217,34 +214,30 @@ mod tests {
 
     #[test]
     fn test_validate_timestamp_too_future() {
-        let res = Config::test().validate_timestamp(
-            0,
-            (TEST_BLOCK_TIMESTAMP + MAX_TIMESTAMP_AHEAD_MS + 1).into(),
-        );
+        let timestamp = (TEST_BLOCK_TIMESTAMP + MAX_TIMESTAMP_AHEAD_MS + 1).into();
+        let res = Config::test().validate_timestamp(0, timestamp);
 
-        assert_eq!(res, Err(ValidationError::TimestampTooFuture));
+        assert_eq!(res, Err(Error::TimestampTooFuture(0, timestamp)));
     }
 
     #[test]
     fn test_validate_timestamp_too_old() {
-        let res = Config::test().validate_timestamp(
-            1,
-            (TEST_BLOCK_TIMESTAMP - MAX_TIMESTAMP_DELAY_MS - 1).into(),
-        );
-        assert_eq!(res, Err(ValidationError::TimestampTooOld));
+        let timestamp = (TEST_BLOCK_TIMESTAMP - MAX_TIMESTAMP_DELAY_MS - 1).into();
+        let res = Config::test().validate_timestamp(1, timestamp);
+        assert_eq!(res, Err(Error::TimestampTooOld(1, timestamp)));
     }
 
     #[test]
     fn test_validate_timestamp_zero() {
         let res = Config::test().validate_timestamp(2, 0.into());
-        assert_eq!(res, Err(ValidationError::TimestampTooOld));
+        assert_eq!(res, Err(Error::TimestampTooOld(2, 0.into())));
     }
 
     #[test]
     fn test_validate_timestamp_big() {
-        let res = Config::test()
-            .validate_timestamp(3, (TEST_BLOCK_TIMESTAMP + TEST_BLOCK_TIMESTAMP).into());
-        assert_eq!(res, Err(ValidationError::TimestampTooFuture));
+        let timestamp = (TEST_BLOCK_TIMESTAMP + TEST_BLOCK_TIMESTAMP).into();
+        let res = Config::test().validate_timestamp(3, timestamp);
+        assert_eq!(res, Err(Error::TimestampTooFuture(3, timestamp)));
     }
 
     #[test]
@@ -254,30 +247,57 @@ mod tests {
         config.block_timestamp = 0.into();
         let res = config.validate_timestamp(4, TEST_BLOCK_TIMESTAMP.into());
 
-        assert_eq!(res, Err(ValidationError::TimestampTooFuture));
+        assert_eq!(
+            res,
+            Err(Error::TimestampTooFuture(4, TEST_BLOCK_TIMESTAMP.into()))
+        );
     }
 
     #[test]
     fn test_validate_signer_count_threshold_empty_list() {
-        let res = Config::test().validate_signer_count_threshold(0, vec![].as_slice());
-        assert_eq!(res, Err(ValidationError::InsufficientSignerCount));
+        let test_config = Config::test();
+        let res = test_config.validate_signer_count_threshold(0, vec![].as_slice());
+        assert_eq!(
+            res,
+            Err(Error::InsufficientSignerCount(
+                0,
+                0,
+                test_config.feed_ids[0]
+            ))
+        );
     }
 
     #[test]
     fn test_validate_signer_count_threshold_shorter_list() {
+        let test_config = Config::test();
         let res =
-            Config::test().validate_signer_count_threshold(1, vec![1u8].iter_into_opt().as_slice());
-        assert_eq!(res, Err(ValidationError::InsufficientSignerCount));
+            test_config.validate_signer_count_threshold(1, vec![1u8].iter_into_opt().as_slice());
+        assert_eq!(
+            res,
+            Err(Error::InsufficientSignerCount(
+                1,
+                1,
+                test_config.feed_ids[1]
+            ))
+        );
     }
 
     #[test]
     fn test_validate_signer_count_threshold_list_with_nones() {
-        let res = Config::test().validate_signer_count_threshold(
+        let test_config = Config::test();
+        let res = test_config.validate_signer_count_threshold(
             1,
             vec![None, 1u8.into(), None].opt_iter_into_opt().as_slice(),
         );
 
-        assert_eq!(res, Err(ValidationError::InsufficientSignerCount));
+        assert_eq!(
+            res,
+            Err(Error::InsufficientSignerCount(
+                1,
+                1,
+                test_config.feed_ids[1]
+            ))
+        );
     }
 
     #[test]

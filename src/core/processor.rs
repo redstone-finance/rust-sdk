@@ -1,6 +1,6 @@
 use crate::{
     core::processor_result::ProcessorResult,
-    network::Environment,
+    network::{error::Error, Environment},
     protocol::{payload::Payload, PayloadDecoder},
     Bytes, RedStoneConfig,
 };
@@ -8,8 +8,6 @@ use crate::{
 use crate::core::{aggregator::aggregate_values, config::Config, validator::Validator};
 
 use crate::core::processor_result::ValidatedPayload;
-
-use crate::core::processor_result::ProcessorError;
 
 /// The main processor of the RedStone payload.
 ///
@@ -64,7 +62,7 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
             (Err(_), _) => std::cmp::Ordering::Less,
             _ => std::cmp::Ordering::Greater,
         })
-        .ok_or(ProcessorError::NoDataPackages)??;
+        .ok_or(Error::ArrayIsEmpty)??;
 
     let values = aggregate_values(payload.data_packages, config)?;
 

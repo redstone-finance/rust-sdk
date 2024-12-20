@@ -1,12 +1,11 @@
 use crate::{
     core::{config::Config, validator::Validator},
+    network::error::Error,
     print_debug,
     protocol::data_package::DataPackage,
     types::Value,
     utils::median::Median,
 };
-
-use crate::core::validator::ValidationError;
 
 type Matrix = Vec<Vec<Option<Value>>>;
 
@@ -40,11 +39,11 @@ type Matrix = Vec<Vec<Option<Value>>>;
 pub(crate) fn aggregate_values(
     data_packages: Vec<DataPackage>,
     config: &Config,
-) -> Result<Vec<Value>, ValidationError> {
+) -> Result<Vec<Value>, Error> {
     aggregate_matrix(make_value_signer_matrix(config, data_packages), config)
 }
 
-fn aggregate_matrix(matrix: Matrix, config: &Config) -> Result<Vec<Value>, ValidationError> {
+fn aggregate_matrix(matrix: Matrix, config: &Config) -> Result<Vec<Value>, Error> {
     matrix
         .iter()
         .enumerate()
@@ -83,9 +82,11 @@ fn make_value_signer_matrix(config: &Config, data_packages: Vec<DataPackage>) ->
 #[cfg(test)]
 mod aggregate_matrix_tests {
     use crate::{
-        core::{aggregator::aggregate_matrix, config::Config, validator::ValidationError},
+        core::{aggregator::aggregate_matrix, config::Config},
         helpers::iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
     };
+
+    use crate::network::error::Error;
 
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
@@ -132,7 +133,10 @@ mod aggregate_matrix_tests {
 
         let res = aggregate_matrix(matrix, &config);
 
-        assert_eq!(res, Err(ValidationError::InsufficientSignerCount))
+        assert_eq!(
+            res,
+            Err(Error::InsufficientSignerCount(1, 0, config.feed_ids[1]))
+        )
     }
 
     #[test]
@@ -142,17 +146,25 @@ mod aggregate_matrix_tests {
             vec![11u8, 12].iter_into_opt(),
         ];
 
-        let res = aggregate_matrix(matrix, &Config::test());
+        let config = Config::test();
+        let res = aggregate_matrix(matrix, &config);
 
-        assert_eq!(res, Err(ValidationError::InsufficientSignerCount))
+        assert_eq!(
+            res,
+            Err(Error::InsufficientSignerCount(0, 1, config.feed_ids[0]))
+        )
     }
 
     #[test]
     fn test_aggregate_matrix_missing_whole_feed() {
         let matrix = vec![vec![11u8, 13].iter_into_opt(), vec![None; 2]];
-        let res = aggregate_matrix(matrix, &Config::test());
+        let config = Config::test();
+        let res = aggregate_matrix(matrix, &config);
 
-        assert_eq!(res, Err(ValidationError::InsufficientSignerCount))
+        assert_eq!(
+            res,
+            Err(Error::InsufficientSignerCount(1, 0, config.feed_ids[1]))
+        )
     }
 }
 

@@ -1,27 +1,6 @@
-use crate::{protocol::DecoderError, types::Value, TimestampMillis};
+use crate::{network::error::Error, types::Value, TimestampMillis};
 
-use crate::core::validator::ValidationError;
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ProcessorError {
-    Decoder(DecoderError),
-    Validation(ValidationError),
-    NoDataPackages,
-}
-
-impl From<DecoderError> for ProcessorError {
-    fn from(value: DecoderError) -> Self {
-        Self::Decoder(value)
-    }
-}
-
-impl From<ValidationError> for ProcessorError {
-    fn from(value: ValidationError) -> Self {
-        Self::Validation(value)
-    }
-}
-
-pub type ProcessorResult = Result<ValidatedPayload, ProcessorError>;
+pub type ProcessorResult = Result<ValidatedPayload, Error>;
 
 /// Represents the result of processing the RedStone payload.
 ///

@@ -1,6 +1,6 @@
 use crate::{
     crypto::Crypto,
-    network::Environment,
+    network::{error::Error, Environment},
     protocol::{
         constants::{
             DATA_FEED_ID_BS, DATA_PACKAGES_COUNT_BS, DATA_POINTS_COUNT_BS,
@@ -11,49 +11,35 @@ use crate::{
         data_point::DataPoint,
         payload::Payload,
     },
-    utils::trim::{Trim, TrimError, TryTrim},
+    utils::trim::{Trim, TryTrim},
     TimestampMillis,
 };
 use core::marker::PhantomData;
 
 use crate::protocol::marker::trim_redstone_marker;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DecoderError {
-    Trim(TrimError),
-    NonEmptyPayloadRemainder,
-    RecoveryFailed,
-    UnsupportedDataPointsCount,
-}
-
-impl From<TrimError> for DecoderError {
-    fn from(value: TrimError) -> Self {
-        Self::Trim(value)
-    }
-}
-
 pub struct PayloadDecoder<Env: Environment, C: Crypto>(PhantomData<(Env, C)>);
 
 impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
-    pub fn make_payload(payload_bytes: &mut Vec<u8>) -> Result<Payload, DecoderError> {
+    pub fn make_payload(payload_bytes: &mut Vec<u8>) -> Result<Payload, Error> {
         trim_redstone_marker(payload_bytes);
         let payload = Self::trim_payload(payload_bytes)?;
 
         if !payload_bytes.is_empty() {
-            return Err(DecoderError::NonEmptyPayloadRemainder);
+            return Err(Error::NonEmptyPayloadRemainder(payload_bytes.len()));
         }
 
         Ok(payload)
     }
 
-    fn trim_payload(payload: &mut Vec<u8>) -> Result<Payload, DecoderError> {
+    fn trim_payload(payload: &mut Vec<u8>) -> Result<Payload, Error> {
         let data_package_count = Self::trim_metadata(payload)?;
         let data_packages = Self::trim_data_packages(payload, data_package_count)?;
 
         Ok(Payload { data_packages })
     }
 
-    fn trim_metadata(payload: &mut Vec<u8>) -> Result<usize, DecoderError> {
+    fn trim_metadata(payload: &mut Vec<u8>) -> Result<usize, Error> {
         let unsigned_metadata_size = payload.try_trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS)?;
         let _: Vec<u8> = payload.trim_end(unsigned_metadata_size);
 
@@ -62,10 +48,7 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         Ok(data_package_count)
     }
 
-    fn trim_data_packages(
-        payload: &mut Vec<u8>,
-        count: usize,
-    ) -> Result<Vec<DataPackage>, DecoderError> {
+    fn trim_data_packages(payload: &mut Vec<u8>, count: usize) -> Result<Vec<DataPackage>, Error> {
         let mut data_packages = Vec::with_capacity(count);
 
         for _ in 0..count {
@@ -76,7 +59,7 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         Ok(data_packages)
     }
 
-    fn trim_data_package(payload: &mut Vec<u8>) -> Result<DataPackage, DecoderError> {
+    fn trim_data_package(payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
         let signature: Vec<u8> = payload.trim_end(SIGNATURE_BS);
         let mut tmp = payload.clone();
 
@@ -89,8 +72,7 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
             + DATA_POINTS_COUNT_BS;
 
         let signable_bytes: Vec<_> = tmp.trim_end(size);
-        let signer_address = C::recover_address(signable_bytes, signature)
-            .map_err(|_| DecoderError::RecoveryFailed)?;
+        let signer_address = C::recover_address(signable_bytes, signature)?;
 
         let data_points = Self::trim_data_points(payload, data_point_count, value_size)?;
 
@@ -105,9 +87,9 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         payload: &mut Vec<u8>,
         count: usize,
         value_size: usize,
-    ) -> Result<Vec<DataPoint>, DecoderError> {
+    ) -> Result<Vec<DataPoint>, Error> {
         if count != 1 {
-            return Err(DecoderError::UnsupportedDataPointsCount);
+            return Err(Error::SizeNotSupported(count));
         }
 
         let mut data_points = Vec::with_capacity(count);
@@ -137,7 +119,7 @@ mod tests {
     use crate::{
         crypto::DefaultCrypto,
         helpers::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex},
-        network::StdEnv,
+        network::{error::Error, StdEnv},
         protocol::{
             constants::{
                 DATA_FEED_ID_BS, DATA_POINTS_COUNT_BS, DATA_POINT_VALUE_BYTE_SIZE_BS,
@@ -145,7 +127,7 @@ mod tests {
             },
             data_package::DataPackage,
             data_point::DataPoint,
-            DecoderError, PayloadDecoder,
+            PayloadDecoder,
         },
         types::VALUE_SIZE,
         Value,
@@ -203,7 +185,7 @@ mod tests {
         let mut bytes = hex_to_bytes("12".to_owned() + &payload_hex);
         let res = TestProcessor::make_payload(&mut bytes);
 
-        assert!(matches!(res, Err(DecoderError::NonEmptyPayloadRemainder)));
+        assert!(matches!(res, Err(Error::NonEmptyPayloadRemainder(1))));
     }
 
     const DATA_PACKAGE_BYTES_1: &str = "4554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000360cafc94e018d79bf0ba00000002000000151afa8c5c3caf6004b42c0fb17723e524f993b9ecbad3b9bce5ec74930fa436a3660e8edef10e96ee5f222de7ef5787c02ca467c0ec18daa2907b43ac20c63c11c";
@@ -361,14 +343,14 @@ mod tests {
     fn test_trim_zero_data_points() {
         let res =
             TestProcessor::trim_data_points(&mut hex_to_bytes(DATA_POINT_BYTES_TAIL.into()), 0, 32);
-        assert_eq!(res, Err(DecoderError::UnsupportedDataPointsCount));
+        assert_eq!(res, Err(Error::SizeNotSupported(0)));
     }
 
     #[test]
     fn test_trim_two_data_points() {
         let res =
             TestProcessor::trim_data_points(&mut hex_to_bytes(DATA_POINT_BYTES_TAIL.into()), 2, 32);
-        assert_eq!(res, Err(DecoderError::UnsupportedDataPointsCount));
+        assert_eq!(res, Err(Error::SizeNotSupported(2)));
     }
 
     #[test]

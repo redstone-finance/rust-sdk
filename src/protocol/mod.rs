@@ -6,4 +6,4 @@ pub(crate) mod payload;
 
 mod payload_decoder;
 
-pub use payload_decoder::{DecoderError, PayloadDecoder};
+pub use payload_decoder::PayloadDecoder;
