@@ -154,7 +154,7 @@ mod tests {
 
         assert_eq!(
             output,
-            Err(Error::NumberOverflow(18446744073709551615_u128.into()))
+            Err(Error::NumberOverflow(823907890102272_u64.into()))
         );
     }
 
