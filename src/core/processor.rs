@@ -1,11 +1,11 @@
 use crate::{
     core::processor_result::ProcessorResult,
-    network::{error::Error, Environment},
+    network::Environment,
     protocol::{payload::Payload, PayloadDecoder},
     Bytes, RedStoneConfig,
 };
 
-use crate::core::{aggregator::aggregate_values, config::Config, validator::Validator};
+use crate::core::{aggregator::aggregate_values, config::Config};
 
 use crate::core::processor_result::ValidatedPayload;
 
@@ -52,17 +52,7 @@ impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
 }
 
 fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) -> ProcessorResult {
-    let min_timestamp = payload
-        .data_packages
-        .iter()
-        .enumerate()
-        .map(|(index, dp)| config.validate_timestamp(index, dp.timestamp))
-        .min_by(|a, b| match (a, b) {
-            (Ok(a), Ok(b)) => a.cmp(b),
-            (Err(_), _) => std::cmp::Ordering::Less,
-            _ => std::cmp::Ordering::Greater,
-        })
-        .ok_or(Error::ArrayIsEmpty)??;
+    let min_timestamp = payload.get_min_validated_timestamp(config)?;
 
     let values = aggregate_values(payload.data_packages, config)?;
 

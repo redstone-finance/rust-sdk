@@ -3,7 +3,7 @@ pub mod processor;
 pub mod processor_result;
 
 mod aggregator;
-mod validator;
+pub mod validator;
 
 pub use processor::process_payload;
 pub use processor_result::ProcessorResult;
