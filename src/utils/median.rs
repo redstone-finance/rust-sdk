@@ -1,10 +1,8 @@
-use crate::network::{assert::Assert, error::Error::ArrayIsEmpty};
 use std::ops::{Add, Rem, Shr};
-
 pub(crate) trait Median {
     type Item;
 
-    fn median(self) -> Self::Item;
+    fn median(self) -> Option<Self::Item>;
 }
 
 trait Avg {
@@ -38,10 +36,14 @@ where
 {
     type Item = T;
 
-    fn median(self) -> Self::Item {
+    fn median(self) -> Option<Self::Item> {
         let len = self.len();
 
-        match len.assert_or_revert(|x| *x > 0, |_| ArrayIsEmpty) {
+        if len == 0 {
+            return None;
+        }
+
+        let median = match len {
             1 => self[0],
             2 => self[0].avg(self[1]),
             3 => maybe_pick_median(self[0], self[1], self[2]).unwrap_or_else(|| {
@@ -60,7 +62,9 @@ where
                     values[mid]
                 }
             }
-        }
+        };
+
+        Some(median)
     }
 }
 
@@ -106,16 +110,17 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Array is empty")]
     fn test_median_empty_vector() {
         let vec: Vec<i32> = vec![];
 
-        vec.median();
+        let res = vec.median();
+
+        assert_eq!(res, None);
     }
 
     #[test]
     fn test_median_single_element() {
-        assert_eq!(vec![1].median(), 1);
+        assert_eq!(vec![1].median(), Some(1));
     }
 
     #[test]
@@ -171,7 +176,7 @@ mod tests {
         for perm in perms {
             let p: Vec<_> = perm.iter().map(|&&v| v).collect();
 
-            assert_eq!(p.median(), expected_value);
+            assert_eq!(p.median(), Some(expected_value));
         }
     }
 }

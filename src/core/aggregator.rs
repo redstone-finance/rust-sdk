@@ -53,7 +53,8 @@ fn aggregate_matrix(matrix: Matrix, config: &Config) -> Result<Vec<Value>, Error
                 .iter()
                 .map(|v| v.to_u256())
                 .collect::<Vec<_>>()
-                .median();
+                .median()
+                .ok_or(Error::ArrayIsEmpty)?;
 
             Ok(Value::from_u256(median))
         })
@@ -123,7 +124,6 @@ mod aggregate_matrix_tests {
         assert_eq!(result, Ok(vec![12u8, 21].iter_into()));
     }
 
-    #[should_panic(expected = "Array is empty")]
     #[test]
     fn test_aggregate_matrix_smaller_threshold_missing_whole_feed() {
         let mut config = Config::test();
@@ -133,10 +133,7 @@ mod aggregate_matrix_tests {
 
         let res = aggregate_matrix(matrix, &config);
 
-        assert_eq!(
-            res,
-            Err(Error::InsufficientSignerCount(1, 0, config.feed_ids[1]))
-        )
+        assert_eq!(res, Err(Error::ArrayIsEmpty))
     }
 
     #[test]
