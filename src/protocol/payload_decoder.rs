@@ -116,6 +116,7 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
 
 #[cfg(test)]
 #[cfg(feature = "helpers")]
+#[cfg(feature = "default-crypto")]
 mod tests {
     use alloc::{borrow::ToOwned, string::ToString, vec::Vec};
     use core::ops::Shr;

@@ -6,14 +6,19 @@ authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"
 
 [features]
-default = ["std"]
+default = ["std", "default-crypto"]
 
 std = [
     "primitive-types/std",
     "hex?/std",
-    "k256/std",
+    "k256?/std",
     "getrandom/std",
     "sha3/std",
+]
+
+# default crypto implementations
+default-crypto = [
+    "sha3", "k256"
 ]
 
 # An extension for Radix network
@@ -42,8 +47,8 @@ helpers = ["hex/serde", "hex/alloc"]
 casper-contract = { version = "^4.0.0", default-features = false, features = [], optional = true }
 casper-types = { version = "^4.0.2", default-features = false, features = [], optional = true }
 scrypto = { version = "^1.3.0", default-features = false, features = ["alloc"], optional = true }
-sha3 = { version = "^0.10.8", default-features = false, features = ["asm"] }
-k256 = { version = "^0.13.4", default-features = false, features = ["ecdsa"] }
+sha3 = { version = "^0.10.8", default-features = false, features = ["asm"], optional = true }
+k256 = { version = "^0.13.4", default-features = false, features = ["ecdsa"], optional = true }
 secp256k1 = { version = "^0.29.1", default-features = false, features = [], optional = true }
 hex = { version = "^0.4.3", default-features = false, features = [], optional = true }
 primitive-types = { version = "^0.13.1", default-features = false }
