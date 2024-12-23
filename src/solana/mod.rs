@@ -44,11 +44,10 @@ impl Crypto for SolanaCrypto {
         })?
         .to_bytes();
 
-        let mut uncompressed_key = [0u8; 65];
-        uncompressed_key[0] = 0x04;
-        uncompressed_key[1..].copy_from_slice(&key);
+        let mut uncompressed_key = vec![0x04];
+        uncompressed_key.extend_from_slice(&key);
 
-        Ok(uncompressed_key.to_vec().into())
+        Ok(uncompressed_key.into())
     }
 }
 
