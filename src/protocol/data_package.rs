@@ -1,6 +1,7 @@
-use crate::{protocol::data_point::DataPoint, SignerAddress, TimestampMillis};
-use std::fmt::{Debug, Formatter};
+use alloc::vec::Vec;
+use core::fmt::{Debug, Formatter};
 
+use crate::{protocol::data_point::DataPoint, SignerAddress, TimestampMillis};
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct DataPackage {
     pub(crate) signer_address: SignerAddress,
@@ -9,7 +10,7 @@ pub(crate) struct DataPackage {
 }
 
 impl Debug for DataPackage {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             // todo: fix hex display

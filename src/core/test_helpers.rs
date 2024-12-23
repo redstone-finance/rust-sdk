@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::{
     core::config::Config,
     helpers::hex::{hex_to_bytes, make_feed_id, make_feed_ids},

@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::{network::error::Error, types::Value, TimestampMillis};
 
 pub type ProcessorResult = Result<ValidatedPayload, Error>;

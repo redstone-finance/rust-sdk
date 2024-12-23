@@ -1,8 +1,9 @@
 CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged
 DOC=cargo doc --no-deps --document-private-items
 TEST=RUST_BACKTRACE=full cargo test --features="helpers"
-FEATURE_SETS="crypto_k256" "crypto_k256,casper" "crypto_secp256k1" "crypto_secp256k1,casper" "crypto_secp256k1,casper-test" "crypto_secp256k1,radix" "solana,pure"
+FEATURE_SETS="crypto_k256" "crypto_k256,casper" "crypto_secp256k1" "crypto_secp256k1,casper" "crypto_secp256k1,casper-test" "crypto_secp256k1,radix" "solana"
 WASM32_FEATURE_SETS="radix" "solana"
+
 prepare:
 	@rustup target add wasm32-unknown-unknown
 	cargo install wasm-bindgen-cli wasm-pack
@@ -10,7 +11,7 @@ prepare:
 test: clippy
 	@for features in $(WASM32_FEATURE_SETS); do \
         echo "Running tests with features: $$features"; \
-        (wasm-pack test --node --features="helpers" --features=$$features); \
+        (wasm-pack test --node --no-default-features --features="helpers" --features=$$features); \
     done
 	@for features in $(FEATURE_SETS); do \
         echo "Running tests with features: $$features"; \
@@ -36,6 +37,11 @@ clippy: prepare
 	@for features in $(FEATURE_SETS); do \
         ($(CLIPPY) --all-targets --features=$$features -- -D warnings); \
     done
+
+	# check all features enabled
+	($(CLIPPY) --all-targets --all-features -- -D warnings);
+	# check all features disabled
+	($(CLIPPY) --no-default-features --all-features -- -D warnings);
 
 check-lint: clippy
 	cargo fmt -- --check

@@ -1,5 +1,6 @@
-use crate::{FeedId, SignerAddress, TimestampMillis};
+use alloc::vec::Vec;
 
+use crate::{FeedId, SignerAddress, TimestampMillis};
 /// Configuration for a RedStone payload processor.
 ///
 /// Specifies the parameters necessary for the verification and aggregation of values

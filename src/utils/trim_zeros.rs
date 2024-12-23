@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 pub trait TrimZeros {
     fn trim_zeros(self) -> Self;
 }
@@ -22,10 +24,12 @@ impl TrimZeros for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{protocol::constants::REDSTONE_MARKER, utils::trim_zeros::TrimZeros};
+    use alloc::vec::Vec;
 
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
+
+    use crate::{protocol::constants::REDSTONE_MARKER, utils::trim_zeros::TrimZeros};
 
     fn redstone_marker_bytes() -> Vec<u8> {
         REDSTONE_MARKER.as_slice().into()

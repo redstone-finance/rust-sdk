@@ -1,6 +1,6 @@
 pub mod as_str;
 pub mod error;
-pub mod print_debug;
+use alloc::string::String;
 
 // Todo: extend with logging capabilities etc.
 
@@ -16,6 +16,7 @@ pub struct StdEnv;
 
 impl Environment for StdEnv {
     fn print<F: FnOnce() -> String>(print_content: F) {
+        #[cfg(feature = "std")]
         println!("{}", print_content())
     }
 }

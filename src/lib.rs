@@ -5,6 +5,12 @@
 //!
 //! Different crypto-mechanisms are easily injectable.
 //! The current implementation contains `secp256k1`- and `k256`-based variants.
+#![cfg_attr(not(feature = "std"), no_std)]
+
+// todo: uncomment #![cfg_attr(not(test), warn(unused_crate_dependencies))]
+
+#[macro_use]
+extern crate alloc;
 
 pub mod core;
 mod crypto;
@@ -20,14 +26,15 @@ pub mod solana;
 pub mod casper;
 
 #[cfg(feature = "radix")]
+#[cfg(target_arch = "wasm32")]
 pub mod radix;
 
 use ::core::marker::PhantomData;
-use core::config::Config;
-use network::{Environment, StdEnv};
-
 pub use crypto::{Crypto, CryptoError, DefaultCrypto};
+use network::{Environment, StdEnv};
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
+
+use crate::core::config::Config;
 
 /// Configuration for the redstone protocol.
 /// Pluggable with custom environments and possible specialized crypto operations.

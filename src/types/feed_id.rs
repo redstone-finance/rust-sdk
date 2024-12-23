@@ -1,6 +1,6 @@
-use crate::types::Sanitized;
+use alloc::vec::Vec;
 
-use crate::types::VALUE_SIZE;
+use crate::types::{Sanitized, VALUE_SIZE};
 
 /// Type describing feed ids.
 /// We expect FeedId to be byte string like b"EUR"

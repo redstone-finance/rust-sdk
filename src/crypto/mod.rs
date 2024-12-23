@@ -1,6 +1,7 @@
-use crate::{Bytes, SignerAddress};
+use alloc::vec::Vec;
 use core::fmt::Debug;
 
+use crate::{Bytes, SignerAddress};
 mod default_crypto;
 
 pub use default_crypto::DefaultCrypto;
@@ -52,6 +53,8 @@ pub trait Crypto {
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 pub mod recovery_key_tests {
+    use alloc::borrow::ToOwned;
+
     use crate::{helpers::hex::hex_to_bytes, Crypto};
 
     const MESSAGE: &str = "415641580000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d394303d018d79bf0ba000000020000001";
@@ -66,7 +69,7 @@ pub mod recovery_key_tests {
     const ADDRESS_V28: &str = "12470f7aBA85c8b81D63137DD5925D6EE114952b";
 
     /// run testcases against implementation of the RecovePublicKey.
-    pub fn run_all_testcases<T: Crypto>()
+    pub fn run_all_testcases<T>()
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
@@ -76,33 +79,27 @@ pub mod recovery_key_tests {
         test_recover_address_1c::<T>();
     }
 
-    fn test_recover_public_key_v27<T: Crypto>()
+    fn test_recover_public_key_v27<T>()
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
-        let public_key = T::recover_public_key(
-            0,
-            hex_to_bytes(SIG_V27.into()),
-            u8_slice(MESSAGE_HASH.into()),
-        );
+        let public_key =
+            T::recover_public_key(0, hex_to_bytes(SIG_V27.into()), u8_slice(MESSAGE_HASH));
 
         assert_eq!(Ok(hex_to_bytes(PUBLIC_KEY_V27.into()).into()), public_key);
     }
 
-    fn test_recover_public_key_v28<T: Crypto>()
+    fn test_recover_public_key_v28<T>()
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
-        let public_key = T::recover_public_key(
-            1,
-            hex_to_bytes(SIG_V28.into()),
-            u8_slice(MESSAGE_HASH.into()),
-        );
+        let public_key =
+            T::recover_public_key(1, hex_to_bytes(SIG_V28.into()), u8_slice(MESSAGE_HASH));
 
         assert_eq!(Ok(hex_to_bytes(PUBLIC_KEY_V28.into()).into()), public_key);
     }
 
-    fn test_recover_address_1b<T: Crypto>()
+    fn test_recover_address_1b<T>()
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
@@ -114,7 +111,7 @@ pub mod recovery_key_tests {
         assert_eq!(Ok(hex_to_bytes(ADDRESS_V27.into()).into()), address);
     }
 
-    fn test_recover_address_1c<T: Crypto>()
+    fn test_recover_address_1c<T>()
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
