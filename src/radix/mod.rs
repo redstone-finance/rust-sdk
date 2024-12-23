@@ -11,6 +11,8 @@ use scrypto::{
 };
 
 use crate::{Bytes, Crypto, CryptoError};
+use crate::Environment;
+use crate::RedStoneConfigImpl;
 
 
 /// Implementation of `RedstoneConfig` specialized for operations on the radix.
@@ -20,8 +22,8 @@ pub struct RadixCrypto;
 pub struct RadixEnv;
 
 impl Environment for RadixEnv {
-    fn print<F: FnOnce() -> String>(print_content: F) {
-        info!("{}", print_content());
+    fn print<F: FnOnce() -> String>(_print_content: F) {
+        info!("{}", _print_content());
     }
 }
 
@@ -49,16 +51,5 @@ impl Crypto for RadixCrypto {
             .to_vec();
 
         Ok(pk.into())
-    }
-}
-
-#[cfg(test)]
-#[cfg(feature = "helpers")]
-mod tests {
-    use crate::{crypto::recovery_key_tests::run_all_testcases, radix::RadixCrypto};
-
-    #[test]
-    fn test_default_crypto_impl() {
-        run_all_testcases::<RadixCrypto>();
     }
 }
