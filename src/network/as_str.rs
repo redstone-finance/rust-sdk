@@ -14,13 +14,6 @@ impl AsHexStr for &[u8] {
     }
 }
 
-#[cfg(feature = "network_casper")]
-impl AsHexStr for casper_types::bytesrepr::Bytes {
-    fn as_hex_str(&self) -> String {
-        self.as_slice().as_hex_str()
-    }
-}
-
 impl AsAsciiStr for FeedId {
     fn as_ascii_str(&self) -> String {
         self.0.to_vec().trim_zeros().as_ascii_str()

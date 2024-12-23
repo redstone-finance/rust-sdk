@@ -11,14 +11,12 @@ default = ["pure"]
 # Pure Rust, no specific network extension. Uses k256 for cryptographic
 pure = ["k256"]
 
-# An extension for Casper network
-network_casper = ["casper-contract/wee_alloc", "casper-types"]
-
 # An extension for Radix network
 network_radix = ["radix-common", "scrypto"]
 
-# An extension for debug-printing of messages in the Casper extension. Not supported by Casper Contracts deployed to the network.
-casper_debug = ["print_debug", "casper-contract/test-support"]
+# An extension setting usage on casper network.
+casper = ["casper-types"]
+casper-test = ["casper", "casper-contract/test-support"]
 
 # An extension for debug-printing of messages.
 print_debug = []
