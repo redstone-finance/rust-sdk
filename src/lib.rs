@@ -13,6 +13,10 @@ mod protocol;
 mod types;
 mod utils;
 
+#[cfg(feature = "solana")]
+pub mod solana;
+
+use ::core::marker::PhantomData;
 use core::config::Config;
 use network::{Environment, StdEnv};
 
@@ -31,23 +35,35 @@ pub trait RedStoneConfig {
     fn config(&self) -> &Config;
 }
 
+pub struct RedStoneConfigImpl<C, Env> {
+    inner: Config,
+    _phantom: PhantomData<(C, Env)>,
+}
+
 /// Standard nonspecialized implementation of the RedStoneConfig.
 /// See [crate::crypto::DefaultCrypto] for more information about crypto ops used.
 /// Constructuble from the [crate::core::config::Config].
-pub struct StdRedStoneConfig(Config);
+pub type StdRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, StdEnv>;
 
-impl From<Config> for StdRedStoneConfig {
+impl<C, Env> From<Config> for RedStoneConfigImpl<C, Env> {
     fn from(value: Config) -> Self {
-        Self(value)
+        Self {
+            inner: value,
+            _phantom: PhantomData,
+        }
     }
 }
 
-impl RedStoneConfig for StdRedStoneConfig {
-    type Crypto = DefaultCrypto;
-    type Environment = StdEnv;
+impl<C, E> RedStoneConfig for RedStoneConfigImpl<C, E>
+where
+    C: Crypto,
+    E: Environment,
+{
+    type Crypto = C;
+    type Environment = E;
 
     fn config(&self) -> &Config {
-        &self.0
+        &self.inner
     }
 }
 

@@ -33,7 +33,7 @@ crypto_k256 = ["k256/alloc", "k256/sha256", "k256/ecdsa"]
 crypto_radix = ["scrypto", "radix-common"]
 
 # A variant of decrypting the message-signers using Solana library.
-crypto_solana = ["anchor-lang"]
+solana = ["anchor-lang"]
 
 # A set of helpers for testing & offline usage.
 helpers = ["hex/serde", "hex/alloc"]
