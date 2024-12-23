@@ -13,7 +13,7 @@ std = [
     "hex?/std",
     "k256?/std",
     "getrandom/std",
-    "sha3/std",
+    "sha3?/std",
 ]
 
 # default crypto implementations
@@ -25,7 +25,7 @@ default-crypto = [
 radix = ["scrypto"]
 
 # An extension setting usage on casper network.
-casper = ["casper-types"]
+casper = ["casper-types", "default-crypto"]
 casper-test = ["casper", "casper-contract/test-support"]
 
 # An extension for debug-printing of messages.

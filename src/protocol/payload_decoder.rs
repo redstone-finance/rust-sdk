@@ -122,7 +122,7 @@ mod tests {
     use core::ops::Shr;
 
     use crate::{
-        crypto::DefaultCrypto,
+        default_ext::DefaultCrypto,
         helpers::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex},
         network::{error::Error, StdEnv},
         protocol::{

@@ -1,7 +1,12 @@
 use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 use sha3::{Digest, Keccak256};
 
-use crate::{crypto::Crypto, Bytes, CryptoError};
+use crate::{crypto::Crypto, network::StdEnv, Bytes, CryptoError, RedStoneConfigImpl};
+
+/// Standard nonspecialized implementation of the RedStoneConfig.
+/// See [crate::crypto::DefaultCrypto] for more information about crypto ops used.
+/// Constructuble from the [crate::core::config::Config].
+pub type StdRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, StdEnv>;
 
 /// Default crypto operations. Uses k256 and sha3 crates.
 pub struct DefaultCrypto;
@@ -38,7 +43,7 @@ impl Crypto for DefaultCrypto {
 #[cfg(test)]
 #[cfg(feature = "helpers")]
 mod test {
-    use crate::crypto::{recovery_key_tests::run_all_testcases, DefaultCrypto};
+    use crate::{crypto::recovery_key_tests::run_all_testcases, default_ext::DefaultCrypto};
 
     #[test]
     fn test_default_crypto_impl() {

@@ -31,7 +31,8 @@ pub mod radix;
 
 use ::core::marker::PhantomData;
 #[cfg(feature = "default-crypto")]
-pub use crypto::DefaultCrypto;
+pub mod default_ext;
+
 pub use crypto::{Crypto, CryptoError};
 use network::Environment;
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
@@ -54,15 +55,6 @@ pub struct RedStoneConfigImpl<C, Env> {
     inner: Config,
     _phantom: PhantomData<(C, Env)>,
 }
-
-#[cfg(feature = "default-crypto")]
-use crate::network::StdEnv;
-
-#[cfg(feature = "default-crypto")]
-/// Standard nonspecialized implementation of the RedStoneConfig.
-/// See [crate::crypto::DefaultCrypto] for more information about crypto ops used.
-/// Constructuble from the [crate::core::config::Config].
-pub type StdRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, StdEnv>;
 
 impl<C, Env> From<Config> for RedStoneConfigImpl<C, Env> {
     fn from(value: Config) -> Self {
