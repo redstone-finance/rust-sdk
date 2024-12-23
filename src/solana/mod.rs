@@ -1,4 +1,4 @@
-//! Solana extenstion
+//! Solana extension
 //!
 //! Implementations of the crypto operations using anchor_lang (solana) specific operations.
 
