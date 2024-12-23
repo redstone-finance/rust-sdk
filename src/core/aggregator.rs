@@ -1,7 +1,8 @@
+use alloc::vec::Vec;
+
 use crate::{
     core::{config::Config, validator::Validator},
     network::error::Error,
-    print_debug,
     protocol::data_package::DataPackage,
     types::Value,
     utils::median::Median,
@@ -74,23 +75,20 @@ fn make_value_signer_matrix(config: &Config, data_packages: Vec<DataPackage>) ->
         }
     });
 
-    print_debug!("{:?}", matrix);
-
     matrix
 }
 
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 mod aggregate_matrix_tests {
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     use crate::{
         core::{aggregator::aggregate_matrix, config::Config},
         helpers::iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
+        network::error::Error,
     };
-
-    use crate::network::error::Error;
-
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     #[test]
     fn test_aggregate_matrix() {
@@ -168,6 +166,9 @@ mod aggregate_matrix_tests {
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 mod make_value_signer_matrix {
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     use crate::{
         core::{
             aggregator::{make_value_signer_matrix, Matrix},
@@ -178,9 +179,6 @@ mod make_value_signer_matrix {
         protocol::data_package::DataPackage,
         Value,
     };
-
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     #[test]
     fn test_make_value_signer_matrix_empty() {

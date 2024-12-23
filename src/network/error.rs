@@ -1,10 +1,11 @@
+use alloc::{string::String, vec::Vec};
+use core::fmt::{Debug, Display, Formatter};
+
 use crate::{
     network::as_str::{AsAsciiStr, AsHexStr},
     types::Value,
     CryptoError, FeedId, TimestampMillis,
 };
-use std::fmt::{Debug, Display, Formatter};
-
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ContractErrorContent {
     pub code: u8,
@@ -104,7 +105,7 @@ impl Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             Error::ContractError(boxed) => write!(f, "Contract error: {}", boxed.msg),
             Error::NumberOverflow(number) => write!(f, "Number overflow: {}", number.to_u256()),

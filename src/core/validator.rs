@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::{
     core::config::Config,
     network::error::Error,
@@ -136,6 +138,10 @@ impl Validator for Config {
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
+    use itertools::Itertools;
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     use crate::{
         core::{
             config::Config,
@@ -152,10 +158,6 @@ mod tests {
         protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
         Value,
     };
-    use itertools::Itertools;
-
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     #[test]
     fn test_feed_index() {

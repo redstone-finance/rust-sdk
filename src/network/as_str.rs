@@ -1,7 +1,6 @@
-extern crate alloc;
+use alloc::{format, string::String, vec::Vec};
 
 use crate::{utils::trim_zeros::TrimZeros, FeedId};
-use alloc::{format, string::String};
 
 pub trait AsHexStr {
     fn as_hex_str(&self) -> String;
@@ -23,12 +22,6 @@ impl AsAsciiStr for FeedId {
 impl AsHexStr for Vec<u8> {
     fn as_hex_str(&self) -> String {
         self.as_slice().as_hex_str()
-    }
-}
-
-impl AsHexStr for Box<[u8]> {
-    fn as_hex_str(&self) -> String {
-        self.as_ref().as_hex_str()
     }
 }
 
@@ -56,13 +49,13 @@ impl AsHexStr for FeedId {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     use crate::{
         network::as_str::{AsAsciiStr, AsHexStr},
         types::FeedId,
     };
-
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     const ETH: u32 = 4543560u32;
 

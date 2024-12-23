@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 pub(crate) trait FilterSome<Output> {
     fn filter_some(&self) -> Output;
 }
@@ -10,10 +11,10 @@ impl<T: Copy> FilterSome<Vec<T>> for [Option<T>] {
 
 #[cfg(test)]
 mod filter_some_tests {
-    use crate::utils::filter::FilterSome;
-
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
+
+    use crate::utils::filter::FilterSome;
 
     #[test]
     fn test_filter_some() {

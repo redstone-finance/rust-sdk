@@ -15,7 +15,7 @@ impl SignerAddress {
         )
     }
 }
-
+use alloc::vec::Vec;
 impl From<Vec<u8>> for SignerAddress {
     fn from(value: Vec<u8>) -> Self {
         let value = value.sanitized();
