@@ -6,7 +6,7 @@ authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"
 
 [features]
-default = ["std",]
+default = ["std"]
 
 std = [
     "primitive-types/std",
