@@ -2,9 +2,6 @@ use alloc::vec::Vec;
 use core::fmt::Debug;
 
 use crate::{Bytes, SignerAddress};
-mod default_crypto;
-
-pub use default_crypto::DefaultCrypto;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum CryptoError {
@@ -52,6 +49,7 @@ pub trait Crypto {
 
 #[cfg(feature = "helpers")]
 #[cfg(test)]
+#[allow(dead_code)] // this is test template for crypto implementations
 pub mod recovery_key_tests {
     use alloc::borrow::ToOwned;
 

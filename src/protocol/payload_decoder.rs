@@ -116,12 +116,13 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
 
 #[cfg(test)]
 #[cfg(feature = "helpers")]
+#[cfg(feature = "default-crypto")]
 mod tests {
     use alloc::{borrow::ToOwned, string::ToString, vec::Vec};
     use core::ops::Shr;
 
     use crate::{
-        crypto::DefaultCrypto,
+        default_ext::DefaultCrypto,
         helpers::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex},
         network::{error::Error, StdEnv},
         protocol::{
