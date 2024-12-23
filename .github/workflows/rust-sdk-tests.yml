@@ -15,6 +15,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Set up Rust PATH
         run: echo "$HOME/.cargo/bin:$PATH" >> $GITHUB_PATH
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2024-12-20
+          components: clippy,rustfmt
       - name: Lint rust
         run: make check-lint
       - name: Test rust
