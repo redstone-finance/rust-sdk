@@ -84,13 +84,14 @@ where
 #[cfg(test)]
 mod tests {
 
-    use super::{Avg, Median};
-    use itertools::Itertools;
-    use primitive_types::U256;
     use std::fmt::Debug;
 
+    use itertools::Itertools;
+    use primitive_types::U256;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
+
+    use super::{Avg, Median};
 
     #[allow(clippy::legacy_numeric_constants)]
     #[test]

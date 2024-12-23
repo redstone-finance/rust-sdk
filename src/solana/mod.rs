@@ -2,14 +2,15 @@
 //!
 //! Implementations of the crypto operations using anchor_lang (solana) specific operations.
 
+use anchor_lang::solana_program::{
+    keccak::hash,
+    secp256k1_recover::{secp256k1_recover, Secp256k1RecoverError},
+};
+
 use crate::{
     crypto::{Crypto, CryptoError},
     network::StdEnv,
     RedStoneConfigImpl,
-};
-use anchor_lang::solana_program::{
-    keccak::hash,
-    secp256k1_recover::{secp256k1_recover, Secp256k1RecoverError},
 };
 
 /// Implementation of `RedstoneConfig` specialized for operations on the solana.

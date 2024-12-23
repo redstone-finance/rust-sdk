@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::{
     core::config::Config,
     network::error::Error,
@@ -6,7 +8,6 @@ use crate::{
     utils::filter::FilterSome,
     FeedId, SignerAddress, TimestampMillis,
 };
-use alloc::vec::Vec;
 /// A trait defining validation operations for data feeds and signers.
 ///
 /// This trait specifies methods for validating aspects of data feeds and signers within a system that
@@ -137,6 +138,10 @@ impl Validator for Config {
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
+    use itertools::Itertools;
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     use crate::{
         core::{
             config::Config,
@@ -153,10 +158,6 @@ mod tests {
         protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
         Value,
     };
-    use itertools::Itertools;
-
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     #[test]
     fn test_feed_index() {

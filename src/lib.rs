@@ -25,11 +25,11 @@ pub mod solana;
 #[cfg(feature = "casper")]
 pub mod casper;
 
-use ::core::marker::PhantomData;
 use core::config::Config;
-use network::{Environment, StdEnv};
 
+use ::core::marker::PhantomData;
 pub use crypto::{Crypto, CryptoError, DefaultCrypto};
+use network::{Environment, StdEnv};
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 
 /// Configuration for the redstone protocol.

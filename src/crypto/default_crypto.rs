@@ -1,6 +1,7 @@
-use crate::{crypto::Crypto, Bytes, CryptoError};
 use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 use sha3::{Digest, Keccak256};
+
+use crate::{crypto::Crypto, Bytes, CryptoError};
 
 /// Default crypto operations. Uses k256 and sha3 crates.
 pub struct DefaultCrypto;

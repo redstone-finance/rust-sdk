@@ -1,9 +1,10 @@
+use core::fmt::{Debug, Formatter};
+
 use crate::{
     network::as_str::{AsAsciiStr, AsHexStr},
     types::Value,
     FeedId,
 };
-use core::fmt::{Debug, Formatter};
 
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct DataPoint {

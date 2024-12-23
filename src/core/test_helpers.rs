@@ -1,9 +1,10 @@
+use alloc::vec::Vec;
+
 use crate::{
     core::config::Config,
     helpers::hex::{hex_to_bytes, make_feed_id, make_feed_ids},
     protocol::{data_package::DataPackage, data_point::DataPoint},
 };
-use alloc::vec::Vec;
 
 pub(crate) const TEST_BLOCK_TIMESTAMP: u64 = 2000000000000;
 

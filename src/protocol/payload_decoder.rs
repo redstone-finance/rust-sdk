@@ -1,3 +1,6 @@
+use alloc::vec::Vec;
+use core::marker::PhantomData;
+
 use crate::{
     crypto::Crypto,
     network::{error::Error, Environment},
@@ -15,8 +18,6 @@ use crate::{
     utils::trim::{Trim, TryTrim},
     TimestampMillis,
 };
-use alloc::vec::Vec;
-use core::marker::PhantomData;
 
 pub struct PayloadDecoder<Env: Environment, C: Crypto>(PhantomData<(Env, C)>);
 
@@ -116,6 +117,8 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
 #[cfg(test)]
 #[cfg(feature = "helpers")]
 mod tests {
+    use core::ops::Shr;
+
     use crate::{
         crypto::DefaultCrypto,
         helpers::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex},
@@ -132,7 +135,6 @@ mod tests {
         types::VALUE_SIZE,
         Value,
     };
-    use core::ops::Shr;
 
     type TestProcessor = PayloadDecoder<StdEnv, DefaultCrypto>;
 

@@ -32,13 +32,13 @@ impl<U: Copy, T: Copy + Into<U>> IterIntoOpt<Vec<Option<U>>> for Vec<T> {
 
 #[cfg(test)]
 mod iter_into_tests {
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     use crate::{
         helpers::iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
         Value,
     };
-
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     #[test]
     fn test_iter_into() {
