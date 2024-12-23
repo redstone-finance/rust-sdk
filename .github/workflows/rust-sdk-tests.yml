@@ -16,7 +16,7 @@ jobs:
       - name: Set up Rust PATH
         run: echo "$HOME/.cargo/bin:$PATH" >> $GITHUB_PATH
       - name: Install nightly
-        run: rustup toolchain install nightly
+        run: rustup toolchain install nightly-2024-12-02 --component rustfmt,clippy
       - name: Lint rust
         run: make check-lint
       - name: Test rust
