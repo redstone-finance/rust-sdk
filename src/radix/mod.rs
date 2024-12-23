@@ -2,18 +2,14 @@
 //!
 //! Implementation of the config suited for the radix network.
 
-use alloc::vec::Vec;
-use alloc::string::String;
+use alloc::{string::String, vec::Vec};
 
 use scrypto::{
     crypto::{keccak256_hash, Hash, IsHash, Secp256k1Signature},
-    prelude::{CryptoUtils, info},
+    prelude::{info, CryptoUtils},
 };
 
-use crate::{Bytes, Crypto, CryptoError};
-use crate::Environment;
-use crate::RedStoneConfigImpl;
-
+use crate::{Bytes, Crypto, CryptoError, Environment, RedStoneConfigImpl};
 
 /// Implementation of `RedstoneConfig` specialized for operations on the radix.
 pub type RadixRedStoneConfig = RedStoneConfigImpl<RadixCrypto, RadixEnv>;
