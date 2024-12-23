@@ -58,16 +58,15 @@ impl TryTrim<u64> for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        protocol::constants::{REDSTONE_MARKER, REDSTONE_MARKER_BS},
-        utils::trim::Trim,
-        FeedId,
-    };
-
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
-    use crate::{network::error::Error, utils::trim::TryTrim};
+    use crate::{
+        network::error::Error,
+        protocol::constants::{REDSTONE_MARKER, REDSTONE_MARKER_BS},
+        utils::trim::{Trim, TryTrim},
+        FeedId,
+    };
 
     const MARKER_DECIMAL: u64 = 823907890102272;
 

@@ -1,13 +1,13 @@
 use crate::{
-    core::processor_result::ProcessorResult,
+    core::{
+        aggregator::aggregate_values,
+        config::Config,
+        processor_result::{ProcessorResult, ValidatedPayload},
+    },
     network::Environment,
     protocol::{payload::Payload, PayloadDecoder},
     Bytes, RedStoneConfig,
 };
-
-use crate::core::{aggregator::aggregate_values, config::Config};
-
-use crate::core::processor_result::ValidatedPayload;
 
 /// The main processor of the RedStone payload.
 ///
@@ -67,6 +67,9 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen_test::wasm_bindgen_test as test;
+
     use crate::{
         core::{
             config::Config,
@@ -80,9 +83,6 @@ mod tests {
         network::StdEnv,
         protocol::{data_package::DataPackage, payload::Payload},
     };
-
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::wasm_bindgen_test as test;
 
     #[test]
     fn test_make_processor_result() {

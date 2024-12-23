@@ -1,5 +1,6 @@
-use crate::{protocol::data_point::DataPoint, SignerAddress, TimestampMillis};
 use std::fmt::{Debug, Formatter};
+
+use crate::{protocol::data_point::DataPoint, SignerAddress, TimestampMillis};
 
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct DataPackage {

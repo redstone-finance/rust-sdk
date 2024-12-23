@@ -38,7 +38,7 @@ clippy: prepare
     done
 
 check-lint: clippy
-	cargo fmt -- --check
+	cargo +nightly fmt -- --check
 
 lint: clippy
-	cargo fmt
+	cargo +nightly fmt

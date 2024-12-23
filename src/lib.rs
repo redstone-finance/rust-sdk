@@ -14,9 +14,9 @@ mod types;
 mod utils;
 
 use core::config::Config;
-use network::{Environment, StdEnv};
 
 pub use crypto::{Crypto, CryptoError, DefaultCrypto};
+use network::{Environment, StdEnv};
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 
 /// Configuration for the redstone protocol.

@@ -1,5 +1,6 @@
-use crate::{Bytes, SignerAddress};
 use core::fmt::Debug;
+
+use crate::{Bytes, SignerAddress};
 
 mod default_crypto;
 

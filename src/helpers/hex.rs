@@ -1,5 +1,6 @@
-use crate::{Bytes, FeedId};
 use hex::{decode, encode};
+
+use crate::{Bytes, FeedId};
 
 const SAMPLE_PAYLOAD_HEX: &str = include_str!("../.././sample-data/payload.hex");
 

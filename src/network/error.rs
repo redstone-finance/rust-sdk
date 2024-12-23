@@ -1,9 +1,10 @@
+use std::fmt::{Debug, Display, Formatter};
+
 use crate::{
     network::as_str::{AsAsciiStr, AsHexStr},
     types::Value,
     CryptoError, FeedId, TimestampMillis,
 };
-use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ContractErrorContent {
