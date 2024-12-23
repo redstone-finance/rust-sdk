@@ -12,7 +12,7 @@ default = ["pure"]
 pure = ["k256"]
 
 # An extension for Radix network
-network_radix = ["radix-common", "scrypto"]
+radix = ["radix-common", "scrypto"]
 
 # An extension setting usage on casper network.
 casper = ["casper-types"]
@@ -27,9 +27,6 @@ crypto_secp256k1 = ["secp256k1/recovery", "secp256k1/lowmemory", "secp256k1/allo
 # A variant of decrypting the message-signers using k256 library. Cheaper during contract deployment.
 crypto_k256 = ["k256/alloc", "k256/sha256", "k256/ecdsa"]
 
-# A variant of decrypting the message-signers using Radix library.
-crypto_radix = ["scrypto", "radix-common"]
-
 # A variant of decrypting the message-signers using Solana library.
 solana = ["anchor-lang"]
 
@@ -40,7 +37,7 @@ helpers = ["hex/serde", "hex/alloc"]
 casper-contract = { version = "^4.0.0", default-features = false, features = [], optional = true }
 casper-types = { version = "^4.0.2", default-features = false, features = [], optional = true }
 radix-common = { version = "^1.3.0", default-features = false, features = [], optional = true }
-scrypto = { version = "^1.3.0", optional = true }
+scrypto = { version = "^1.3.0", default-features = false, features = ["alloc"], optional = true }
 sha3 = { version = "^0.10.8", default-features = false, features = ["asm"] }
 k256 = { version = "^0.13.4", default-features = false, features = ["ecdsa"], optional = true }
 secp256k1 = { version = "^0.29.1", default-features = false, features = [], optional = true }

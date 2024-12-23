@@ -19,6 +19,9 @@ pub mod solana;
 #[cfg(feature = "casper")]
 pub mod casper;
 
+#[cfg(feature = "radix")]
+pub mod radix;
+
 use ::core::marker::PhantomData;
 use core::config::Config;
 use network::{Environment, StdEnv};
