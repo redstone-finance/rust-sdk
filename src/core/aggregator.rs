@@ -6,6 +6,7 @@ use crate::{
     types::Value,
     utils::median::Median,
 };
+use alloc::vec::Vec;
 
 type Matrix = Vec<Vec<Option<Value>>>;
 

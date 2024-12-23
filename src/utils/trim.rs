@@ -1,4 +1,5 @@
 use crate::{network::error::Error, FeedId, Value};
+use alloc::vec::Vec;
 
 pub trait Trim<T>
 where
@@ -17,7 +18,7 @@ where
 impl Trim<Vec<u8>> for Vec<u8> {
     fn trim_end(&mut self, len: usize) -> Self {
         if len >= self.len() {
-            std::mem::take(self)
+            core::mem::take(self)
         } else {
             self.split_off(self.len() - len)
         }

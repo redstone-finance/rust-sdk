@@ -9,14 +9,14 @@ use crate::{
         },
         data_package::DataPackage,
         data_point::DataPoint,
+        marker::trim_redstone_marker,
         payload::Payload,
     },
     utils::trim::{Trim, TryTrim},
     TimestampMillis,
 };
+use alloc::vec::Vec;
 use core::marker::PhantomData;
-
-use crate::protocol::marker::trim_redstone_marker;
 
 pub struct PayloadDecoder<Env: Environment, C: Crypto>(PhantomData<(Env, C)>);
 
@@ -132,7 +132,7 @@ mod tests {
         types::VALUE_SIZE,
         Value,
     };
-    use std::ops::Shr;
+    use core::ops::Shr;
 
     type TestProcessor = PayloadDecoder<StdEnv, DefaultCrypto>;
 

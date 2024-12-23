@@ -3,6 +3,7 @@ use crate::{
     protocol::constants::{REDSTONE_MARKER, REDSTONE_MARKER_BS},
     utils::trim::Trim,
 };
+use alloc::vec::Vec;
 
 pub fn trim_redstone_marker(payload: &mut Vec<u8>) -> Result<(), Error> {
     let marker: Vec<u8> = payload.trim_end(REDSTONE_MARKER_BS);

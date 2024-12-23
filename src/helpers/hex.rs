@@ -1,6 +1,6 @@
 use crate::{Bytes, FeedId};
+use alloc::vec::Vec;
 use hex::{decode, encode};
-
 const SAMPLE_PAYLOAD_HEX: &str = include_str!("../.././sample-data/payload.hex");
 
 pub fn hex_to_bytes(hex_str: String) -> Vec<u8> {

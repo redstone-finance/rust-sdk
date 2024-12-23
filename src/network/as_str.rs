@@ -1,7 +1,5 @@
-extern crate alloc;
-
 use crate::{utils::trim_zeros::TrimZeros, FeedId};
-use alloc::{format, string::String};
+use alloc::{format, string::String, vec::Vec};
 
 pub trait AsHexStr {
     fn as_hex_str(&self) -> String;
@@ -23,12 +21,6 @@ impl AsAsciiStr for FeedId {
 impl AsHexStr for Vec<u8> {
     fn as_hex_str(&self) -> String {
         self.as_slice().as_hex_str()
-    }
-}
-
-impl AsHexStr for Box<[u8]> {
-    fn as_hex_str(&self) -> String {
-        self.as_ref().as_hex_str()
     }
 }
 

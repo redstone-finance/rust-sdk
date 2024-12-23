@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 pub trait IterInto<U> {
     fn iter_into(&self) -> U;
 }

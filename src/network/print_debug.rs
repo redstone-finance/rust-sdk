@@ -1,5 +1,3 @@
-extern crate alloc;
-
 #[macro_export]
 macro_rules! print_debug {
     ($fmt:expr) => {

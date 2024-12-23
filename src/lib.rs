@@ -5,6 +5,10 @@
 //!
 //! Different crypto-mechanisms are easily injectable.
 //! The current implementation contains `secp256k1`- and `k256`-based variants.
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[macro_use]
+extern crate alloc;
 
 pub mod core;
 mod crypto;

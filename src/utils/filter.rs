@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 pub(crate) trait FilterSome<Output> {
     fn filter_some(&self) -> Output;
 }

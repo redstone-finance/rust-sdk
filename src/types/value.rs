@@ -1,5 +1,5 @@
 use crate::types::{Sanitized, VALUE_SIZE};
-
+use alloc::vec::Vec;
 /// Type describing values we are getting from and to network.
 /// We expect it to be at most u256 and reserve that many bytes for it.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

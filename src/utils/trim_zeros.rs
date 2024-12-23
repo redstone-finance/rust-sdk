@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 pub trait TrimZeros {
     fn trim_zeros(self) -> Self;
 }

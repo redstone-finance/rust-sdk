@@ -3,7 +3,7 @@ use crate::{
     types::Value,
     FeedId,
 };
-use std::fmt::{Debug, Formatter};
+use core::fmt::{Debug, Formatter};
 
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) struct DataPoint {
@@ -12,7 +12,7 @@ pub(crate) struct DataPoint {
 }
 
 impl Debug for DataPoint {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         // todo: fix
         write!(
             f,

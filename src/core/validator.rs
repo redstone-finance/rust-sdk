@@ -6,6 +6,7 @@ use crate::{
     utils::filter::FilterSome,
     FeedId, SignerAddress, TimestampMillis,
 };
+use alloc::vec::Vec;
 /// A trait defining validation operations for data feeds and signers.
 ///
 /// This trait specifies methods for validating aspects of data feeds and signers within a system that

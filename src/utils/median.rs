@@ -1,4 +1,5 @@
-use std::ops::{Add, Rem, Shr};
+use alloc::vec::Vec;
+use core::ops::{Add, Rem, Shr};
 pub(crate) trait Median {
     type Item;
 
