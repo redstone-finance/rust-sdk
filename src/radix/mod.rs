@@ -1,13 +1,29 @@
+//! Radix extension
+//!
+//! Implementation of the config suited for the radix network.
+
 use alloc::vec::Vec;
+use alloc::string::String;
 
 use scrypto::{
     crypto::{keccak256_hash, Hash, IsHash, Secp256k1Signature},
-    prelude::CryptoUtils,
+    prelude::{CryptoUtils, info},
 };
 
 use crate::{Bytes, Crypto, CryptoError};
 
+
+/// Implementation of `RedstoneConfig` specialized for operations on the radix.
+pub type RadixRedStoneConfig = RedStoneConfigImpl<RadixCrypto, RadixEnv>;
+
 pub struct RadixCrypto;
+pub struct RadixEnv;
+
+impl Environment for RadixEnv {
+    fn print<F: FnOnce() -> String>(print_content: F) {
+        info!("{}", print_content());
+    }
+}
 
 impl Crypto for RadixCrypto {
     type KeccakOutput = [u8; 32];

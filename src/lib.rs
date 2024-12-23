@@ -26,6 +26,7 @@ pub mod solana;
 pub mod casper;
 
 #[cfg(feature = "radix")]
+#[cfg(target_arch = "wasm32")]
 pub mod radix;
 
 use ::core::marker::PhantomData;
