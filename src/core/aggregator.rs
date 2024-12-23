@@ -1,7 +1,6 @@
 use crate::{
     core::{config::Config, validator::Validator},
     network::error::Error,
-    print_debug,
     protocol::data_package::DataPackage,
     types::Value,
     utils::median::Median,
@@ -74,8 +73,6 @@ fn make_value_signer_matrix(config: &Config, data_packages: Vec<DataPackage>) ->
             })
         }
     });
-
-    print_debug!("{:?}", matrix);
 
     matrix
 }

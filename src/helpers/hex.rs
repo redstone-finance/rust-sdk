@@ -1,5 +1,6 @@
 use crate::{Bytes, FeedId};
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
+
 use hex::{decode, encode};
 const SAMPLE_PAYLOAD_HEX: &str = include_str!("../.././sample-data/payload.hex");
 

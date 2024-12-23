@@ -10,10 +10,10 @@ default = ["std"]
 
 std = [
     "primitive-types/std",
-    "scrypto/std",
-    "radix-common/std",
-    "scrypto/std",
-    "hex/std",
+    "scrypto?/std",
+    "radix-common?/std",
+    "scrypto?/std",
+    "hex?/std",
     "k256/std",
     "getrandom/std",
     "sha3/std",

@@ -1,6 +1,5 @@
 pub mod as_str;
 pub mod error;
-pub mod print_debug;
 use alloc::string::String;
 
 // Todo: extend with logging capabilities etc.

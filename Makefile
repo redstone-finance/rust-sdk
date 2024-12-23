@@ -37,6 +37,11 @@ clippy: prepare
         ($(CLIPPY) --all-targets --features=$$features -- -D warnings); \
     done
 
+	# check all features enabled
+	($(CLIPPY) --all-targets --all-features -- -D warnings);
+	# check all features disabled
+	($(CLIPPY) --no-default-features --all-features -- -D warnings);
+
 check-lint: clippy
 	cargo fmt -- --check
 

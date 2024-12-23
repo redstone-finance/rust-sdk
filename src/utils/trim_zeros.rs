@@ -25,7 +25,7 @@ impl TrimZeros for Vec<u8> {
 #[cfg(test)]
 mod tests {
     use crate::{protocol::constants::REDSTONE_MARKER, utils::trim_zeros::TrimZeros};
-
+    use alloc::vec::Vec;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 

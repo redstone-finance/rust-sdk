@@ -7,6 +7,8 @@
 //! The current implementation contains `secp256k1`- and `k256`-based variants.
 #![cfg_attr(not(feature = "std"), no_std)]
 
+// todo: uncomment #![cfg_attr(not(test), warn(unused_crate_dependencies))]
+
 #[macro_use]
 extern crate alloc;
 
