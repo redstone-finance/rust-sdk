@@ -53,6 +53,8 @@ pub trait Crypto {
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 pub mod recovery_key_tests {
+    use alloc::borrow::ToOwned;
+
     use crate::{helpers::hex::hex_to_bytes, Crypto};
 
     const MESSAGE: &str = "415641580000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d394303d018d79bf0ba000000020000001";

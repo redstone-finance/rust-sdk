@@ -14,9 +14,9 @@ pub trait Environment {
 /// Uses panic and println macros in implementation of trait function.
 pub struct StdEnv;
 
-#[cfg(feature = "std")]
 impl Environment for StdEnv {
-    fn print<F: FnOnce() -> String>(print_content: F) {
-        println!("{}", print_content())
+    fn print<F: FnOnce() -> String>(_print_content: F) {
+        #[cfg(feature = "std")]
+        println!("{}", _print_content())
     }
 }

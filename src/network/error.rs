@@ -6,6 +6,7 @@ use crate::{
     types::Value,
     CryptoError, FeedId, TimestampMillis,
 };
+
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ContractErrorContent {
     pub code: u8,

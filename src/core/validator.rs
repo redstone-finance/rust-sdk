@@ -138,6 +138,8 @@ impl Validator for Config {
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
+    use alloc::vec::Vec;
+
     use itertools::Itertools;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;

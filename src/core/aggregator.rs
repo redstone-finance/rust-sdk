@@ -166,6 +166,8 @@ mod aggregate_matrix_tests {
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 mod make_value_signer_matrix {
+    use alloc::vec::Vec;
+
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
@@ -305,10 +307,9 @@ mod make_value_signer_matrix {
         let expected_matrix: Matrix = expected_values
             .iter()
             .map(|row| {
-                (row.iter()
+                row.iter()
                     .map(|&value| value.map(Value::from))
-                    .collect::<Vec<_>>())
-                .iter_into() as Vec<Option<Value>>
+                    .collect::<Vec<_>>()
             })
             .collect();
 

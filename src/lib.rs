@@ -25,12 +25,16 @@ pub mod solana;
 #[cfg(feature = "casper")]
 pub mod casper;
 
-use core::config::Config;
+#[cfg(feature = "radix")]
+#[cfg(target_arch = "wasm32")]
+pub mod radix;
 
 use ::core::marker::PhantomData;
 pub use crypto::{Crypto, CryptoError, DefaultCrypto};
 use network::{Environment, StdEnv};
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
+
+use crate::core::config::Config;
 
 /// Configuration for the redstone protocol.
 /// Pluggable with custom environments and possible specialized crypto operations.

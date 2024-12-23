@@ -83,8 +83,8 @@ where
 
 #[cfg(test)]
 mod tests {
-
-    use std::fmt::Debug;
+    use alloc::vec::Vec;
+    use core::fmt::Debug;
 
     use itertools::Itertools;
     use primitive_types::U256;

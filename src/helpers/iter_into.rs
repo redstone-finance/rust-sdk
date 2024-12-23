@@ -32,6 +32,8 @@ impl<U: Copy, T: Copy + Into<U>> IterIntoOpt<Vec<Option<U>>> for Vec<T> {
 
 #[cfg(test)]
 mod iter_into_tests {
+    use alloc::vec::Vec;
+
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 

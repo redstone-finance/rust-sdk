@@ -60,6 +60,8 @@ impl TryTrim<u64> for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
+    use alloc::vec::Vec;
+
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
