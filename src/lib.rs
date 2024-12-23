@@ -16,6 +16,9 @@ mod utils;
 #[cfg(feature = "solana")]
 pub mod solana;
 
+#[cfg(feature = "casper")]
+pub mod casper;
+
 use ::core::marker::PhantomData;
 use core::config::Config;
 use network::{Environment, StdEnv};

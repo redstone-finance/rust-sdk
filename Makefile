@@ -1,7 +1,7 @@
 CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged
 DOC=cargo doc --no-deps --document-private-items
 TEST=RUST_BACKTRACE=full cargo test --features="helpers"
-FEATURE_SETS="crypto_k256" "crypto_k256,network_casper" "crypto_secp256k1" "crypto_secp256k1,network_casper" "crypto_secp256k1,network_radix" "solana,pure"
+FEATURE_SETS="crypto_k256" "crypto_k256,casper" "crypto_secp256k1" "crypto_secp256k1,casper" "crypto_secp256k1,casper-test" "crypto_secp256k1,network_radix" "solana,pure"
 WASM32_FEATURE_SETS="crypto_radix" "crypto_radix,network_radix" "solana"
 prepare:
 	@rustup target add wasm32-unknown-unknown
