@@ -22,7 +22,6 @@ impl Crypto for RadixCrypto {
         message_hash: Self::KeccakOutput,
     ) -> Result<Bytes, CryptoError> {
         let hash = Hash::from_bytes(message_hash);
-
         let mut sig_vec = Vec::with_capacity(65);
         sig_vec.push(recovery_byte);
         sig_vec.extend(signature_bytes.as_ref());
@@ -40,11 +39,10 @@ impl Crypto for RadixCrypto {
 #[cfg(test)]
 #[cfg(feature = "helpers")]
 mod tests {
+    use crate::{crypto::recovery_key_tests::run_all_testcases, radix::RadixCrypto};
 
     #[test]
     fn test_default_crypto_impl() {
-        use crate::{crypto::recovery_key_tests::run_all_testcases, radix::RadixCrypto};
-
         run_all_testcases::<RadixCrypto>();
     }
 }

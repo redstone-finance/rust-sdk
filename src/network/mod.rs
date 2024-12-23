@@ -15,8 +15,8 @@ pub trait Environment {
 pub struct StdEnv;
 
 impl Environment for StdEnv {
-    fn print<F: FnOnce() -> String>(print_content: F) {
+    fn print<F: FnOnce() -> String>(_print_content: F) {
         #[cfg(feature = "std")]
-        println!("{}", print_content())
+        println!("{}", _print_content())
     }
 }
