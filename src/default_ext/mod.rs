@@ -4,7 +4,6 @@ use sha3::{Digest, Keccak256};
 use crate::{crypto::Crypto, network::StdEnv, Bytes, CryptoError, RedStoneConfigImpl};
 
 /// Standard nonspecialized implementation of the RedStoneConfig.
-/// See [crate::crypto::DefaultCrypto] for more information about crypto ops used.
 /// Constructuble from the [crate::core::config::Config].
 pub type StdRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, StdEnv>;
 
