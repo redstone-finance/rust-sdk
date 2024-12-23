@@ -15,10 +15,7 @@ pub type CasperRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, StdEnv>;
 
 #[cfg(feature = "casper-test")]
 pub mod casper_test {
-    use crate::{
-        network::Environment,
-        DefaultCrypto, RedStoneConfigImpl,
-    };
+    use crate::{network::Environment, DefaultCrypto, RedStoneConfigImpl};
     use casper_contract::contract_api::runtime::print;
 
     /// Config for casper tests, not to be used in the production
