@@ -22,7 +22,7 @@ pub struct PayloadDecoder<Env: Environment, C: Crypto>(PhantomData<(Env, C)>);
 
 impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
     pub fn make_payload(payload_bytes: &mut Vec<u8>) -> Result<Payload, Error> {
-        trim_redstone_marker(payload_bytes);
+        trim_redstone_marker(payload_bytes)?;
         let payload = Self::trim_payload(payload_bytes)?;
 
         if !payload_bytes.is_empty() {
