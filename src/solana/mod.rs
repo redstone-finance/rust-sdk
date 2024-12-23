@@ -2,16 +2,33 @@
 //!
 //! Implementations of the crypto operations using anchor_lang (solana) specific operations.
 
-use anchor_lang::solana_program::{
-    keccak::hash,
-    secp256k1_recover::{secp256k1_recover, Secp256k1RecoverError},
+use alloc::string::ToString;
+use anchor_lang::{
+    error::{AnchorError, Error as AnchorLangError},
+    solana_program::{
+        keccak::hash,
+        secp256k1_recover::{secp256k1_recover, Secp256k1RecoverError},
+    },
 };
 
 use crate::{
     crypto::{Crypto, CryptoError},
-    network::StdEnv,
+    network::{error::Error, StdEnv},
     RedStoneConfigImpl,
 };
+
+impl From<Error> for AnchorLangError {
+    fn from(value: Error) -> Self {
+        AnchorError {
+            error_name: "rust-sdk".to_string(),
+            error_code_number: value.code() as u32,
+            error_msg: value.to_string(),
+            error_origin: None,
+            compared_values: None,
+        }
+        .into()
+    }
+}
 
 /// Implementation of `RedstoneConfig` specialized for operations on the solana.
 pub type SolanaRedStoneConfig = RedStoneConfigImpl<SolanaCrypto, SolanaEnv>;
