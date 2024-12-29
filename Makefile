@@ -12,10 +12,10 @@ prepare:
 
 test: clippy
 	@for features in $(WASM32_FEATURE_SETS); do \
-		pushd $(RUST_SDK_DIR); \
+		cd $(RUST_SDK_DIR); \
         echo "Running tests with features: $$features"; \
         (wasm-pack test --node --no-default-features --features="helpers" --features=$$features); \
-		popd; \
+		cd -; \
     done
 	@for features in $(FEATURE_SETS); do \
         echo "Running tests with features: $$features"; \
