@@ -6,7 +6,7 @@ use alloc::{
 use hex::{decode, encode};
 
 use crate::{Bytes, FeedId};
-const SAMPLE_PAYLOAD_HEX: &str = include_str!("../.././sample-data/payload.hex");
+const SAMPLE_PAYLOAD_HEX: &str = include_str!("../../../.././sample-data/payload.hex");
 
 pub fn hex_to_bytes(hex_str: String) -> Vec<u8> {
     let trimmed_hex = hex_str.trim_start_matches("0x");

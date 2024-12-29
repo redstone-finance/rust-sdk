@@ -1,9 +1,13 @@
 use alloc::vec::Vec;
 
+#[cfg(feature = "radix")]
+use scrypto::prelude::*;
+
 use crate::types::{Sanitized, VALUE_SIZE};
 /// Type describing values we are getting from and to network.
 /// We expect it to be at most u256 and reserve that many bytes for it.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "radix", derive(ScryptoSbor))]
 pub struct Value(pub [u8; VALUE_SIZE]);
 
 macro_rules! impl_from_number {
@@ -28,6 +32,17 @@ impl Value {
 
     pub fn from_u256(value: primitive_types::U256) -> Self {
         value.to_big_endian().to_vec().into()
+    }
+
+    pub fn le_bytes(&self) -> [u8; 32] {
+        let mut le = self.0;
+        le.reverse();
+
+        le
+    }
+
+    pub fn as_be_bytes(&self) -> &[u8] {
+        &self.0
     }
 }
 
