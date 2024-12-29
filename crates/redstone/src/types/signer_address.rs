@@ -1,11 +1,11 @@
-use crate::types::{Sanitized, VALUE_SIZE};
 #[cfg(feature = "radix")]
 use scrypto::prelude::*;
+
+use crate::types::{Sanitized, VALUE_SIZE};
 /// Type describing address of signer. Typically pubkey of length 20 bytes;
 /// As of right now we dont expect larger keys than 32 bytes.
 /// The address is normalized to contain only lowercase letters (A-F) -> (a-f).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-
 #[cfg_attr(feature = "radix", derive(ScryptoSbor))]
 pub struct SignerAddress([u8; VALUE_SIZE]);
 

@@ -1,4 +1,3 @@
-
 use scrypto::math::{Decimal, ParseDecimalError, U256};
 
 use crate::Value;
@@ -11,7 +10,6 @@ impl TryFrom<Value> for Decimal {
 
         let u256 = U256::from_le_bytes(&le_bytes);
 
-    
         u256.try_into()
     }
 }

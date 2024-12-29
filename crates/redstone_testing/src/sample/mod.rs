@@ -1,12 +1,12 @@
 pub mod sample_test_helpers;
 
 use std::collections::HashMap;
+
 use redstone::Value;
 
 #[macro_export]
 macro_rules! hashmap {
     ($( $key:expr => $val:expr ),*) => {{
-        use redstone::Value;
         let mut map = ::std::collections::HashMap::new();
         $( map.insert($key.to_string(), Value::from($val)); )*
         map

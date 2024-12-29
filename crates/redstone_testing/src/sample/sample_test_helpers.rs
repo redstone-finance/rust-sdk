@@ -1,27 +1,27 @@
+use redstone::{
+    helpers::{hex::make_bytes, iter_into::IterIntoOpt},
+    Value,
+};
+
 use crate::{
     env::run_env::{PriceAdapterRunEnv, RunMode},
     sample::{Sample, SIGNERS},
 };
-use redstone::{helpers::{hex::make_bytes, iter_into::IterIntoOpt}, Value};
 
 fn make_feed_ids(feeds: &[&str]) -> Vec<Vec<u8>> {
-    feeds
-        .iter()
-        .map(|&s| s.as_bytes().to_vec())
-        .collect()
+    feeds.iter().map(|&s| s.as_bytes().to_vec()).collect()
 }
 
 fn signers() -> Vec<Vec<u8>> {
-    make_bytes(SIGNERS.to_vec(), |s| s.to_string()).into_iter().map(|x| x.0).collect()
+    make_bytes(SIGNERS.to_vec(), |s| s.to_string())
+        .into_iter()
+        .map(|x| x.0)
+        .collect()
 }
 
 impl Sample {
     pub fn instantiate_price_adapter<PriceAdapter: PriceAdapterRunEnv>(&self) -> PriceAdapter {
-        PriceAdapter::instantiate(
-            1,
-            signers(),
-            Some(self.system_timestamp),
-        )
+        PriceAdapter::instantiate(1, signers(), self.system_timestamp.into())
     }
 
     pub fn verify_written_values<PriceAdapter: PriceAdapterRunEnv>(
