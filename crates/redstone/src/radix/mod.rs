@@ -1,6 +1,7 @@
 //! Radix extension
 //!
 //! Implementation of the config suited for the radix network.
+pub mod value_ext;
 
 use alloc::{string::String, vec::Vec};
 

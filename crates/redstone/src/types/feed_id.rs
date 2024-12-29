@@ -1,11 +1,15 @@
 use alloc::vec::Vec;
+#[cfg(feature = "radix")]
+use scrypto::prelude::*;
 
 use crate::types::{Sanitized, VALUE_SIZE};
 
 /// Type describing feed ids.
 /// We expect FeedId to be byte string like b"EUR"
 /// converted to bytearray and padded with zeroes to the right.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, PartialOrd, Ord)]
+
+#[cfg_attr(feature = "radix", derive(ScryptoSbor))]
 pub struct FeedId(pub [u8; VALUE_SIZE]);
 
 // trim zeros from both sides
