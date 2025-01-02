@@ -2,8 +2,6 @@ pub mod as_str;
 pub mod error;
 use alloc::string::String;
 
-// Todo: extend with logging capabilities etc.
-
 /// Environment in which the code executes.
 pub trait Environment {
     /// Environment specific print function.

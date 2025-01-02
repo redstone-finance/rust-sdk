@@ -14,7 +14,6 @@ pub(crate) struct DataPoint {
 
 impl Debug for DataPoint {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        // todo: fix
         write!(
             f,
             "DataPoint {{\n      feed_id: {:?} (0x{}), value: {:?}\n   }}",
