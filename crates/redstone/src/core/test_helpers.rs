@@ -34,7 +34,7 @@ impl Config {
 }
 
 impl DataPackage {
-    pub(crate) fn test(
+    pub(crate) fn test_single_data_point(
         feed_id: &str,
         value: u128,
         signer_address: &str,
@@ -47,6 +47,24 @@ impl DataPackage {
                 feed_id: make_feed_id(feed_id),
                 value: value.into(),
             }],
+        }
+    }
+
+    pub(crate) fn test_multi_data_point(
+        data_points: Vec<(&str, u128)>,
+        signer_address: &str,
+        timestamp: Option<u64>,
+    ) -> Self {
+        DataPackage {
+            signer_address: hex_to_bytes(signer_address.into()).into(),
+            timestamp: timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP).into(),
+            data_points: data_points
+                .into_iter()
+                .map(|(feed_id, value)| DataPoint {
+                    feed_id: make_feed_id(feed_id),
+                    value: value.into(),
+                })
+                .collect(),
         }
     }
 }

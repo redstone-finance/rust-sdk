@@ -195,10 +195,10 @@ mod make_value_signer_matrix {
     #[test]
     fn test_make_value_signer_matrix_exact() {
         let data_packages = vec![
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
         ];
 
         test_make_value_signer_matrix_of(
@@ -210,12 +210,12 @@ mod make_value_signer_matrix {
     #[test]
     fn test_make_value_signer_matrix_greater() {
         let data_packages = vec![
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
         ];
 
         test_make_value_signer_matrix_of(
@@ -227,8 +227,8 @@ mod make_value_signer_matrix {
     #[test]
     fn test_make_value_signer_matrix_smaller() {
         let data_packages = vec![
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
         ];
 
         test_make_value_signer_matrix_of(
@@ -240,8 +240,8 @@ mod make_value_signer_matrix {
     #[test]
     fn test_make_value_signer_matrix_diagonal() {
         let data_packages = vec![
-            DataPackage::test(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
         ];
 
         test_make_value_signer_matrix_of(
@@ -253,12 +253,12 @@ mod make_value_signer_matrix {
     #[test]
     fn test_make_value_signer_matrix_repetitions() {
         let data_packages = vec![
-            DataPackage::test(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 202, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 101, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 202, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 101, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
         ];
 
         test_make_value_signer_matrix_of(
@@ -272,8 +272,8 @@ mod make_value_signer_matrix {
         let config = Config::test();
 
         let data_packages = vec![
-            DataPackage::test(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
         ];
 
         test_make_value_signer_matrix_of(
@@ -285,10 +285,10 @@ mod make_value_signer_matrix {
     #[test]
     fn test_make_value_signer_matrix_mix() {
         let data_packages = vec![
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
         ];
 
         test_make_value_signer_matrix_of(

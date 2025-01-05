@@ -85,27 +85,27 @@ mod tests {
     };
 
     #[test]
-    fn test_make_processor_result() {
+    fn test_make_processor_result_for_single_datapoint() {
         let data_packages = vec![
-            DataPackage::test(
+            DataPackage::test_single_data_point(
                 ETH,
                 11,
                 TEST_SIGNER_ADDRESS_1,
                 (TEST_BLOCK_TIMESTAMP + 5).into(),
             ),
-            DataPackage::test(
+            DataPackage::test_single_data_point(
                 ETH,
                 13,
                 TEST_SIGNER_ADDRESS_2,
                 (TEST_BLOCK_TIMESTAMP + 3).into(),
             ),
-            DataPackage::test(
+            DataPackage::test_single_data_point(
                 BTC,
                 32,
                 TEST_SIGNER_ADDRESS_2,
                 (TEST_BLOCK_TIMESTAMP - 2).into(),
             ),
-            DataPackage::test(
+            DataPackage::test_single_data_point(
                 BTC,
                 31,
                 TEST_SIGNER_ADDRESS_1,
@@ -122,5 +122,44 @@ mod tests {
                 values: vec![12u8, 31].iter_into()
             })
         );
+    }
+
+    #[test]
+    fn test_make_processor_result_for_multi_datapoint() {
+        let data_packages = vec![
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 11), (ETH, 12), (ETH, 13)],
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 5).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 10), (ETH, 12), (ETH, 14)],
+                TEST_SIGNER_ADDRESS_2,
+                (TEST_BLOCK_TIMESTAMP + 3).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(BTC, 33), (BTC, 34), (BTC, 35), (BTC, 36)],
+                TEST_SIGNER_ADDRESS_2,
+                (TEST_BLOCK_TIMESTAMP - 2).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(BTC, 31), (BTC, 32), (BTC, 38), (BTC, 39)],
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
+            ),
+        ];
+
+        println!("DATA POINTS: {:?}", data_packages);
+
+        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
+
+        println!("RESULT: {result:?}");
+        // assert_eq!(
+        //     result,
+        //     Ok(ValidatedPayload {
+        //         min_timestamp: (TEST_BLOCK_TIMESTAMP - 2).into(),
+        //         values: vec![12u8, 31].iter_into()
+        //     })
+        // );
     }
 }
