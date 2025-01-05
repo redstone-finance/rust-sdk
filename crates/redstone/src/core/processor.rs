@@ -143,23 +143,20 @@ mod tests {
                 (TEST_BLOCK_TIMESTAMP - 2).into(),
             ),
             DataPackage::test_multi_data_point(
-                vec![(BTC, 31), (BTC, 32), (BTC, 38), (BTC, 39)],
+                vec![(BTC, 31), (BTC, 32), (BTC, 38), (BTC, 38)],
                 TEST_SIGNER_ADDRESS_1,
                 (TEST_BLOCK_TIMESTAMP + 400).into(),
             ),
         ];
 
-        println!("DATA POINTS: {:?}", data_packages);
-
         let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
 
-        println!("RESULT: {result:?}");
-        // assert_eq!(
-        //     result,
-        //     Ok(ValidatedPayload {
-        //         min_timestamp: (TEST_BLOCK_TIMESTAMP - 2).into(),
-        //         values: vec![12u8, 31].iter_into()
-        //     })
-        // );
+        assert_eq!(
+            result,
+            Ok(ValidatedPayload {
+                min_timestamp: (TEST_BLOCK_TIMESTAMP - 2).into(),
+                values: vec![13u8, 37].iter_into()
+            })
+        );
     }
 }
