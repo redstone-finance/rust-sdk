@@ -19,7 +19,7 @@ use crate::{
 ///
 /// # Returns
 ///
-/// * Returns a `ProcessorResult` in case of succesfull payload processing. Will panic in case of bad input.
+/// * Returns a `ProcessorResult` in case of successful payload processing. Will panic in case of bad input.
 pub fn process_payload(
     config: &impl RedStoneConfig,
     payload_bytes: impl Into<Bytes>,
@@ -36,7 +36,7 @@ trait RedStonePayloadProcessor {
     ///
     /// # Returns
     ///
-    /// * Returns a `ProcessorResult` in case of succesfull payload processing. Will panic in case of bad input.
+    /// * Returns a `ProcessorResult` in case of successful payload processing. Will panic in case of bad input.
     fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult;
 }
 

@@ -1,5 +1,6 @@
 pub(crate) const UNSIGNED_METADATA_BYTE_SIZE_BS: usize = 3;
 pub(crate) const DATA_PACKAGES_COUNT_BS: usize = 2;
+pub(crate) const DATA_PACKAGES_COUNT_MAX_VALUE: usize = u16::MAX as usize; // 0xFFFF
 pub(crate) const DATA_POINTS_COUNT_BS: usize = 3;
 pub(crate) const SIGNATURE_BS: usize = 65;
 pub(crate) const DATA_POINT_VALUE_BYTE_SIZE_BS: usize = 4;
