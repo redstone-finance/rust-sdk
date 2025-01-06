@@ -80,7 +80,7 @@ mod tests {
             },
         },
         helpers::iter_into::IterInto,
-        network::StdEnv,
+        network::{error::Error, StdEnv},
         protocol::{data_package::DataPackage, payload::Payload},
     };
 
@@ -128,22 +128,22 @@ mod tests {
     fn test_make_processor_result_for_multi_datapoint() {
         let data_packages = vec![
             DataPackage::test_multi_data_point(
-                vec![(ETH, 11), (ETH, 12), (ETH, 13)],
+                vec![(BTC, 30), (ETH, 11)],
                 TEST_SIGNER_ADDRESS_1,
                 (TEST_BLOCK_TIMESTAMP + 5).into(),
             ),
             DataPackage::test_multi_data_point(
-                vec![(ETH, 10), (ETH, 12), (ETH, 14)],
+                vec![(ETH, 10), (BTC, 31)],
                 TEST_SIGNER_ADDRESS_2,
                 (TEST_BLOCK_TIMESTAMP + 3).into(),
             ),
             DataPackage::test_multi_data_point(
-                vec![(BTC, 33), (BTC, 34), (BTC, 35), (BTC, 36)],
+                vec![(BTC, 34), (ETH, 12)],
                 TEST_SIGNER_ADDRESS_2,
                 (TEST_BLOCK_TIMESTAMP - 2).into(),
             ),
             DataPackage::test_multi_data_point(
-                vec![(BTC, 31), (BTC, 32), (BTC, 38), (BTC, 38)],
+                vec![(ETH, 13), (BTC, 32)],
                 TEST_SIGNER_ADDRESS_1,
                 (TEST_BLOCK_TIMESTAMP + 400).into(),
             ),
@@ -155,8 +155,43 @@ mod tests {
             result,
             Ok(ValidatedPayload {
                 min_timestamp: (TEST_BLOCK_TIMESTAMP - 2).into(),
-                values: vec![13u8, 37].iter_into()
+                values: vec![12u8, 33].iter_into()
             })
+        );
+    }
+
+    #[test]
+    fn test_make_processor_result_for_multi_datapoint_with_repetition() {
+        // given
+        let data_packages = vec![
+            DataPackage::test_multi_data_point(
+                vec![(BTC, 30), (ETH, 11)],
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 5).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 10), (BTC, 31)],
+                TEST_SIGNER_ADDRESS_2,
+                (TEST_BLOCK_TIMESTAMP + 3).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(BTC, 34), (ETH, 12), (BTC, 33)], // NOT ALLOWED REPETITION IS HERE
+                TEST_SIGNER_ADDRESS_2,
+                (TEST_BLOCK_TIMESTAMP - 2).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 13), (BTC, 32)],
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
+            ),
+        ];
+
+        // when, then
+        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
+
+        assert_eq!(
+            result,
+            Err(Error::ReocuringFeedId(BTC.as_bytes().to_vec().into()))
         );
     }
 }
