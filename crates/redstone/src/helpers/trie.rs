@@ -1,4 +1,5 @@
-use crate::{network::error::Error, FeedId};
+use crate::network::error::Error;
+use crate::FeedId;
 
 const CHAR_START: u8 = 48; // Start at ASCII b'0'
 const CHAR_END: u8 = 90; // End at ASCII b'Z'
@@ -72,7 +73,7 @@ impl Trie {
                 || *c < CHAR_START
                 || *c > CHAR_END
             {
-                return Err(Error::UnhandlableCharInFeedID(*c as char, *feed_id));
+                return Err(Error::UnhandlableCharInFeedID(*c as char, feed_id.clone()));
             }
 
             let i = (c - CHAR_START) as usize;
@@ -84,7 +85,7 @@ impl Trie {
             cur_node = self.nodes[cur_node].children[i];
         }
 
-        if self.nodes[cur_node].end {
+        if self.nodes[cur_node].end == true {
             return Ok(false);
         }
 
@@ -101,7 +102,9 @@ mod tests {
     #[test]
     fn test_trie_store_only_unique() -> Result<(), Error> {
         // given
-        let test_cases = ["ABC", "AB", "ABCD", "ABCDE", "B", "BCD", "BCDE", "C", "CD", "CDE", "D", "DE"];
+        let test_cases = [
+            "ABC", "AB", "ABCD", "ABCDE", "B", "BCD", "BCDE", "C", "CD", "CDE", "D", "DE",
+        ];
 
         // when
         let mut test_processor = Trie::default();
@@ -118,7 +121,9 @@ mod tests {
     #[test]
     fn test_trie_attempt_to_store_repeated() -> Result<(), Error> {
         // given
-        let test_cases = ["ABC", "AB", "ABCD", "ABCDE", "B", "BCD", "BCDE", "C", "CD", "CDE", "D", "DE"];
+        let test_cases = [
+            "ABC", "AB", "ABCD", "ABCDE", "B", "BCD", "BCDE", "C", "CD", "CDE", "D", "DE",
+        ];
 
         // when
         let mut test_processor = Trie::default();
@@ -141,13 +146,15 @@ mod tests {
     #[test]
     fn test_trie_store_unhandlable_characters() {
         // given
-        let test_cases = [("AB%", '%'),
+        let test_cases = [
+            ("AB%", '%'),
             ("aB", 'a'),
             ("ABcD", 'c'),
             ("A^", '^'),
             ("AA!", '!'),
             ("A@!", '@'),
-            ("CC<C", '<')];
+            ("CC<C", '<'),
+        ];
 
         // when
         let mut test_processor = Trie::default();
