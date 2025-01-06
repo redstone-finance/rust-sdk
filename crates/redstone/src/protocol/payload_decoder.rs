@@ -357,7 +357,7 @@ mod tests {
         let res = TestProcessor::trim_data_points(&mut bytes, DATA_POINTS_50_COUNT, 32)?;
         assert_eq!(res.len(), DATA_POINTS_50_COUNT);
         verify_rest_and_result(
-            &DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim(),
+            DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim(),
             32,
             DATA_POINTS_50_COUNT,
             VALUE.into(),
@@ -375,7 +375,7 @@ mod tests {
         let res = TestProcessor::trim_data_points(&mut bytes, DATA_POINTS_500_COUNT, 32)?;
         assert_eq!(res.len(), DATA_POINTS_500_COUNT);
         verify_rest_and_result(
-            &DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim(),
+            DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim(),
             32,
             DATA_POINTS_500_COUNT,
             VALUE.into(),
@@ -411,7 +411,7 @@ mod tests {
     #[test]
     fn test_trim_medium_slice_of_data_points() -> Result<(), Error> {
         test_trim_data_point_of(
-            DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim().into(),
+            DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim(),
             32,
             DATA_POINTS_50_COUNT,
             VALUE.into(),
@@ -421,7 +421,7 @@ mod tests {
     #[test]
     fn test_trim_large_slice_of_data_points() -> Result<(), Error> {
         test_trim_data_point_of(
-            DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim().into(),
+            DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim(),
             32,
             DATA_POINTS_500_COUNT,
             VALUE.into(),

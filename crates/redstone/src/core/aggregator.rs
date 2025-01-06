@@ -2,9 +2,10 @@ use alloc::vec::Vec;
 
 use crate::{
     core::{config::Config, validator::Validator},
+    helpers::trie::Trie,
     network::error::Error,
     protocol::data_package::DataPackage,
-    types::{Trie, Value},
+    types::Value,
     utils::median::Median,
 };
 
