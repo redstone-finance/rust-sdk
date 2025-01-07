@@ -85,7 +85,7 @@ impl Trie {
             cur_node = self.nodes[cur_node].children[i];
         }
 
-        if self.nodes[cur_node].end == true {
+        if self.nodes[cur_node].end {
             return Ok(false);
         }
 
