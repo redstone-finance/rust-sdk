@@ -1,0 +1,8 @@
+[package]
+name = "redstone_testing"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+redstone = { path = "../redstone", features = ["helpers"] }
+paste = { version = "1.0.6" }
