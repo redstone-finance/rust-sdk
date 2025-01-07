@@ -7,7 +7,7 @@ use crate::{
     protocol::{
         constants::{
             DATA_FEED_ID_BS, DATA_PACKAGES_COUNT_BS, DATA_POINTS_COUNT_BS,
-            DATA_POINT_VALUE_BYTE_SIZE_BS, SIGNATURE_BS, TIMESTAMP_BS,
+            DATA_POINT_COUNT_MAX_VALUE, DATA_POINT_VALUE_BYTE_SIZE_BS, SIGNATURE_BS, TIMESTAMP_BS,
             UNSIGNED_METADATA_BYTE_SIZE_BS,
         },
         data_package::DataPackage,
@@ -89,9 +89,7 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         count: usize,
         value_size: usize,
     ) -> Result<Vec<DataPoint>, Error> {
-        if count != 1 {
-            return Err(Error::SizeNotSupported(count));
-        }
+        Self::check_data_point_count(count)?;
 
         let mut data_points = Vec::with_capacity(count);
 
@@ -111,6 +109,14 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
             value: value.into(),
             feed_id,
         }
+    }
+
+    #[inline(always)]
+    fn check_data_point_count(count: usize) -> Result<(), Error> {
+        if count > DATA_POINT_COUNT_MAX_VALUE || count == 0 {
+            return Err(Error::SizeNotSupported(count));
+        }
+        Ok(())
     }
 }
 
@@ -209,6 +215,12 @@ mod tests {
         + DATA_POINTS_COUNT_BS;
 
     const DATA_POINT_BYTES_TAIL: &str = "4554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000360cafc94e";
+    const DATA_POINTS_500_COUNT: usize = 500;
+    const DATA_POINTS_50_COUNT: usize = 50;
+    const DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL: &str =
+        include_str!("../../../../test_data/payload_50_datapoints.hex");
+    const DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL: &str =
+        include_str!("../../../../test_data/payload_500_datapoints.hex");
     const VALUE: u128 = 232141080910;
 
     #[test]
@@ -337,10 +349,48 @@ mod tests {
         verify_rest_and_result(
             DATA_POINT_BYTES_TAIL,
             32,
+            1,
             VALUE.into(),
             bytes,
             result[0].clone(),
         )
+    }
+
+    #[test]
+    fn test_trim_medium_data_points() -> Result<(), Error> {
+        let test_data_points_trimmed: String = DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim().into();
+        let mut bytes = hex_to_bytes(test_data_points_trimmed.clone());
+        let res = TestProcessor::trim_data_points(&mut bytes, DATA_POINTS_50_COUNT, 32)?;
+        assert_eq!(res.len(), DATA_POINTS_50_COUNT);
+        verify_rest_and_result(
+            DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim(),
+            32,
+            DATA_POINTS_50_COUNT,
+            VALUE.into(),
+            bytes,
+            res[0].clone(),
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_trim_large_data_points() -> Result<(), Error> {
+        let test_data_points_trimmed: String =
+            DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim().into();
+        let mut bytes = hex_to_bytes(test_data_points_trimmed.clone());
+        let res = TestProcessor::trim_data_points(&mut bytes, DATA_POINTS_500_COUNT, 32)?;
+        assert_eq!(res.len(), DATA_POINTS_500_COUNT);
+        verify_rest_and_result(
+            DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim(),
+            32,
+            DATA_POINTS_500_COUNT,
+            VALUE.into(),
+            bytes,
+            res[0].clone(),
+        );
+
+        Ok(())
     }
 
     #[test]
@@ -351,54 +401,86 @@ mod tests {
     }
 
     #[test]
-    fn test_trim_two_data_points() {
-        let res =
-            TestProcessor::trim_data_points(&mut hex_to_bytes(DATA_POINT_BYTES_TAIL.into()), 2, 32);
-        assert_eq!(res, Err(Error::SizeNotSupported(2)));
+    fn test_trim_above_max_available_data_points() {
+        let res = TestProcessor::trim_data_points(
+            &mut hex_to_bytes(DATA_POINT_BYTES_TAIL.trim().into()),
+            u16::MAX as usize + 1,
+            32,
+        );
+        assert_eq!(res, Err(Error::SizeNotSupported(u16::MAX as usize + 1)));
     }
 
     #[test]
-    fn test_trim_data_point() {
-        test_trim_data_point_of(DATA_POINT_BYTES_TAIL, 32, VALUE.into());
+    fn test_trim_data_point() -> Result<(), Error> {
+        test_trim_data_point_of(DATA_POINT_BYTES_TAIL, 32, 1, VALUE.into())
     }
 
     #[test]
-    fn test_trim_data_point_with_prefix() {
+    fn test_trim_medium_slice_of_data_points() -> Result<(), Error> {
+        test_trim_data_point_of(
+            DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim(),
+            32,
+            DATA_POINTS_50_COUNT,
+            VALUE.into(),
+        )
+    }
+
+    #[test]
+    fn test_trim_large_slice_of_data_points() -> Result<(), Error> {
+        test_trim_data_point_of(
+            DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim(),
+            32,
+            DATA_POINTS_500_COUNT,
+            VALUE.into(),
+        )
+    }
+
+    #[test]
+    fn test_trim_data_point_with_prefix() -> Result<(), Error> {
         test_trim_data_point_of(
             &("a2a812f3ee1b".to_owned() + DATA_POINT_BYTES_TAIL),
             32,
+            1,
             VALUE.into(),
-        );
+        )
     }
 
     #[test]
-    fn test_trim_data_point_other_lengths() {
+    fn test_trim_data_point_other_lengths() -> Result<(), Error> {
         for i in 1..VALUE_SIZE {
             test_trim_data_point_of(
                 &DATA_POINT_BYTES_TAIL[..DATA_POINT_BYTES_TAIL.len() - 2 * i],
                 32 - i,
+                1,
                 Value::from_u256(primitive_types::U256::from(VALUE).shr(8 * i as u32)),
-            );
+            )?;
         }
+        Ok(())
     }
 
-    fn test_trim_data_point_of(value: &str, size: usize, expected_value: Value) {
+    fn test_trim_data_point_of(
+        value: &str,
+        size: usize,
+        count: usize,
+        expected_value: Value,
+    ) -> Result<(), Error> {
         let mut bytes = hex_to_bytes(value.into());
-        let result = TestProcessor::trim_data_point(&mut bytes, size);
-
-        verify_rest_and_result(value, size, expected_value, bytes, result);
+        let result = TestProcessor::trim_data_points(&mut bytes, count, size)?;
+        verify_rest_and_result(value, size, count, expected_value, bytes, result[0].clone());
+        Ok(())
     }
 
     fn verify_rest_and_result(
         value: &str,
         size: usize,
+        count: usize,
         expected_value: Value,
         rest: Vec<u8>,
         result: DataPoint,
     ) {
         assert_eq!(
             rest,
-            hex_to_bytes(value[..value.len() - 2 * (size + DATA_FEED_ID_BS)].into())
+            hex_to_bytes(value[..value.len() - 2 * (size + DATA_FEED_ID_BS) * count].into())
         );
 
         let data_point = DataPoint {

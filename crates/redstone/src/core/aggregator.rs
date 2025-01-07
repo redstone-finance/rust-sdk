@@ -41,7 +41,7 @@ pub(crate) fn aggregate_values(
     data_packages: Vec<DataPackage>,
     config: &Config,
 ) -> Result<Vec<Value>, Error> {
-    aggregate_matrix(make_value_signer_matrix(config, data_packages), config)
+    aggregate_matrix(make_value_signer_matrix(config, data_packages)?, config)
 }
 
 fn aggregate_matrix(matrix: Matrix, config: &Config) -> Result<Vec<Value>, Error> {
@@ -62,20 +62,32 @@ fn aggregate_matrix(matrix: Matrix, config: &Config) -> Result<Vec<Value>, Error
         .collect()
 }
 
-fn make_value_signer_matrix(config: &Config, data_packages: Vec<DataPackage>) -> Matrix {
+/// Makes the value signer matrix.
+/// This function may fail if DataPackage contains DataPoints with reocuring FeedId
+/// or if FeedId has a wrong ASCII representation.
+/// Chekck FeedId crate for more details.
+fn make_value_signer_matrix(
+    config: &Config,
+    data_packages: Vec<DataPackage>,
+) -> Result<Matrix, Error> {
     let mut matrix = vec![vec![None; config.signers.len()]; config.feed_ids.len()];
 
-    data_packages.iter().for_each(|data_package| {
-        if let Some(signer_index) = config.signer_index(&data_package.signer_address) {
-            data_package.data_points.iter().for_each(|data_point| {
-                if let Some(feed_index) = config.feed_index(data_point.feed_id) {
-                    matrix[feed_index][signer_index] = data_point.value.into()
-                }
-            })
+    for data_package in data_packages.iter() {
+        let Some(signer_index) = config.signer_index(&data_package.signer_address) else {
+            continue;
+        };
+        'data_points_iter: for data_point in data_package.data_points.iter() {
+            let Some(feed_index) = config.feed_index(data_point.feed_id) else {
+                continue 'data_points_iter;
+            };
+            if matrix[feed_index][signer_index].is_some() {
+                return Err(Error::ReocuringFeedId(data_point.feed_id));
+            }
+            matrix[feed_index][signer_index] = data_point.value.into();
         }
-    });
+    }
 
-    matrix
+    Ok(matrix)
 }
 
 #[cfg(feature = "helpers")]
@@ -178,131 +190,136 @@ mod make_value_signer_matrix {
             test_helpers::{AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2},
         },
         helpers::iter_into::IterInto,
+        network::error::Error,
         protocol::data_package::DataPackage,
         Value,
     };
 
     #[test]
-    fn test_make_value_signer_matrix_empty() {
+    fn test_make_value_signer_matrix_empty() -> Result<(), Error> {
         let config = Config::test();
 
         test_make_value_signer_matrix_of(
             vec![],
             vec![vec![None; config.signers.len()]; config.feed_ids.len()],
-        );
+        )
     }
 
     #[test]
-    fn test_make_value_signer_matrix_exact() {
+    fn test_make_value_signer_matrix_exact() -> Result<(), Error> {
         let data_packages = vec![
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
         ];
 
         test_make_value_signer_matrix_of(
             data_packages,
             vec![vec![11, 12].iter_into(), vec![21, 22].iter_into()],
-        );
+        )
     }
 
     #[test]
-    fn test_make_value_signer_matrix_greater() {
+    fn test_make_value_signer_matrix_greater() -> Result<(), Error> {
         let data_packages = vec![
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
         ];
 
         test_make_value_signer_matrix_of(
             data_packages,
             vec![vec![11, 12].iter_into(), vec![21, 22].iter_into()],
-        );
+        )
     }
 
     #[test]
-    fn test_make_value_signer_matrix_smaller() {
+    fn test_make_value_signer_matrix_smaller() -> Result<(), Error> {
         let data_packages = vec![
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
         ];
 
         test_make_value_signer_matrix_of(
             data_packages,
             vec![vec![11, 12].iter_into(), vec![None; 2]],
-        );
+        )
     }
 
     #[test]
-    fn test_make_value_signer_matrix_diagonal() {
+    fn test_make_value_signer_matrix_diagonal() -> Result<(), Error> {
         let data_packages = vec![
-            DataPackage::test(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
         ];
 
         test_make_value_signer_matrix_of(
             data_packages,
             vec![vec![11.into(), None], vec![None, 22.into()]],
-        );
+        )
     }
 
     #[test]
-    fn test_make_value_signer_matrix_repetitions() {
+    fn test_make_value_signer_matrix_repetitions() -> Result<(), Error> {
         let data_packages = vec![
-            DataPackage::test(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(BTC, 202, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 101, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 202, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 101, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        test_make_value_signer_matrix_of(
-            data_packages,
-            vec![vec![101, 12].iter_into(), vec![21, 202].iter_into()],
+        let result = test_make_value_signer_matrix_of(data_packages, vec![vec![]]);
+
+        assert_eq!(
+            result,
+            Err(Error::ReocuringFeedId(BTC.as_bytes().to_vec().into()))
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_make_value_signer_matrix_all_wrong() {
+    fn test_make_value_signer_matrix_all_wrong() -> Result<(), Error> {
         let config = Config::test();
 
         let data_packages = vec![
-            DataPackage::test(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
         ];
 
         test_make_value_signer_matrix_of(
             data_packages,
             vec![vec![None; config.signers.len()]; config.feed_ids.len()],
-        );
+        )
     }
 
     #[test]
-    fn test_make_value_signer_matrix_mix() {
+    fn test_make_value_signer_matrix_mix() -> Result<(), Error> {
         let data_packages = vec![
-            DataPackage::test(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
         ];
 
         test_make_value_signer_matrix_of(
             data_packages,
             vec![vec![11, 12].iter_into(), vec![None; 2]],
-        );
+        )
     }
 
     fn test_make_value_signer_matrix_of(
         data_packages: Vec<DataPackage>,
         expected_values: Vec<Vec<Option<u128>>>,
-    ) {
+    ) -> Result<(), Error> {
         let config = &Config::test();
-        let result = make_value_signer_matrix(config, data_packages);
+        let result = make_value_signer_matrix(config, data_packages)?;
 
         let expected_matrix: Matrix = expected_values
             .iter()
@@ -313,6 +330,8 @@ mod make_value_signer_matrix {
             })
             .collect();
 
-        assert_eq!(result, expected_matrix)
+        assert_eq!(result, expected_matrix);
+
+        Ok(())
     }
 }

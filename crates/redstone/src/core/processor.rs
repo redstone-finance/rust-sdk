@@ -19,7 +19,7 @@ use crate::{
 ///
 /// # Returns
 ///
-/// * Returns a `ProcessorResult` in case of succesfull payload processing. Will panic in case of bad input.
+/// * Returns a `ProcessorResult` in case of successful payload processing. Will panic in case of bad input.
 pub fn process_payload(
     config: &impl RedStoneConfig,
     payload_bytes: impl Into<Bytes>,
@@ -36,7 +36,7 @@ trait RedStonePayloadProcessor {
     ///
     /// # Returns
     ///
-    /// * Returns a `ProcessorResult` in case of succesfull payload processing. Will panic in case of bad input.
+    /// * Returns a `ProcessorResult` in case of successful payload processing. Will panic in case of bad input.
     fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult;
 }
 
@@ -80,32 +80,32 @@ mod tests {
             },
         },
         helpers::iter_into::IterInto,
-        network::StdEnv,
+        network::{error::Error, StdEnv},
         protocol::{data_package::DataPackage, payload::Payload},
     };
 
     #[test]
-    fn test_make_processor_result() {
+    fn test_make_processor_result_for_single_datapoint() {
         let data_packages = vec![
-            DataPackage::test(
+            DataPackage::test_single_data_point(
                 ETH,
                 11,
                 TEST_SIGNER_ADDRESS_1,
                 (TEST_BLOCK_TIMESTAMP + 5).into(),
             ),
-            DataPackage::test(
+            DataPackage::test_single_data_point(
                 ETH,
                 13,
                 TEST_SIGNER_ADDRESS_2,
                 (TEST_BLOCK_TIMESTAMP + 3).into(),
             ),
-            DataPackage::test(
+            DataPackage::test_single_data_point(
                 BTC,
                 32,
                 TEST_SIGNER_ADDRESS_2,
                 (TEST_BLOCK_TIMESTAMP - 2).into(),
             ),
-            DataPackage::test(
+            DataPackage::test_single_data_point(
                 BTC,
                 31,
                 TEST_SIGNER_ADDRESS_1,
@@ -121,6 +121,90 @@ mod tests {
                 min_timestamp: (TEST_BLOCK_TIMESTAMP - 2).into(),
                 values: vec![12u8, 31].iter_into()
             })
+        );
+    }
+
+    #[test]
+    fn test_make_processor_result_for_multi_datapoint() {
+        let data_packages = vec![
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 10), (BTC, 31)],
+                TEST_SIGNER_ADDRESS_2,
+                (TEST_BLOCK_TIMESTAMP + 3).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 13), (BTC, 32)],
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
+            ),
+        ];
+
+        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
+
+        assert_eq!(
+            result,
+            Ok(ValidatedPayload {
+                min_timestamp: (TEST_BLOCK_TIMESTAMP + 3).into(),
+                values: vec![11u8, 31].iter_into()
+            })
+        );
+    }
+
+    #[test]
+    fn test_make_processor_result_for_multi_datapoint_package_repetition() {
+        let data_packages = vec![
+            DataPackage::test_multi_data_point(
+                vec![(BTC, 30), (ETH, 11)],
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 5).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 10), (BTC, 31)],
+                TEST_SIGNER_ADDRESS_2,
+                (TEST_BLOCK_TIMESTAMP + 3).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(BTC, 34), (ETH, 12)],
+                TEST_SIGNER_ADDRESS_2, // REPETITION OF A SIGNER
+                (TEST_BLOCK_TIMESTAMP - 2).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 13), (BTC, 32)],
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
+            ),
+        ];
+
+        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
+
+        assert_eq!(
+            result,
+            Err(Error::ReocuringFeedId(BTC.as_bytes().to_vec().into()))
+        );
+    }
+
+    #[test]
+    fn test_make_processor_result_for_multi_datapoint_with_datapoint_repetition() {
+        // given
+        let data_packages = vec![
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 10), (BTC, 31), (BTC, 33)], // REPETITION IN DATAPOINTS HERE.
+                TEST_SIGNER_ADDRESS_2,
+                (TEST_BLOCK_TIMESTAMP + 3).into(),
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 13), (BTC, 32)],
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
+            ),
+        ];
+
+        // when, then
+        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
+
+        assert_eq!(
+            result,
+            Err(Error::ReocuringFeedId(BTC.as_bytes().to_vec().into()))
         );
     }
 }
