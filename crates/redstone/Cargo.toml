@@ -59,11 +59,6 @@ getrandom = { version = "^0.2.15", default-features = false, features = ["js"] }
 
 [dev-dependencies]
 itertools = { version = "^0.13.0" }
-criterion = "0.5.1"
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 wasm-bindgen-test = { version = "^0.3.45" }
-
-[[bench]]
-name = "benchmarks"
-harness = false

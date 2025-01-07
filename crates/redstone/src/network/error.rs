@@ -79,11 +79,6 @@ pub enum Error {
     /// acceptance window.
     TimestampTooFuture(usize, TimestampMillis),
 
-    /// Indicates that a character in FeedId is not allowed.
-    ///
-    /// FeedId shall be a composition of ASCII letters and numbers.
-    UnhandlableCharInFeedID(char, FeedId),
-
     /// Indicates that a FeedId is reocuring in data points.
     ReocuringFeedId(FeedId),
 }
@@ -102,8 +97,7 @@ impl Error {
             Error::ArrayIsEmpty => 510,
             Error::WrongRedStoneMarker(_) => 511,
             Error::NonEmptyPayloadRemainder(_) => 512,
-            Error::UnhandlableCharInFeedID(_, _) => 513,
-            Error::ReocuringFeedId(_) => 514,
+            Error::ReocuringFeedId(_) => 513,
             Error::InsufficientSignerCount(data_package_index, value, _) => {
                 (2000 + data_package_index * 10 + value) as u16
             }
@@ -148,9 +142,6 @@ impl Display for Error {
                 "Timestamp {:?} is too future for #{}",
                 value, data_package_index
             ),
-            Error::UnhandlableCharInFeedID(ch, feed) => {
-                write!(f, "Unhandlable character {ch} in feed {feed:?}")
-            }
             Error::ReocuringFeedId(feed) => {
                 write!(f, "Reocuriung FeedId: {feed:?} in data points")
             }

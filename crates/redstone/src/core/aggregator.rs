@@ -2,7 +2,6 @@ use alloc::vec::Vec;
 
 use crate::{
     core::{config::Config, validator::Validator},
-    helpers::trie::Trie,
     network::error::Error,
     protocol::data_package::DataPackage,
     types::Value,
@@ -77,14 +76,13 @@ fn make_value_signer_matrix(
         let Some(signer_index) = config.signer_index(&data_package.signer_address) else {
             continue;
         };
-        let mut trie = Trie::default();
         'data_points_iter: for data_point in data_package.data_points.iter() {
-            if !trie.store(&data_point.feed_id)? {
-                return Err(Error::ReocuringFeedId(data_point.feed_id));
-            }
             let Some(feed_index) = config.feed_index(data_point.feed_id) else {
                 continue 'data_points_iter;
             };
+            if matrix[feed_index][signer_index].is_some() {
+                return Err(Error::ReocuringFeedId(data_point.feed_id));
+            }
             matrix[feed_index][signer_index] = data_point.value.into();
         }
     }
@@ -197,13 +195,21 @@ mod make_value_signer_matrix {
         Value,
     };
 
+    enum ExpectedResult {
+        Values(Vec<Vec<Option<u128>>>),
+        Failure(Error),
+    }
+
     #[test]
     fn test_make_value_signer_matrix_empty() -> Result<(), Error> {
         let config = Config::test();
 
         test_make_value_signer_matrix_of(
             vec![],
-            vec![vec![None; config.signers.len()]; config.feed_ids.len()],
+            ExpectedResult::Values(vec![
+                vec![None; config.signers.len()];
+                config.feed_ids.len()
+            ]),
         )
     }
 
@@ -218,7 +224,7 @@ mod make_value_signer_matrix {
 
         test_make_value_signer_matrix_of(
             data_packages,
-            vec![vec![11, 12].iter_into(), vec![21, 22].iter_into()],
+            ExpectedResult::Values(vec![vec![11, 12].iter_into(), vec![21, 22].iter_into()]),
         )
     }
 
@@ -235,7 +241,7 @@ mod make_value_signer_matrix {
 
         test_make_value_signer_matrix_of(
             data_packages,
-            vec![vec![11, 12].iter_into(), vec![21, 22].iter_into()],
+            ExpectedResult::Values(vec![vec![11, 12].iter_into(), vec![21, 22].iter_into()]),
         )
     }
 
@@ -248,7 +254,7 @@ mod make_value_signer_matrix {
 
         test_make_value_signer_matrix_of(
             data_packages,
-            vec![vec![11, 12].iter_into(), vec![None; 2]],
+            ExpectedResult::Values(vec![vec![11, 12].iter_into(), vec![None; 2]]),
         )
     }
 
@@ -261,7 +267,7 @@ mod make_value_signer_matrix {
 
         test_make_value_signer_matrix_of(
             data_packages,
-            vec![vec![11.into(), None], vec![None, 22.into()]],
+            ExpectedResult::Values(vec![vec![11.into(), None], vec![None, 22.into()]]),
         )
     }
 
@@ -278,7 +284,7 @@ mod make_value_signer_matrix {
 
         test_make_value_signer_matrix_of(
             data_packages,
-            vec![vec![101, 12].iter_into(), vec![21, 202].iter_into()],
+            ExpectedResult::Failure(Error::ReocuringFeedId(BTC.as_bytes().to_vec().into())),
         )
     }
 
@@ -293,7 +299,10 @@ mod make_value_signer_matrix {
 
         test_make_value_signer_matrix_of(
             data_packages,
-            vec![vec![None; config.signers.len()]; config.feed_ids.len()],
+            ExpectedResult::Values(vec![
+                vec![None; config.signers.len()];
+                config.feed_ids.len()
+            ]),
         )
     }
 
@@ -308,27 +317,34 @@ mod make_value_signer_matrix {
 
         test_make_value_signer_matrix_of(
             data_packages,
-            vec![vec![11, 12].iter_into(), vec![None; 2]],
+            ExpectedResult::Values(vec![vec![11, 12].iter_into(), vec![None; 2]]),
         )
     }
 
     fn test_make_value_signer_matrix_of(
         data_packages: Vec<DataPackage>,
-        expected_values: Vec<Vec<Option<u128>>>,
+        expected_result: ExpectedResult,
     ) -> Result<(), Error> {
         let config = &Config::test();
-        let result = make_value_signer_matrix(config, data_packages)?;
+        let result = make_value_signer_matrix(config, data_packages);
 
-        let expected_matrix: Matrix = expected_values
-            .iter()
-            .map(|row| {
-                row.iter()
-                    .map(|&value| value.map(Value::from))
-                    .collect::<Vec<_>>()
-            })
-            .collect();
+        match expected_result {
+            ExpectedResult::Values(expected_values) => {
+                let expected_matrix: Matrix = expected_values
+                    .iter()
+                    .map(|row| {
+                        row.iter()
+                            .map(|&value| value.map(Value::from))
+                            .collect::<Vec<_>>()
+                    })
+                    .collect();
 
-        assert_eq!(result, expected_matrix);
+                assert_eq!(result?, expected_matrix);
+            }
+            ExpectedResult::Failure(err) => {
+                assert_eq!(result, Err(err));
+            }
+        }
 
         Ok(())
     }
