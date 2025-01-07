@@ -352,8 +352,8 @@ mod tests {
 
     #[test]
     fn test_trim_medium_data_points() -> Result<(), Error> {
-        let test_datapaints_trimmed: String = DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim().into();
-        let mut bytes = hex_to_bytes(test_datapaints_trimmed.clone());
+        let test_data_points_trimmed: String = DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim().into();
+        let mut bytes = hex_to_bytes(test_data_points_trimmed.clone());
         let res = TestProcessor::trim_data_points(&mut bytes, DATA_POINTS_50_COUNT, 32)?;
         assert_eq!(res.len(), DATA_POINTS_50_COUNT);
         verify_rest_and_result(
@@ -370,8 +370,9 @@ mod tests {
 
     #[test]
     fn test_trim_large_data_points() -> Result<(), Error> {
-        let test_datapaints_trimmed: String = DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim().into();
-        let mut bytes = hex_to_bytes(test_datapaints_trimmed.clone());
+        let test_data_points_trimmed: String =
+            DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim().into();
+        let mut bytes = hex_to_bytes(test_data_points_trimmed.clone());
         let res = TestProcessor::trim_data_points(&mut bytes, DATA_POINTS_500_COUNT, 32)?;
         assert_eq!(res.len(), DATA_POINTS_500_COUNT);
         verify_rest_and_result(
