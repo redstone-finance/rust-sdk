@@ -6,8 +6,8 @@ use crate::{
     network::{error::Error, Environment},
     protocol::{
         constants::{
-            DATA_FEED_ID_BS, DATA_PACKAGES_COUNT_BS, DATA_PACKAGES_COUNT_MAX_VALUE,
-            DATA_POINTS_COUNT_BS, DATA_POINT_VALUE_BYTE_SIZE_BS, SIGNATURE_BS, TIMESTAMP_BS,
+            DATA_FEED_ID_BS, DATA_PACKAGES_COUNT_BS, DATA_POINTS_COUNT_BS,
+            DATA_POINT_COUNT_MAX_VALUE, DATA_POINT_VALUE_BYTE_SIZE_BS, SIGNATURE_BS, TIMESTAMP_BS,
             UNSIGNED_METADATA_BYTE_SIZE_BS,
         },
         data_package::DataPackage,
@@ -89,9 +89,7 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         count: usize,
         value_size: usize,
     ) -> Result<Vec<DataPoint>, Error> {
-        if count > DATA_PACKAGES_COUNT_MAX_VALUE || count == 0 {
-            return Err(Error::SizeNotSupported(count));
-        }
+        Self::check_data_point_count(count)?;
 
         let mut data_points = Vec::with_capacity(count);
 
@@ -111,6 +109,14 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
             value: value.into(),
             feed_id,
         }
+    }
+
+    #[inline(always)]
+    fn check_data_point_count(count: usize) -> Result<(), Error> {
+        if count > DATA_POINT_COUNT_MAX_VALUE || count == 0 {
+            return Err(Error::SizeNotSupported(count));
+        }
+        Ok(())
     }
 }
 
