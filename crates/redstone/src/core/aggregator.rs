@@ -63,9 +63,9 @@ fn aggregate_matrix(matrix: Matrix, config: &Config) -> Result<Vec<Value>, Error
 }
 
 /// Makes the value signer matrix.
-/// This function may fail if DataPackage contains DataPoints with reocuring FeedId
+/// This function may fail if DataPackage contains DataPoints with reoccurring FeedId
 /// or if FeedId has a wrong ASCII representation.
-/// Chekck FeedId crate for more details.
+/// Check FeedId crate for more details.
 fn make_value_signer_matrix(
     config: &Config,
     data_packages: Vec<DataPackage>,
