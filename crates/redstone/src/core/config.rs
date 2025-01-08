@@ -1,6 +1,5 @@
 use crate::{
-    helpers::slice::has_repetition_quadratic_lookup, network::error::Error, FeedId, SignerAddress,
-    TimestampMillis,
+    helpers::slice::has_repetition, network::error::Error, FeedId, SignerAddress, TimestampMillis,
 };
 use alloc::vec::Vec;
 
@@ -53,7 +52,7 @@ impl Config {
     #[inline]
     fn validate_feed_ids_list(&self) -> Result<(), Error> {
         self.is_feed_ids_empty()?;
-        has_repetition_quadratic_lookup(&self.feed_ids)
+        has_repetition(&self.feed_ids)
             .map_or_else(|| Ok(()), |v| Err(Error::ConfigReocuringFeedId(v)))
     }
 
@@ -70,7 +69,7 @@ impl Config {
     fn validate_signers_list(&self) -> Result<(), Error> {
         self.is_signers_count_in_threshold()?;
         self.is_signer_count_not_exceeded()?;
-        has_repetition_quadratic_lookup(&self.signers)
+        has_repetition(&self.signers)
             .map_or_else(|| Ok(()), |v| Err(Error::ConfigReocuringSigner(v)))
     }
 
