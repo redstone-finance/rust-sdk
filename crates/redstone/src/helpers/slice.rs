@@ -2,13 +2,13 @@
 ///
 /// # Arguments
 ///
-/// * `list` - A `&[T]` list where `T` implements `PartialEq`, `Eq` and `Copy` traits.
+/// * `list` - A `&[T]` list where `T` implements `PartialEq`, `Eq`, `Copy` and `Ord` traits.
 ///
 /// # Returns
 ///
 /// Returns a `Option<T>` which contains first repeated element found in the list or if there is no repeated
 /// element then None otherwise.
-pub fn has_repetition<T>(list: &[T]) -> Option<T>
+pub fn has_duplicates<T>(list: &[T]) -> Option<T>
 where
     T: PartialEq + Eq + Copy + Ord,
 {
@@ -46,7 +46,7 @@ mod test {
         ];
 
         for test_case in test_cases.iter_mut() {
-            let result = has_repetition(test_case);
+            let result = has_duplicates(test_case);
             assert_eq!(result, None)
         }
     }
@@ -62,7 +62,7 @@ mod test {
         ];
 
         for test_case in test_cases.iter_mut() {
-            let result = has_repetition(&mut test_case.0);
+            let result = has_duplicates(&mut test_case.0);
             assert_eq!(result, test_case.1)
         }
     }
@@ -78,7 +78,7 @@ mod test {
         ];
 
         for test_case in test_cases.iter_mut() {
-            let result = has_repetition(test_case);
+            let result = has_duplicates(test_case);
             assert_eq!(result, None)
         }
     }
@@ -94,7 +94,7 @@ mod test {
         ];
 
         for test_case in test_cases.iter_mut() {
-            let result = has_repetition(&mut test_case.0);
+            let result = has_duplicates(&mut test_case.0);
             assert_eq!(result, test_case.1)
         }
     }
