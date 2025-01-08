@@ -41,7 +41,7 @@ pub(crate) fn aggregate_values(
     data_packages: Vec<DataPackage>,
     config: &Config,
 ) -> Result<Vec<Value>, Error> {
-    config.verify_members()?;
+    config.verify()?;
     aggregate_matrix(make_value_signer_matrix(config, data_packages)?, config)
 }
 

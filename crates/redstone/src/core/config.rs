@@ -37,14 +37,14 @@ pub struct Config {
 }
 
 impl Config {
-    /// Verifies members of the config.
+    /// Verifies all members of the config.
     ///
     /// This method checks whether all configs members are correct.
     ///
     /// # Returns
     ///
     /// * Success `()` if config is valid or Err with `Error` otherwise.
-    pub(crate) fn verify_members(&self) -> Result<(), Error> {
+    pub(crate) fn verify(&self) -> Result<(), Error> {
         self.validate_feed_ids_list()?;
         self.validate_signers_list()
     }
