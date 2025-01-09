@@ -123,6 +123,7 @@ impl Config {
 }
 
 #[cfg(test)]
+#[cfg(feature = "helpers")]
 mod tests {
     use super::*;
     use crate::helpers::hex::{hex_to_bytes, make_feed_id, make_feed_ids};
