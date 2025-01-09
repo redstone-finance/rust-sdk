@@ -1,63 +1,87 @@
 use crate::{
-    network::error::Error, utils::slice::has_duplicates, FeedId, SignerAddress, TimestampMillis,
+    network::error::Error, utils::slice::check_no_duplicates, FeedId, SignerAddress,
+    TimestampMillis,
 };
 use alloc::vec::Vec;
+use derive_getters::Getters;
 
-/// MAX_SIGNERS_COUNT describes maximum number of signers in Config.
-const MAX_SIGNERS_COUNT: usize = u8::MAX as usize;
+/// MAX_SIGNER_COUNT describes maximum number of signers in Config.
+const MAX_SIGNER_COUNT: usize = u8::MAX as usize;
 
 /// Configuration for a RedStone payload processor.
 ///
 /// Specifies the parameters necessary for the verification and aggregation of values
 /// from various data points passed by the RedStone payload.
-#[derive(Debug)]
+#[derive(Debug, Getters)]
 pub struct Config {
     /// The minimum number of signers required validating the data.
     ///
     /// Specifies how many unique signers (from different addresses) are required
     /// for the data to be considered valid and trustworthy.
-    pub signer_count_threshold: u8,
+    signer_count_threshold: u8,
 
     /// List of identifiers for signers authorized to sign the data.
     ///
     /// Each signer is identified by a unique, network-specific byte string (`Bytes`),
     /// which represents their address.
-    pub signers: Vec<SignerAddress>,
+    signers: Vec<SignerAddress>,
 
     /// Identifiers for the data feeds from which values are aggregated.
     ///
     /// Each data feed id is represented by the `FeedId` type.
-    pub feed_ids: Vec<FeedId>,
+    feed_ids: Vec<FeedId>,
 
     /// The current block time in timestamp format, used for verifying data timeliness.
     ///
     /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970) and allows
     /// for determining whether the data is current in the context of blockchain time.
-    pub block_timestamp: TimestampMillis,
+    block_timestamp: TimestampMillis,
 }
 
 impl Config {
     /// Verifies all members of the config.
     ///
-    /// This method checks whether all configs members are correct.
+    /// This method checks whether all config members are correct.
+    ///
+    /// # Arguments
+    ///
+    /// * `signer_count_threshold` - The minimum number of signers required validating the data.
+    /// * `signers` - List of identifiers for signers authorized to sign the data.
+    /// * `feed_ids` - Identifiers for the data feeds from which values are aggregated.
+    /// * `block_timestamp` - The current block time in timestamp format, used for verifying data timeliness.
     ///
     /// # Returns
     ///
-    /// * Success `()` if config is valid or Err with `Error` otherwise.
-    pub(crate) fn verify(&self) -> Result<(), Error> {
-        self.validate_feed_ids_list()?;
-        self.validate_signers_list()
+    /// * Success `Self` if arguments to the functions are correct
+    ///   or cresponding Err with `redstone::network::Error` otherwise.
+    pub fn try_new(
+        signer_count_threshold: u8,
+        signers: Vec<SignerAddress>,
+        feed_ids: Vec<FeedId>,
+        block_timestamp: TimestampMillis,
+    ) -> Result<Self, Error> {
+        let config = Self {
+            signer_count_threshold,
+            signers,
+            feed_ids,
+            block_timestamp,
+        };
+
+        config.verify_signer_list()?;
+        config.verify_feed_id_list()?;
+
+        Ok(config)
     }
 
     #[inline]
-    fn validate_feed_ids_list(&self) -> Result<(), Error> {
-        self.is_feed_ids_empty()?;
-        has_duplicates(&self.feed_ids)
+    fn verify_feed_id_list(&self) -> Result<(), Error> {
+        self.verify_feed_id_list_empty()?;
+        check_no_duplicates(&self.feed_ids)
             .map_or_else(|| Ok(()), |v| Err(Error::ConfigReocuringFeedId(v)))
     }
 
     #[inline(always)]
-    fn is_feed_ids_empty(&self) -> Result<(), Error> {
+    fn verify_feed_id_list_empty(&self) -> Result<(), Error> {
         if self.feed_ids.is_empty() {
             return Err(Error::ConfigEmptyFeedIds);
         }
@@ -66,17 +90,17 @@ impl Config {
     }
 
     #[inline]
-    fn validate_signers_list(&self) -> Result<(), Error> {
-        self.is_signers_count_in_threshold()?;
-        self.is_signer_count_not_exceeded()?;
-        has_duplicates(&self.signers)
+    fn verify_signer_list(&self) -> Result<(), Error> {
+        self.verify_signer_count_in_threshold()?;
+        self.verify_signer_count_not_exceeded()?;
+        check_no_duplicates(&self.signers)
             .map_or_else(|| Ok(()), |v| Err(Error::ConfigReocuringSigner(v)))
     }
 
     #[inline(always)]
-    fn is_signers_count_in_threshold(&self) -> Result<(), Error> {
+    fn verify_signer_count_in_threshold(&self) -> Result<(), Error> {
         if self.signers.len() < self.signer_count_threshold as usize || self.signers.is_empty() {
-            return Err(Error::ConfigInsufficientSignersCount(
+            return Err(Error::ConfigInsufficientSignerCount(
                 self.signers.len() as u8,
                 self.signer_count_threshold,
             ));
@@ -86,11 +110,11 @@ impl Config {
     }
 
     #[inline(always)]
-    fn is_signer_count_not_exceeded(&self) -> Result<(), Error> {
-        if self.signers.len() > MAX_SIGNERS_COUNT {
-            return Err(Error::ConfigExceededSignersCount(
+    fn verify_signer_count_not_exceeded(&self) -> Result<(), Error> {
+        if self.signers.len() > MAX_SIGNER_COUNT {
+            return Err(Error::ConfigExceededSignerCount(
                 self.signers.len(),
-                MAX_SIGNERS_COUNT,
+                MAX_SIGNER_COUNT,
             ));
         }
 
@@ -115,7 +139,7 @@ mod tests {
             block_timestamp: 2000000000000.into(),
         };
 
-        config.validate_feed_ids_list()
+        config.verify_feed_id_list()
     }
 
     #[test]
@@ -130,7 +154,7 @@ mod tests {
             block_timestamp: 2000000000000.into(),
         };
 
-        let resutlt = config.validate_feed_ids_list();
+        let resutlt = config.verify_feed_id_list();
 
         assert_eq!(resutlt, Err(Error::ConfigEmptyFeedIds));
     }
@@ -154,7 +178,7 @@ mod tests {
             block_timestamp: 2000000000000.into(),
         };
 
-        let resutlt = config.validate_feed_ids_list();
+        let resutlt = config.verify_feed_id_list();
 
         assert_eq!(
             resutlt,
@@ -177,7 +201,7 @@ mod tests {
             block_timestamp: 2000000000000.into(),
         };
 
-        config.validate_signers_list()
+        config.verify_signer_list()
     }
 
     #[test]
@@ -189,9 +213,9 @@ mod tests {
             block_timestamp: 2000000000000.into(),
         };
 
-        let resutlt = config.validate_signers_list();
+        let resutlt = config.verify_signer_list();
 
-        assert_eq!(resutlt, Err(Error::ConfigInsufficientSignersCount(0, 0)));
+        assert_eq!(resutlt, Err(Error::ConfigInsufficientSignerCount(0, 0)));
     }
 
     #[test]
@@ -209,9 +233,9 @@ mod tests {
             block_timestamp: 2000000000000.into(),
         };
 
-        let resutlt = config.validate_signers_list();
+        let resutlt = config.verify_signer_list();
 
-        assert_eq!(resutlt, Err(Error::ConfigInsufficientSignersCount(5, 6)));
+        assert_eq!(resutlt, Err(Error::ConfigInsufficientSignerCount(5, 6)));
     }
 
     #[test]
@@ -232,7 +256,7 @@ mod tests {
             block_timestamp: 2000000000000.into(),
         };
 
-        let resutlt = config.validate_signers_list();
+        let resutlt = config.verify_signer_list();
 
         assert_eq!(
             resutlt,
@@ -257,11 +281,11 @@ mod tests {
             block_timestamp: 2000000000000.into(),
         };
 
-        let resutlt = config.validate_signers_list();
+        let resutlt = config.verify_signer_list();
 
         assert_eq!(
             resutlt,
-            Err(Error::ConfigExceededSignersCount(257, MAX_SIGNERS_COUNT))
+            Err(Error::ConfigExceededSignerCount(257, MAX_SIGNER_COUNT))
         );
     }
 

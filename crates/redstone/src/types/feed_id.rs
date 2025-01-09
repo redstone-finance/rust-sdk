@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-use core::fmt;
 
 #[cfg(feature = "radix")]
 use scrypto::prelude::*;
@@ -11,7 +10,7 @@ use crate::types::{Sanitized, VALUE_SIZE};
 /// converted to bytearray and padded with zeroes to the right.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "radix", derive(ScryptoSbor))]
-pub struct FeedId(pub [u8; VALUE_SIZE]);
+pub struct FeedId(pub(crate) [u8; VALUE_SIZE]);
 
 // trim zeros from both sides
 fn trim_zeros(v: Vec<u8>) -> Vec<u8> {
@@ -40,28 +39,5 @@ impl From<Vec<u8>> for FeedId {
         buff[0..value.len()].copy_from_slice(&value);
 
         Self(buff)
-    }
-}
-
-impl fmt::Display for FeedId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            String::from_utf8(self.0.to_vec())
-                .unwrap_or_default()
-                .trim_matches('\0')
-        )
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_display_of_signer_address() {
-        let test_feed_id: FeedId = b"ETH".to_vec().into();
-        assert_eq!("ETH", format!("{test_feed_id}"));
     }
 }

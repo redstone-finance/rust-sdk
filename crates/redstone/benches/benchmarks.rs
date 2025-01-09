@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use redstone::utils::slice::has_duplicates;
+use redstone::utils::slice::check_no_duplicates;
 
 const ELEM_COUNT: usize = 256;
 
@@ -11,7 +11,7 @@ fn benchmark_has_duplicates_unique_reversed(c: &mut Criterion) {
 
     c.bench_function("benchmark_has_duplicates_unique_reversed", |b| {
         b.iter(|| {
-            if let Some(_) = has_duplicates(&slice) {
+            if check_no_duplicates(&slice).is_some() {
                 panic!("Shouldn't find any repetition in benchmark");
             };
         })
@@ -26,7 +26,7 @@ fn benchmark_has_duplicates_unique_sorted(c: &mut Criterion) {
 
     c.bench_function("benchmark_has_duplicates_unique_sorted", |b| {
         b.iter(|| {
-            if let Some(_) = has_duplicates(&slice) {
+            if check_no_duplicates(&slice).is_some() {
                 panic!("Shouldn't find any repetition in benchmark");
             };
         })
@@ -53,7 +53,7 @@ fn benchmark_has_duplicates_unique_shuffled(c: &mut Criterion) {
 
     c.bench_function("benchmark_has_duplicates_unique_shuffled", |b| {
         b.iter(|| {
-            if let Some(_) = has_duplicates(&slice) {
+            if check_no_duplicates(&slice).is_some() {
                 panic!("Shouldn't find any repetition in benchmark");
             };
         })
@@ -80,11 +80,57 @@ fn benchmark_has_duplicates_not_unique_shuffled(c: &mut Criterion) {
 
     c.bench_function("benchmark_has_duplicates_unique_shuffled", |b| {
         b.iter(|| {
-            let Some(_) = has_duplicates(&slice) else {
+            let Some(_) = check_no_duplicates(&slice) else {
                 panic!("Shouldn't find any repetition in benchmark");
             };
         })
     });
+}
+
+fn benchmark_has_duplicates_unique_shuffled_extra_small(c: &mut Criterion) {
+    let slice = vec![94, 218, 60, 212];
+
+    c.bench_function(
+        "benchmark_has_duplicates_unique_shuffled_extra_small",
+        |b| {
+            b.iter(|| {
+                if check_no_duplicates(&slice).is_some() {
+                    panic!("Shouldn't find any repetition in benchmark");
+                };
+            })
+        },
+    );
+}
+fn benchmark_has_duplicates_unique_shuffled_medium(c: &mut Criterion) {
+    let slice = vec![
+        94, 218, 60, 212, 192, 42, 177, 209, 232, 95, 127, 89, 41, 133, 251, 130, 53, 84, 3, 46,
+    ];
+
+    c.bench_function(
+        "benchmark_has_duplicates_unique_shuffled_quite_small",
+        |b| {
+            b.iter(|| {
+                if check_no_duplicates(&slice).is_some() {
+                    panic!("Shouldn't find any repetition in benchmark");
+                };
+            })
+        },
+    );
+}
+
+fn benchmark_has_duplicates_unique_shuffled_small(c: &mut Criterion) {
+    let slice = vec![94, 218, 60, 212, 192, 42, 177, 209, 232, 95, 127, 89];
+
+    c.bench_function(
+        "benchmark_has_duplicates_unique_shuffled_quite_small",
+        |b| {
+            b.iter(|| {
+                if check_no_duplicates(&slice).is_some() {
+                    panic!("Shouldn't find any repetition in benchmark");
+                };
+            })
+        },
+    );
 }
 
 criterion_group!(
@@ -93,6 +139,9 @@ criterion_group!(
     benchmark_has_duplicates_unique_reversed,
     benchmark_has_duplicates_unique_shuffled,
     benchmark_has_duplicates_not_unique_shuffled,
+    benchmark_has_duplicates_unique_shuffled_extra_small,
+    benchmark_has_duplicates_unique_shuffled_medium,
+    benchmark_has_duplicates_unique_shuffled_small
 );
 
 criterion_main!(benches);

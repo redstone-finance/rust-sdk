@@ -1,6 +1,6 @@
 use alloc::{format, string::String, vec::Vec};
 
-use crate::{utils::trim_zeros::TrimZeros, FeedId};
+use crate::{utils::trim_zeros::TrimZeros, FeedId, SignerAddress};
 
 pub trait AsHexStr {
     fn as_hex_str(&self) -> String;
@@ -42,6 +42,12 @@ impl AsAsciiStr for Vec<u8> {
 }
 
 impl AsHexStr for FeedId {
+    fn as_hex_str(&self) -> String {
+        self.0.to_vec().trim_zeros().as_slice().as_hex_str()
+    }
+}
+
+impl AsHexStr for SignerAddress {
     fn as_hex_str(&self) -> String {
         self.0.to_vec().trim_zeros().as_slice().as_hex_str()
     }
