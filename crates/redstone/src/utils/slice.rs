@@ -1,31 +1,31 @@
-/// Performs lookup for repeated value in the list.
+/// Performs lookup for repeated value in the slice.
 ///
 /// # Arguments
 ///
-/// * `list` - A `&[T]` list where `T` implements `PartialEq`, `Eq`, `Copy` and `Ord` traits.
+/// * `slice` - A `&[T]` slice where `T` implements `PartialEq`, `Eq`, `Copy` and `Ord` traits.
 ///
 /// # Returns
 ///
-/// Returns a `Option<T>` which contains first repeated element found in the list or if there is no repeated
+/// Returns a `Option<T>` which contains first repeated element found in the slice or if there is no repeated
 /// element then None otherwise.
-pub fn has_duplicates<T>(list: &[T]) -> Option<T>
+pub fn has_duplicates<T>(slice: &[T]) -> Option<T>
 where
     T: PartialEq + Eq + Copy + Ord,
 {
-    if list.len() < 2 {
+    if slice.len() < 2 {
         return None;
     }
-    if list.len() == 2 {
-        if list[0] == list[1] {
-            return Some(list[0]);
+    if slice.len() == 2 {
+        if slice[0] == slice[1] {
+            return Some(slice[0]);
         }
         return None;
     }
-    let mut list: Vec<T> = list.to_vec();
-    list.sort();
-    for i in 1..list.len() {
-        if list[i - 1] == list[i] {
-            return Some(list[i]);
+    let mut slice: Vec<T> = slice.to_vec();
+    slice.sort_unstable();
+    for i in 1..slice.len() {
+        if slice[i - 1] == slice[i] {
+            return Some(slice[i]);
         }
     }
     None

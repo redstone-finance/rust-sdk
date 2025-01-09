@@ -1,6 +1,7 @@
 CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged
 DOC=cargo doc --no-deps --document-private-items
 TEST=RUST_BACKTRACE=full cargo test --features="helpers"
+BENCH=RUST_BACKTRACE=full cargo bench --features="helpers"
 FEATURE_SETS="crypto_k256" "crypto_k256,casper" "crypto_secp256k1" "crypto_secp256k1,casper" "crypto_secp256k1,casper-test" "crypto_secp256k1,radix" "solana" "radix" "default-crypto"
 WASM32_FEATURE_SETS="solana" "radix"
 
@@ -20,6 +21,12 @@ test: clippy
 	@for features in $(FEATURE_SETS); do \
         echo "Running tests with features: $$features"; \
         ($(TEST) --features=$$features); \
+    done
+
+bench:
+	@for features in $(FEATURE_SETS); do \
+        echo "Running benchmark with features: $$features"; \
+        ($(BENCH) --features=$$features); \
     done
 
 docs:

@@ -1,5 +1,5 @@
 use crate::{
-    helpers::slice::has_duplicates, network::error::Error, FeedId, SignerAddress, TimestampMillis,
+    network::error::Error, utils::slice::has_duplicates, FeedId, SignerAddress, TimestampMillis,
 };
 use alloc::vec::Vec;
 
