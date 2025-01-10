@@ -76,7 +76,7 @@ impl Config {
     #[inline]
     fn verify_feed_id_list(&self) -> Result<(), Error> {
         self.verify_feed_id_list_empty()?;
-        check_no_duplicates(&self.feed_ids).map_err(|v| Error::ConfigReocuringFeedId(v))
+        check_no_duplicates(&self.feed_ids).map_err(Error::ConfigReocuringFeedId)
     }
 
     #[inline(always)]
@@ -92,7 +92,7 @@ impl Config {
     fn verify_signer_list(&self) -> Result<(), Error> {
         self.verify_signer_count_in_threshold()?;
         self.verify_signer_count_not_exceeded()?;
-        check_no_duplicates(&self.signers).map_err(|v| Error::ConfigReocuringSigner(v))
+        check_no_duplicates(&self.signers).map_err(Error::ConfigReocuringSigner)
     }
 
     #[inline(always)]

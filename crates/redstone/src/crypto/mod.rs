@@ -1,7 +1,9 @@
+use crate::{Bytes, SignerAddress};
 use alloc::vec::Vec;
 use core::fmt::Debug;
+use primitive_types::U256;
 
-use crate::{Bytes, SignerAddress};
+const ECDSA_N_DIV_2: &str = "0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0";
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum CryptoError {
@@ -34,6 +36,7 @@ pub trait Crypto {
         message: A,
         signature: B,
     ) -> Result<SignerAddress, CryptoError> {
+        check_signature_malleability(signature.as_ref())?;
         let recovery_byte = signature.as_ref()[64]; // 65-byte representation
         let msg_hash = Self::keccak256(message);
         let key = Self::recover_public_key(
@@ -45,6 +48,14 @@ pub trait Crypto {
 
         Ok(key_hash.as_ref()[12..].to_vec().into()) // last 20 bytes
     }
+}
+
+fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
+    if U256::from_big_endian(&sig[32..64]) > ECDSA_N_DIV_2.into() {
+        return Err(CryptoError::Signature(sig.to_vec()));
+    }
+
+    Ok(())
 }
 
 #[cfg(feature = "helpers")]
