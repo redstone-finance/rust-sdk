@@ -8,7 +8,7 @@
 ///
 /// Returns a `Option<T>` which contains first repeated element found in the slice or if there is no repeated
 /// element then None otherwise.
-pub fn check_no_duplicates<T>(slice: &[T]) -> Option<T>
+pub fn check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
 where
     T: PartialEq + Eq + Copy + Ord,
 {
@@ -18,30 +18,30 @@ where
     }
 }
 
-fn quadratic_check_no_duplicates<T>(slice: &[T]) -> Option<T>
+fn quadratic_check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
 where
     T: PartialEq + Eq + Copy,
 {
     if slice.len() < 2 {
-        return None;
+        return Ok(());
     }
     if slice.len() == 2 {
         if slice[0] == slice[1] {
-            return Some(slice[0]);
+            return Err(slice[0]);
         }
-        return None;
+        return Ok(());
     }
     for (i, a) in slice.iter().enumerate() {
         for b in slice.iter().skip(i + 1) {
             if a == b {
-                return Some(*a);
+                return Err(*a);
             }
         }
     }
-    None
+    Ok(())
 }
 
-fn sort_check_no_duplicates<T>(slice: &[T]) -> Option<T>
+fn sort_check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
 where
     T: PartialEq + Eq + Copy + Ord,
 {
@@ -49,10 +49,10 @@ where
     slice.sort_unstable();
     for i in 1..slice.len() {
         if slice[i - 1] == slice[i] {
-            return Some(slice[i]);
+            return Err(slice[i]);
         }
     }
-    None
+    Ok(())
 }
 
 #[cfg(test)]
@@ -60,7 +60,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_has_repetition_quadratic_lookup_for_u32_unique_lists() {
+    fn test_has_repetition_quadratic_lookup_for_u32_unique_lists() -> Result<(), u32> {
         let test_cases: [Vec<u32>; 6] = [
             vec![1, 2, 3, 4, 5, 6, 7, 8, 9],
             vec![9, 8, 7, 6, 5, 4, 3, 2, 1],
@@ -87,17 +87,18 @@ mod test {
         ];
 
         for test_case in test_cases.iter() {
-            let result = check_no_duplicates(test_case);
-            assert_eq!(result, None)
+            check_no_duplicates(test_case)?;
         }
+
+        Ok(())
     }
 
     #[test]
     fn test_has_repetition_quadratic_lookup_for_u32_not_unique_lists() {
-        let test_cases: [(Vec<u32>, Option<u32>); 6] = [
-            (vec![1, 2, 3, 4, 5, 6, 7, 8, 1], Some(1)),
-            (vec![1, 2, 3, 4, 5, 6, 2, 8, 9], Some(2)),
-            (vec![1, 2, 2, 1], Some(1)),
+        let test_cases: [(Vec<u32>, u32); 6] = [
+            (vec![1, 2, 3, 4, 5, 6, 7, 8, 1], 1),
+            (vec![1, 2, 3, 4, 5, 6, 2, 8, 9], 2),
+            (vec![1, 2, 2, 1], 1),
             (
                 vec![
                     94, 218, 60, 212, 192, 42, 177, 209, 232, 95, 127, 89, 41, 133, 251, 130, 53,
@@ -116,20 +117,20 @@ mod test {
                     25, 125, 50, 155, 82, 253, 230, 92, 56, 121, 201, 2, 93, 40, 217, 210, 18, 241,
                     185, 68, 28, 73, 188, 216, 173, 183, 90, 51, 17, 138, 9, 254, 11, 49, 81,
                 ],
-                Some(254),
+                254,
             ),
-            (vec![9, 8, 7, 1, 2, 3, 1, 2, 3], Some(1)),
-            (vec![1, 2, 3, 4, 5, 5, 6, 7, 8, 9], Some(5)),
+            (vec![9, 8, 7, 1, 2, 3, 1, 2, 3], 1),
+            (vec![1, 2, 3, 4, 5, 5, 6, 7, 8, 9], 5),
         ];
 
         for test_case in test_cases.iter() {
             let result = check_no_duplicates(&test_case.0);
-            assert_eq!(result, test_case.1)
+            assert_eq!(result, Err(test_case.1))
         }
     }
 
     #[test]
-    fn test_has_repetition_quadratic_lookup_for_str_unique_lists() {
+    fn test_has_repetition_quadratic_lookup_for_str_unique_lists<'a>() -> Result<(), &'a str> {
         let test_cases: [Vec<&str>; 5] = [
             vec!["a", "b", "c", "d", "e"],
             vec!["e", "c", "b", "d", "a"],
@@ -139,24 +140,25 @@ mod test {
         ];
 
         for test_case in test_cases.iter() {
-            let result = check_no_duplicates(test_case);
-            assert_eq!(result, None)
+            check_no_duplicates(test_case)?;
         }
+
+        Ok(())
     }
 
     #[test]
     fn test_has_repetition_quadratic_lookup_for_str_nor_unique_lists() {
-        let test_cases: [(Vec<&str>, Option<&str>); 5] = [
-            (vec!["a", "b", "c", "d", "a"], Some("a")),
-            (vec!["a", "b", "c", "b", "e"], Some("b")),
-            (vec!["a", "b", "c", "a", "b"], Some("a")),
-            (vec!["a", "b", "b", "b", "a"], Some("a")),
-            (vec!["a", "b", "c", "d", "b"], Some("b")),
+        let test_cases: [(Vec<&str>, &str); 5] = [
+            (vec!["a", "b", "c", "d", "a"], "a"),
+            (vec!["a", "b", "c", "b", "e"], "b"),
+            (vec!["a", "b", "c", "a", "b"], "a"),
+            (vec!["a", "b", "b", "b", "a"], "a"),
+            (vec!["a", "b", "c", "d", "b"], "b"),
         ];
 
         for test_case in test_cases.iter() {
             let result = check_no_duplicates(&test_case.0);
-            assert_eq!(result, test_case.1)
+            assert_eq!(result, Err(test_case.1));
         }
     }
 }
