@@ -1,38 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use redstone::utils::slice::check_no_duplicates;
 
-const ELEM_COUNT: usize = 256;
-
-fn benchmark_has_duplicates_unique_reversed(c: &mut Criterion) {
-    let mut slice = vec![];
-    for i in (0..ELEM_COUNT).rev() {
-        slice.push(i);
-    }
-
-    c.bench_function("benchmark_has_duplicates_unique_reversed", |b| {
-        b.iter(|| {
-            if check_no_duplicates(&slice).is_err() {
-                panic!("Shouldn't find any repetition in benchmark");
-            };
-        })
-    });
-}
-
-fn benchmark_has_duplicates_unique_sorted(c: &mut Criterion) {
-    let mut slice = vec![];
-    for i in 0..ELEM_COUNT {
-        slice.push(i);
-    }
-
-    c.bench_function("benchmark_has_duplicates_unique_sorted", |b| {
-        b.iter(|| {
-            if check_no_duplicates(&slice).is_err() {
-                panic!("Shouldn't find any repetition in benchmark");
-            };
-        })
-    });
-}
-
 fn benchmark_has_duplicates_unique_shuffled(c: &mut Criterion) {
     let slice = vec![
         94, 218, 60, 212, 192, 42, 177, 209, 232, 95, 127, 89, 41, 133, 251, 130, 53, 84, 3, 46,
@@ -134,8 +102,6 @@ fn benchmark_has_duplicates_unique_shuffled_small(c: &mut Criterion) {
 
 criterion_group!(
     benches,
-    benchmark_has_duplicates_unique_sorted,
-    benchmark_has_duplicates_unique_reversed,
     benchmark_has_duplicates_unique_shuffled,
     benchmark_has_duplicates_not_unique_shuffled,
     benchmark_has_duplicates_unique_shuffled_extra_small,
