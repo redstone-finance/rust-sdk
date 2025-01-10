@@ -11,7 +11,7 @@ fn benchmark_has_duplicates_unique_reversed(c: &mut Criterion) {
 
     c.bench_function("benchmark_has_duplicates_unique_reversed", |b| {
         b.iter(|| {
-            if check_no_duplicates(&slice).is_some() {
+            if check_no_duplicates(&slice).is_err() {
                 panic!("Shouldn't find any repetition in benchmark");
             };
         })
@@ -26,7 +26,7 @@ fn benchmark_has_duplicates_unique_sorted(c: &mut Criterion) {
 
     c.bench_function("benchmark_has_duplicates_unique_sorted", |b| {
         b.iter(|| {
-            if check_no_duplicates(&slice).is_some() {
+            if check_no_duplicates(&slice).is_err() {
                 panic!("Shouldn't find any repetition in benchmark");
             };
         })
@@ -50,10 +50,9 @@ fn benchmark_has_duplicates_unique_shuffled(c: &mut Criterion) {
         40, 217, 210, 18, 241, 185, 68, 28, 73, 188, 216, 173, 183, 90, 51, 17, 138, 9, 255, 11,
         49, 81,
     ];
-
     c.bench_function("benchmark_has_duplicates_unique_shuffled", |b| {
         b.iter(|| {
-            if check_no_duplicates(&slice).is_some() {
+            if check_no_duplicates(&slice).is_err() {
                 panic!("Shouldn't find any repetition in benchmark");
             };
         })
@@ -80,7 +79,7 @@ fn benchmark_has_duplicates_not_unique_shuffled(c: &mut Criterion) {
 
     c.bench_function("benchmark_has_duplicates_unique_shuffled", |b| {
         b.iter(|| {
-            let Some(_) = check_no_duplicates(&slice) else {
+            let Err(_) = check_no_duplicates(&slice) else {
                 panic!("Shouldn't find any repetition in benchmark");
             };
         })
@@ -94,7 +93,7 @@ fn benchmark_has_duplicates_unique_shuffled_extra_small(c: &mut Criterion) {
         "benchmark_has_duplicates_unique_shuffled_extra_small",
         |b| {
             b.iter(|| {
-                if check_no_duplicates(&slice).is_some() {
+                if check_no_duplicates(&slice).is_err() {
                     panic!("Shouldn't find any repetition in benchmark");
                 };
             })
@@ -110,7 +109,7 @@ fn benchmark_has_duplicates_unique_shuffled_medium(c: &mut Criterion) {
         "benchmark_has_duplicates_unique_shuffled_quite_small",
         |b| {
             b.iter(|| {
-                if check_no_duplicates(&slice).is_some() {
+                if check_no_duplicates(&slice).is_err() {
                     panic!("Shouldn't find any repetition in benchmark");
                 };
             })
@@ -125,7 +124,7 @@ fn benchmark_has_duplicates_unique_shuffled_small(c: &mut Criterion) {
         "benchmark_has_duplicates_unique_shuffled_quite_small",
         |b| {
             b.iter(|| {
-                if check_no_duplicates(&slice).is_some() {
+                if check_no_duplicates(&slice).is_err() {
                     panic!("Shouldn't find any repetition in benchmark");
                 };
             })
