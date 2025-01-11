@@ -34,39 +34,22 @@ impl<U: Copy, T: Copy + Into<U>> IterIntoOpt<Vec<Option<U>>> for Vec<T> {
 
 macro_rules! impl_iter_into_hex_to_byte {
     ($(
-        $receiver:ident
+        ($receiver:ident,
+        $converter:expr)
     ),*) => {
         $(
             impl IterInto<Vec<$receiver>> for Vec<&str> {
                 fn iter_into(&self) -> Vec<$receiver> {
                     self
                         .into_iter()
-                        .map(|v| hex_to_bytes((*v).into()).into())
+                        .map(|v| $converter((*v).into()).into())
                         .collect()
                 }
             }
         )*
     };
 }
-impl_iter_into_hex_to_byte!(SignerAddress);
-
-macro_rules! impl_iter_into_make_feed_id {
-    ($(
-        $receiver:ident
-    ),*) => {
-        $(
-            impl IterInto<Vec<$receiver>> for Vec<&str> {
-                fn iter_into(&self) -> Vec<$receiver> {
-                    self
-                        .into_iter()
-                        .map(|v| make_feed_id((*v).into()).into())
-                        .collect()
-                }
-            }
-        )*
-    };
-}
-impl_iter_into_make_feed_id!(FeedId);
+impl_iter_into_hex_to_byte!((SignerAddress, hex_to_bytes), (FeedId, make_feed_id));
 
 #[cfg(test)]
 mod iter_into_tests {
