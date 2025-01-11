@@ -1,3 +1,6 @@
+#[cfg(feature = "radix")]
+use scrypto::prelude::*;
+
 use crate::types::{Sanitized, VALUE_SIZE};
 /// Type describing address of signer. Typically pubkey of length 20 bytes;
 /// As of right now we dont expect larger keys than 32 bytes.
