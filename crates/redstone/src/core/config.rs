@@ -124,17 +124,21 @@ impl Config {
 #[cfg(feature = "helpers")]
 mod tests {
     use super::*;
-    use crate::helpers::hex::{hex_to_bytes, make_feed_id, make_feed_ids};
+    use crate::helpers::{
+        hex::{hex_to_bytes, make_feed_id},
+        iter_into::IterInto,
+    };
 
     #[test]
     fn test_config_correct_feed_ids() -> Result<(), Error> {
         let config = Config {
             signer_count_threshold: 2,
             signers: vec![
-                hex_to_bytes("dd34329d2fc551bea8ee480c2d35d09b75cea39e".into()).into(),
-                hex_to_bytes("582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4".into()).into(),
-            ],
-            feed_ids: make_feed_ids(vec!["ETH", "BTC", "BTS", "SOL"]),
+                "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
+                "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
+            ]
+            .iter_into(),
+            feed_ids: vec!["ETH", "BTC", "BTS", "SOL"].iter_into(),
             block_timestamp: 2000000000000.into(),
         };
 
@@ -146,10 +150,11 @@ mod tests {
         let config = Config {
             signer_count_threshold: 2,
             signers: vec![
-                hex_to_bytes("dd34329d2fc551bea8ee480c2d35d09b75cea39e".into()).into(),
-                hex_to_bytes("582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4".into()).into(),
-            ],
-            feed_ids: make_feed_ids(vec![]),
+                "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
+                "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
+            ]
+            .iter_into(),
+            feed_ids: vec![],
             block_timestamp: 2000000000000.into(),
         };
 
@@ -164,16 +169,11 @@ mod tests {
         let config = Config {
             signer_count_threshold: 2,
             signers: vec![
-                hex_to_bytes("dd34329d2fc551bea8ee480c2d35d09b75cea39e".into()).into(),
-                hex_to_bytes("582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4".into()).into(),
-            ],
-            feed_ids: make_feed_ids(vec![
-                "ETH",
-                repeated_feed_id,
-                "SOL",
-                repeated_feed_id,
-                "BTS",
-            ]),
+                "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
+                "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
+            ]
+            .iter_into(),
+            feed_ids: vec!["ETH", repeated_feed_id, "SOL", repeated_feed_id, "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
         };
 
@@ -190,13 +190,14 @@ mod tests {
         let config = Config {
             signer_count_threshold: 4,
             signers: vec![
-                hex_to_bytes("dd34329d2fc551bea8ee480c2d35d09b75cea39e".into()).into(),
-                hex_to_bytes("582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4".into()).into(),
-                hex_to_bytes("6809c0b4ab2fc9960c8fd6e5448ac9be10aa8fe3".into()).into(),
-                hex_to_bytes("97c037f86c10c7c4f2dc19f6b8f707137e2ab34c".into()).into(),
-                hex_to_bytes("934ff84d7b374601d535217977515797589220e3".into()).into(),
-            ],
-            feed_ids: make_feed_ids(vec!["ETH", "BTC", "BTS", "SOL"]),
+                "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
+                "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
+                "6809c0b4ab2fc9960c8fd6e5448ac9be10aa8fe3",
+                "97c037f86c10c7c4f2dc19f6b8f707137e2ab34c",
+                "934ff84d7b374601d535217977515797589220e3",
+            ]
+            .iter_into(),
+            feed_ids: vec!["ETH", "BTC", "BTS", "SOL"].iter_into(),
             block_timestamp: 2000000000000.into(),
         };
 
@@ -208,7 +209,7 @@ mod tests {
         let config = Config {
             signer_count_threshold: 0,
             signers: vec![],
-            feed_ids: make_feed_ids(vec!["ETH", "BTC", "SOL", "BTS"]),
+            feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
         };
 
@@ -222,13 +223,14 @@ mod tests {
         let config = Config {
             signer_count_threshold: 6,
             signers: vec![
-                hex_to_bytes("dd34329d2fc551bea8ee480c2d35d09b75cea39e".into()).into(),
-                hex_to_bytes("582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4".into()).into(),
-                hex_to_bytes("6809c0b4ab2fc9960c8fd6e5448ac9be10aa8fe3".into()).into(),
-                hex_to_bytes("97c037f86c10c7c4f2dc19f6b8f707137e2ab34c".into()).into(),
-                hex_to_bytes("934ff84d7b374601d535217977515797589220e3".into()).into(),
-            ],
-            feed_ids: make_feed_ids(vec!["ETH", "BTC", "SOL", "BTS"]),
+                "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
+                "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
+                "6809c0b4ab2fc9960c8fd6e5448ac9be10aa8fe3",
+                "97c037f86c10c7c4f2dc19f6b8f707137e2ab34c",
+                "934ff84d7b374601d535217977515797589220e3",
+            ]
+            .iter_into(),
+            feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
         };
 
@@ -244,14 +246,15 @@ mod tests {
         let config = Config {
             signer_count_threshold: 4,
             signers: vec![
-                hex_to_bytes("dd34329d2fc551bea8ee480c2d35d09b75cea39e".into()).into(),
-                hex_to_bytes("582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4".into()).into(),
-                hex_to_bytes(repeated.into()).into(),
-                hex_to_bytes("97c037f86c10c7c4f2dc19f6b8f707137e2ab34c".into()).into(),
-                hex_to_bytes(repeated.into()).into(),
-                hex_to_bytes("934ff84d7b374601d535217977515797589220e3".into()).into(),
-            ],
-            feed_ids: make_feed_ids(vec!["ETH", "BTC", "SOL", "BTS"]),
+                "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
+                "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
+                repeated,
+                "97c037f86c10c7c4f2dc19f6b8f707137e2ab34c",
+                repeated,
+                "934ff84d7b374601d535217977515797589220e3",
+            ]
+            .iter_into(),
+            feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
         };
 
@@ -276,7 +279,7 @@ mod tests {
         let config = Config {
             signer_count_threshold: 6,
             signers,
-            feed_ids: make_feed_ids(vec!["ETH", "BTC", "SOL", "BTS"]),
+            feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
         };
 

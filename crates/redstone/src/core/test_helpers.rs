@@ -2,7 +2,10 @@ use alloc::vec::Vec;
 
 use crate::{
     core::config::Config,
-    helpers::hex::{hex_to_bytes, make_feed_id, make_feed_ids, make_signer_addresses},
+    helpers::{
+        hex::{hex_to_bytes, make_feed_id},
+        iter_into::IterInto,
+    },
     protocol::{data_package::DataPackage, data_point::DataPoint},
     TimestampMillis,
 };
@@ -76,8 +79,8 @@ impl Config {
     ) -> Self {
         Self::try_new(
             signer_count_threshold.unwrap_or(2),
-            make_signer_addresses(signers),
-            make_feed_ids(feed_ids),
+            signers.iter_into(),
+            feed_ids.iter_into(),
             block_timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP.into()),
         )
         .unwrap()
