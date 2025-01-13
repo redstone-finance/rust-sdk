@@ -217,10 +217,13 @@ impl Display for Error {
                 )
             }
             Error::TimestampMustBeGreaterThanBefore => {
-                "Timestamp must be greater than before".to_string()
+                write!(f, "Timestamp must be greater than before")
             }
             Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp => {
-                "Current timestamp must be greater than latest update timestamp".to_string()
+                write!(
+                    f,
+                    "Current timestamp must be greater than latest update timestamp"
+                )
             }
         }
     }
