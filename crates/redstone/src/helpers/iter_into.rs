@@ -1,3 +1,5 @@
+use super::hex::{hex_to_bytes, make_feed_id};
+use crate::{FeedId, SignerAddress};
 use alloc::vec::Vec;
 
 pub trait IterInto<U> {
@@ -29,6 +31,25 @@ impl<U: Copy, T: Copy + Into<U>> IterIntoOpt<Vec<Option<U>>> for Vec<T> {
         self.iter_into().iter_into()
     }
 }
+
+macro_rules! impl_iter_into_with_converter {
+    ($(
+        ($receiver:ident,
+        $converter:expr)
+    ),*) => {
+        $(
+            impl IterInto<Vec<$receiver>> for Vec<&str> {
+                fn iter_into(&self) -> Vec<$receiver> {
+                    self
+                        .into_iter()
+                        .map(|v| $converter((*v).into()).into())
+                        .collect()
+                }
+            }
+        )*
+    };
+}
+impl_iter_into_with_converter!((SignerAddress, hex_to_bytes), (FeedId, make_feed_id));
 
 #[cfg(test)]
 mod iter_into_tests {

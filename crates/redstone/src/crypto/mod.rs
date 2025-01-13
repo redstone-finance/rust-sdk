@@ -1,7 +1,14 @@
+use crate::{Bytes, SignerAddress};
 use alloc::vec::Vec;
 use core::fmt::Debug;
+use primitive_types::U256;
 
-use crate::{Bytes, SignerAddress};
+const ECDSA_N_DIV_2: U256 = U256([
+    16134479119472337056,
+    6725966010171805725,
+    18446744073709551615,
+    9223372036854775807,
+]);
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum CryptoError {
@@ -34,6 +41,7 @@ pub trait Crypto {
         message: A,
         signature: B,
     ) -> Result<SignerAddress, CryptoError> {
+        check_signature_malleability(signature.as_ref())?;
         let recovery_byte = signature.as_ref()[64]; // 65-byte representation
         let msg_hash = Self::keccak256(message);
         let key = Self::recover_public_key(
@@ -47,13 +55,21 @@ pub trait Crypto {
     }
 }
 
+fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
+    if U256::from_big_endian(&sig[32..64]) > ECDSA_N_DIV_2 {
+        return Err(CryptoError::Signature(sig.to_vec()));
+    }
+
+    Ok(())
+}
+
 #[cfg(feature = "helpers")]
 #[cfg(test)]
 #[allow(dead_code)] // this is test template for crypto implementations
 pub mod recovery_key_tests {
     use alloc::borrow::ToOwned;
 
-    use crate::{helpers::hex::hex_to_bytes, Crypto};
+    use crate::{helpers::hex::hex_to_bytes, Crypto, CryptoError};
 
     const MESSAGE: &str = "415641580000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d394303d018d79bf0ba000000020000001";
     const MESSAGE_HASH: &str = "f0805644755393876d0e917e553f0c206f8bc68b7ebfe73a79d2a9e7f5a4cea6";
@@ -75,6 +91,7 @@ pub mod recovery_key_tests {
         test_recover_public_key_v28::<T>();
         test_recover_address_1b::<T>();
         test_recover_address_1c::<T>();
+        test_signature_malleability::<T>();
     }
 
     fn test_recover_public_key_v27<T>()
@@ -119,6 +136,20 @@ pub mod recovery_key_tests {
         );
 
         assert_eq!(Ok(hex_to_bytes(ADDRESS_V28.into()).into()), address);
+    }
+
+    fn test_signature_malleability<T>()
+    where
+        T: Crypto<KeccakOutput = [u8; 32]>,
+    {
+        let msg =
+        b"4254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000058f32c910a001924dc0bd5000000020000001";
+
+        let signature =
+        b"6307247862e106f0d4b3cde75805ababa67325953145aa05bdd219d90a741e0eeba79b756bf3af6db6c26a8ed3810e3c584379476fd83096218e9deb95a7617e1b";
+
+        let result = T::recover_address(msg, signature);
+        assert_eq!(result, Err(CryptoError::RecoveryByte(74)));
     }
 
     fn u8_slice<const N: usize>(str: &str) -> [u8; N] {

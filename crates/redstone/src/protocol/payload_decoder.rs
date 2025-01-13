@@ -268,7 +268,7 @@ mod tests {
         }
     }
 
-    #[should_panic(expected = "index out of bounds")]
+    #[should_panic(expected = "range end index 64 out of range for slice of length 0")]
     #[test]
     fn test_trim_data_packages_bigger_number() {
         test_trim_data_packages_of(3, "");

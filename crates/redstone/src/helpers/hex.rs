@@ -5,7 +5,7 @@ use alloc::{
 
 use hex::{decode, encode};
 
-use crate::{Bytes, FeedId};
+use crate::{Bytes, FeedId, SignerAddress};
 const SAMPLE_PAYLOAD_HEX: &str = include_str!("../../../.././sample-data/payload.hex");
 
 pub fn hex_to_bytes(hex_str: String) -> Vec<u8> {
@@ -28,8 +28,8 @@ pub fn make_feed_id(s: &str) -> FeedId {
     hex_to_bytes(encode(s)).into()
 }
 
-pub fn make_feed_ids(vec: Vec<&str>) -> Vec<FeedId> {
-    vec.iter().map(|&s| make_feed_id(s)).collect()
+pub fn make_signer_address(s: &str) -> SignerAddress {
+    hex_to_bytes(s.into()).into()
 }
 
 pub fn sample_payload_hex() -> String {

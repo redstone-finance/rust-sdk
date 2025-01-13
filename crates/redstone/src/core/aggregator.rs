@@ -70,7 +70,7 @@ fn make_value_signer_matrix(
     config: &Config,
     data_packages: Vec<DataPackage>,
 ) -> Result<Matrix, Error> {
-    let mut matrix = vec![vec![None; config.signers.len()]; config.feed_ids.len()];
+    let mut matrix = vec![vec![None; config.signers().len()]; config.feed_ids().len()];
 
     for data_package in data_packages.iter() {
         let Some(signer_index) = config.signer_index(&data_package.signer_address) else {
@@ -109,9 +109,14 @@ mod aggregate_matrix_tests {
             vec![21u8, 23].iter_into_opt(),
         ];
 
-        for signer_count_threshold in 0..Config::test().signers.len() + 1 {
-            let mut config = Config::test();
-            config.signer_count_threshold = signer_count_threshold as u8;
+        for signer_count_threshold in 0..Config::test_with_signer_count_threshold_or_default(None)
+            .signers()
+            .len()
+            + 1
+        {
+            let config = Config::test_with_signer_count_threshold_or_default(Some(
+                signer_count_threshold as u8,
+            ));
 
             let result = aggregate_matrix(matrix.clone(), &config);
 
@@ -121,8 +126,7 @@ mod aggregate_matrix_tests {
 
     #[test]
     fn test_aggregate_matrix_smaller_threshold_missing_one_value() {
-        let mut config = Config::test();
-        config.signer_count_threshold = 1;
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
 
         let matrix = vec![
             vec![11u8, 13].iter_into_opt(),
@@ -136,8 +140,7 @@ mod aggregate_matrix_tests {
 
     #[test]
     fn test_aggregate_matrix_smaller_threshold_missing_whole_feed() {
-        let mut config = Config::test();
-        config.signer_count_threshold = 0;
+        let config = Config::test_with_signer_count_threshold_or_default(Some(0));
 
         let matrix = vec![vec![11u8, 13].iter_into_opt(), vec![None; 2]];
 
@@ -153,24 +156,24 @@ mod aggregate_matrix_tests {
             vec![11u8, 12].iter_into_opt(),
         ];
 
-        let config = Config::test();
+        let config = Config::test_with_signer_count_threshold_or_default(None);
         let res = aggregate_matrix(matrix, &config);
 
         assert_eq!(
             res,
-            Err(Error::InsufficientSignerCount(0, 1, config.feed_ids[0]))
+            Err(Error::InsufficientSignerCount(0, 1, config.feed_ids()[0]))
         )
     }
 
     #[test]
     fn test_aggregate_matrix_missing_whole_feed() {
         let matrix = vec![vec![11u8, 13].iter_into_opt(), vec![None; 2]];
-        let config = Config::test();
+        let config = Config::test_with_signer_count_threshold_or_default(None);
         let res = aggregate_matrix(matrix, &config);
 
         assert_eq!(
             res,
-            Err(Error::InsufficientSignerCount(1, 0, config.feed_ids[1]))
+            Err(Error::InsufficientSignerCount(1, 0, config.feed_ids()[1]))
         )
     }
 }
@@ -197,11 +200,11 @@ mod make_value_signer_matrix {
 
     #[test]
     fn test_make_value_signer_matrix_empty() -> Result<(), Error> {
-        let config = Config::test();
+        let config = Config::test_with_signer_count_threshold_or_default(None);
 
         test_make_value_signer_matrix_of(
             vec![],
-            vec![vec![None; config.signers.len()]; config.feed_ids.len()],
+            vec![vec![None; config.signers().len()]; config.feed_ids().len()],
         )
     }
 
@@ -286,7 +289,7 @@ mod make_value_signer_matrix {
 
     #[test]
     fn test_make_value_signer_matrix_all_wrong() -> Result<(), Error> {
-        let config = Config::test();
+        let config = Config::test_with_signer_count_threshold_or_default(None);
 
         let data_packages = vec![
             DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
@@ -295,7 +298,7 @@ mod make_value_signer_matrix {
 
         test_make_value_signer_matrix_of(
             data_packages,
-            vec![vec![None; config.signers.len()]; config.feed_ids.len()],
+            vec![vec![None; config.signers().len()]; config.feed_ids().len()],
         )
     }
 
@@ -318,7 +321,7 @@ mod make_value_signer_matrix {
         data_packages: Vec<DataPackage>,
         expected_values: Vec<Vec<Option<u128>>>,
     ) -> Result<(), Error> {
-        let config = &Config::test();
+        let config = &Config::test_with_signer_count_threshold_or_default(None);
         let result = make_value_signer_matrix(config, data_packages)?;
 
         let expected_matrix: Matrix = expected_values

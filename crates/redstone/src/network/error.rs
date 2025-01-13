@@ -1,11 +1,10 @@
-use alloc::{string::String, vec::Vec};
-use core::fmt::{Debug, Display, Formatter};
-
 use crate::{
     network::as_str::{AsAsciiStr, AsHexStr},
     types::Value,
-    CryptoError, FeedId, TimestampMillis,
+    CryptoError, FeedId, SignerAddress, TimestampMillis,
 };
+use alloc::{string::String, vec::Vec};
+use core::fmt::{Debug, Display, Formatter};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ContractErrorContent {
@@ -80,7 +79,33 @@ pub enum Error {
     TimestampTooFuture(usize, TimestampMillis),
 
     /// Indicates that a FeedId is reocuring in data points.
+    ///
+    /// Includes FeedId that is reocuring.
     ReocuringFeedId(FeedId),
+
+    ///  ConfigInsufficientSignerCount occurs when number of signer count is not at least equal required signer threshold.
+    ///
+    /// Includes current config signer list length and minimum required signer count.
+    ConfigInsufficientSignerCount(u8, u8),
+
+    /// ConfigExceededSignerCount occurs when number of signer count is larger than config max allowed signer count.
+    /// Look in to core::config crate to acknowladge constant value.
+    ///
+    /// Includes current config signer list length and maximum allowed signer count per config.
+    ConfigExceededSignerCount(usize, usize),
+
+    /// Indicates that a SignerAddress is reocuring on config signer list.
+    ///
+    /// Includes SignerAddress that is reocuring.
+    ConfigReocuringSigner(SignerAddress),
+
+    /// Indicates that list doesn't contain FeedIds.
+    ConfigEmptyFeedIds,
+
+    /// Indicates that a FeedId is reocuring on config feed_ids list.
+    ///
+    /// Includes FeedId that is reocuring.
+    ConfigReocuringFeedId(FeedId),
 }
 
 impl From<CryptoError> for Error {
@@ -98,6 +123,11 @@ impl Error {
             Error::WrongRedStoneMarker(_) => 511,
             Error::NonEmptyPayloadRemainder(_) => 512,
             Error::ReocuringFeedId(_) => 513,
+            Error::ConfigInsufficientSignerCount(_, _) => 514,
+            Error::ConfigExceededSignerCount(_, _) => 515,
+            Error::ConfigReocuringSigner(_) => 516,
+            Error::ConfigEmptyFeedIds => 517,
+            Error::ConfigReocuringFeedId(_) => 518,
             Error::InsufficientSignerCount(data_package_index, value, _) => {
                 (2000 + data_package_index * 10 + value) as u16
             }
@@ -144,6 +174,29 @@ impl Display for Error {
             ),
             Error::ReocuringFeedId(feed) => {
                 write!(f, "Reocuriung FeedId: {feed:?} in data points")
+            }
+            Error::ConfigInsufficientSignerCount(got, expected) => {
+                write!(f, "Wrong configuration signer count, got {got} signers, expected at minimum {expected}")
+            }
+            Error::ConfigExceededSignerCount(got, allowed) => {
+                write!(f, "Wrong configuration signer count, got {got} signers, allowed maximum is {allowed}")
+            }
+            Error::ConfigReocuringSigner(signer_address) => {
+                write!(
+                    f,
+                    "Wrong configuration, signer address {} is reocuring on the signer list",
+                    signer_address.as_hex_str()
+                )
+            }
+            Error::ConfigEmptyFeedIds => {
+                write!(f, "Empty configuration feed ids list")
+            }
+            Error::ConfigReocuringFeedId(feed_id) => {
+                write!(
+                    f,
+                    "Wrong configuration, feed id {} is reocuring on the feed_ids list",
+                    feed_id.as_hex_str()
+                )
             }
         }
     }

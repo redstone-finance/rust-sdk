@@ -113,7 +113,10 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
+        let result = make_processor_result::<StdEnv>(
+            &Config::test_with_signer_count_threshold_or_default(None),
+            Payload { data_packages },
+        );
 
         assert_eq!(
             result,
@@ -139,7 +142,10 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
+        let result = make_processor_result::<StdEnv>(
+            &Config::test_with_signer_count_threshold_or_default(None),
+            Payload { data_packages },
+        );
 
         assert_eq!(
             result,
@@ -175,7 +181,10 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
+        let result = make_processor_result::<StdEnv>(
+            &Config::test_with_signer_count_threshold_or_default(None),
+            Payload { data_packages },
+        );
 
         assert_eq!(
             result,
@@ -200,7 +209,10 @@ mod tests {
         ];
 
         // when, then
-        let result = make_processor_result::<StdEnv>(&Config::test(), Payload { data_packages });
+        let result = make_processor_result::<StdEnv>(
+            &Config::test_with_signer_count_threshold_or_default(None),
+            Payload { data_packages },
+        );
 
         assert_eq!(
             result,
