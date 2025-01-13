@@ -1,10 +1,11 @@
+use alloc::{string::String, vec::Vec};
+use core::fmt::{Debug, Display, Formatter};
+
 use crate::{
     network::as_str::{AsAsciiStr, AsHexStr},
     types::Value,
     CryptoError, FeedId, SignerAddress, TimestampMillis,
 };
-use alloc::{string::String, vec::Vec};
-use core::fmt::{Debug, Display, Formatter};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ContractErrorContent {

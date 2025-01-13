@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 /// Performs lookup for repeated value in the slice.
 ///
 /// # Arguments
@@ -6,15 +8,15 @@
 ///
 /// # Returns
 ///
-/// Returns a `Option<T>` which contains first repeated element found in the slice or if there is no repeated
-/// element then None otherwise.
+/// Returns a `Result<(), T>` which contains first repeated element found in the slice or if there is no repeated
+/// element then Ok(()) otherwise.
 pub fn check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
 where
     T: PartialEq + Eq + Copy + Ord,
 {
     match slice.len() {
-        ..20 => quadratic_check_no_duplicates(slice),
-        20.. => sort_check_no_duplicates(slice),
+        x if x < 20 => quadratic_check_no_duplicates(slice),
+        _ => sort_check_no_duplicates(slice),
     }
 }
 

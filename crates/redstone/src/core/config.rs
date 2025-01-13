@@ -1,9 +1,11 @@
+use alloc::vec::Vec;
+
+use derive_getters::Getters;
+
 use crate::{
     network::error::Error, utils::slice::check_no_duplicates, FeedId, SignerAddress,
     TimestampMillis,
 };
-use alloc::vec::Vec;
-use derive_getters::Getters;
 
 /// MAX_SIGNER_COUNT describes maximum number of signers in Config.
 const MAX_SIGNER_COUNT: usize = u8::MAX as usize;

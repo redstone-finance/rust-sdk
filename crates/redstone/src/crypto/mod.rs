@@ -1,7 +1,9 @@
-use crate::{Bytes, SignerAddress};
 use alloc::vec::Vec;
 use core::fmt::Debug;
+
 use primitive_types::U256;
+
+use crate::{Bytes, SignerAddress};
 
 const ECDSA_N_DIV_2: U256 = U256([
     16134479119472337056,
