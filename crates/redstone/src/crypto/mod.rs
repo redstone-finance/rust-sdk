@@ -3,10 +3,12 @@ use alloc::vec::Vec;
 use core::fmt::Debug;
 use primitive_types::U256;
 
-const ECDSA_N_DIV_2: [u8; 32] = [
-    127, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 93, 87, 110,
-    115, 87, 164, 80, 29, 223, 233, 47, 70, 104, 27, 32, 160,
-];
+const ECDSA_N_DIV_2: U256 = U256([
+    16134479119472337056,
+    6725966010171805725,
+    18446744073709551615,
+    9223372036854775807,
+]);
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum CryptoError {
@@ -54,7 +56,7 @@ pub trait Crypto {
 }
 
 fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
-    if U256::from_big_endian(&sig[32..64]) > U256::from_big_endian(&ECDSA_N_DIV_2) {
+    if U256::from_big_endian(&sig[32..64]) > ECDSA_N_DIV_2 {
         return Err(CryptoError::Signature(sig.to_vec()));
     }
 

@@ -7,7 +7,13 @@ use crate::types::{Sanitized, VALUE_SIZE};
 /// The address is normalized to contain only lowercase letters (A-F) -> (a-f).
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Ord, PartialOrd)]
 #[cfg_attr(feature = "radix", derive(ScryptoSbor))]
-pub struct SignerAddress(pub(crate) [u8; VALUE_SIZE]);
+pub struct SignerAddress([u8; VALUE_SIZE]);
+
+impl AsRef<[u8]> for SignerAddress {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
 
 impl SignerAddress {
     pub fn new(raw_address: [u8; VALUE_SIZE]) -> Self {
@@ -19,6 +25,7 @@ impl SignerAddress {
         )
     }
 }
+
 use alloc::vec::Vec;
 impl From<Vec<u8>> for SignerAddress {
     fn from(value: Vec<u8>) -> Self {
