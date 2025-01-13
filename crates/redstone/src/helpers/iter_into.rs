@@ -32,7 +32,7 @@ impl<U: Copy, T: Copy + Into<U>> IterIntoOpt<Vec<Option<U>>> for Vec<T> {
     }
 }
 
-macro_rules! impl_iter_into_converter {
+macro_rules! impl_iter_into_with_converter {
     ($(
         ($receiver:ident,
         $converter:expr)
@@ -49,7 +49,7 @@ macro_rules! impl_iter_into_converter {
         )*
     };
 }
-impl_iter_into_converter!((SignerAddress, hex_to_bytes), (FeedId, make_feed_id));
+impl_iter_into_with_converter!((SignerAddress, hex_to_bytes), (FeedId, make_feed_id));
 
 #[cfg(test)]
 mod iter_into_tests {
