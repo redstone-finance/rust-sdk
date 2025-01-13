@@ -1,6 +1,7 @@
+use alloc::vec::Vec;
+
 use super::hex::{hex_to_bytes, make_feed_id};
 use crate::{FeedId, SignerAddress};
-use alloc::vec::Vec;
 
 pub trait IterInto<U> {
     fn iter_into(&self) -> U;
