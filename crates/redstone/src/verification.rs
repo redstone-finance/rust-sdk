@@ -1,4 +1,4 @@
-use crate::{network::error::Error, SignerAddress, TimestampMillis};
+use crate::{network::error::Error, TimestampMillis};
 
 /// Verify if the update performed adheres to the logic:
 /// If `price_write_timestamp` is None variant, update is always fine - it represent first write and it is always ok.
@@ -16,9 +16,9 @@ use crate::{network::error::Error, SignerAddress, TimestampMillis};
 /// # Returns
 ///
 /// Returns a `Result<(), Error>`, Ok in case it is fine to perform the update.
-pub fn verify_update(
-    updater: &SignerAddress,
-    trusted_updaters: &[SignerAddress],
+pub fn verify_update<T: PartialEq>(
+    updater: &T,
+    trusted_updaters: &[T],
     price_write_timestamp: Option<TimestampMillis>,
     time_now: TimestampMillis,
     min_time_between_updates: TimestampMillis,
