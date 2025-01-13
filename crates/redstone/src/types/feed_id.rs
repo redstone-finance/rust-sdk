@@ -1,8 +1,9 @@
+use alloc::vec::Vec;
+
 #[cfg(feature = "radix")]
 use scrypto::prelude::*;
 
 use crate::types::{Sanitized, VALUE_SIZE};
-use alloc::vec::Vec;
 
 /// Type describing feed ids.
 /// We expect FeedId to be byte string like b"EUR"
@@ -10,6 +11,18 @@ use alloc::vec::Vec;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "radix", derive(ScryptoSbor))]
 pub struct FeedId([u8; VALUE_SIZE]);
+
+impl From<FeedId> for [u8; VALUE_SIZE] {
+    fn from(value: FeedId) -> Self {
+        value.0
+    }
+}
+
+impl From<[u8; VALUE_SIZE]> for FeedId {
+    fn from(value: [u8; VALUE_SIZE]) -> Self {
+        Self(value)
+    }
+}
 
 impl AsRef<[u8]> for FeedId {
     fn as_ref(&self) -> &[u8] {
