@@ -3,12 +3,9 @@ use alloc::vec::Vec;
 use derive_getters::Getters;
 
 use crate::{
-    network::error::Error, utils::slice::check_no_duplicates, FeedId, SignerAddress,
-    TimestampMillis,
+    contract::verification::verify_signers_config, network::error::Error,
+    utils::slice::check_no_duplicates, FeedId, SignerAddress, TimestampMillis,
 };
-
-/// MAX_SIGNER_COUNT describes maximum number of signers in Config.
-const MAX_SIGNER_COUNT: usize = u8::MAX as usize;
 
 /// Configuration for a RedStone payload processor.
 ///
@@ -92,33 +89,7 @@ impl Config {
 
     #[inline]
     fn verify_signer_list(&self) -> Result<(), Error> {
-        self.verify_signer_count_in_threshold()?;
-        self.verify_signer_count_not_exceeded()?;
-        check_no_duplicates(&self.signers).map_err(Error::ConfigReocuringSigner)
-    }
-
-    #[inline(always)]
-    fn verify_signer_count_in_threshold(&self) -> Result<(), Error> {
-        if self.signers.len() < self.signer_count_threshold as usize || self.signers.is_empty() {
-            return Err(Error::ConfigInsufficientSignerCount(
-                self.signers.len() as u8,
-                self.signer_count_threshold,
-            ));
-        }
-
-        Ok(())
-    }
-
-    #[inline(always)]
-    fn verify_signer_count_not_exceeded(&self) -> Result<(), Error> {
-        if self.signers.len() > MAX_SIGNER_COUNT {
-            return Err(Error::ConfigExceededSignerCount(
-                self.signers.len(),
-                MAX_SIGNER_COUNT,
-            ));
-        }
-
-        Ok(())
+        verify_signers_config(&self.signers, self.signer_count_threshold)
     }
 }
 
@@ -287,10 +258,7 @@ mod tests {
 
         let resutlt = config.verify_signer_list();
 
-        assert_eq!(
-            resutlt,
-            Err(Error::ConfigExceededSignerCount(257, MAX_SIGNER_COUNT))
-        );
+        assert_eq!(resutlt, Err(Error::ConfigExceededSignerCount(257, 255)));
     }
 
     fn helper_generate_random_hex(size: usize) -> Vec<u8> {
