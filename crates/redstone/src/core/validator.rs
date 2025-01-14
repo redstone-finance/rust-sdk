@@ -123,11 +123,11 @@ impl Validator for Config {
     ) -> Result<TimestampMillis, Error> {
         if !timestamp
             .add(MAX_TIMESTAMP_DELAY_MS)
-            .is_after(*self.block_timestamp())
+            .is_same_or_after(*self.block_timestamp())
         {
             return Err(Error::TimestampTooOld(index, timestamp));
         }
-        if !timestamp.is_before(self.block_timestamp().add(MAX_TIMESTAMP_AHEAD_MS)) {
+        if !timestamp.is_same_or_before(self.block_timestamp().add(MAX_TIMESTAMP_AHEAD_MS)) {
             return Err(Error::TimestampTooFuture(index, timestamp));
         }
 

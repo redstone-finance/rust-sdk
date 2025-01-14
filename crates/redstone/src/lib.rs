@@ -12,13 +12,13 @@
 #[macro_use]
 extern crate alloc;
 
+pub mod contract;
 pub mod core;
 mod crypto;
 pub mod network;
 mod protocol;
 mod types;
 pub mod utils;
-mod verification;
 
 #[cfg(feature = "solana")]
 pub mod solana;
@@ -36,7 +36,6 @@ pub mod default_ext;
 pub use crypto::{Crypto, CryptoError};
 use network::Environment;
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
-pub use verification::verify_update;
 
 use crate::core::config::Config;
 

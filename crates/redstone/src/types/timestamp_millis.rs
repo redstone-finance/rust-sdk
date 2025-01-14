@@ -17,7 +17,7 @@ impl From<u64> for TimestampMillis {
 }
 
 impl TimestampMillis {
-    pub fn from_millis(millis: u64) -> Self {
+    pub const fn from_millis(millis: u64) -> Self {
         Self(millis)
     }
 
@@ -29,11 +29,11 @@ impl TimestampMillis {
         Self(self.0 + other.into().0)
     }
 
-    pub fn is_before(&self, other: Self) -> bool {
+    pub fn is_same_or_before(&self, other: Self) -> bool {
         self.0 <= other.0
     }
 
-    pub fn is_after(&self, other: Self) -> bool {
+    pub fn is_same_or_after(&self, other: Self) -> bool {
         self.0 >= other.0
     }
 }
