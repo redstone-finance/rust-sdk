@@ -1,10 +1,58 @@
 //! Module containing primitives used for verification of the contract data and logic.
 //!
-//! See [verify_untrusted_update], [verify_trusted_update] and [verify_signers_config].
+//! See
+//! * [verify_untrusted_update] - for untrusted updaters
+//! * [verify_trusted_update] - for trusted updaters
+//! * [verify_signers_config] - verify integrity of the config
+//! * [UpdateTimestampVerifier] - for verifying timestamps with static dispatch between Trusted/Untrusted source.
 
 use crate::{
     network::error::Error, utils::slice::check_no_duplicates, SignerAddress, TimestampMillis,
 };
+
+/// Timestamp verifier, with variants for trusted/nontrusted updaters.
+pub enum UpdateTimestampVerifier {
+    Trusted,
+    Untrusted,
+}
+
+impl UpdateTimestampVerifier {
+    /// Checks if the `updater` is in the trusted set.
+    ///  If yes, returns `Trusted` variant, `Untrusted` otherwise.
+    pub fn verifier<T: PartialEq>(updater: &T, trusted: &[T]) -> Self {
+        match trusted.contains(updater) {
+            true => UpdateTimestampVerifier::Trusted,
+            false => UpdateTimestampVerifier::Untrusted,
+        }
+    }
+
+    /// For trusted variant see [verify_trusted_update].
+    /// For untrusted variant see [verify_untrusted_update].
+    pub fn verify_timestamp(
+        &self,
+        time_now: TimestampMillis,
+        last_write_time: Option<TimestampMillis>,
+        min_time_between_updates: TimestampMillis,
+        last_package_time: TimestampMillis,
+        new_package_time: TimestampMillis,
+    ) -> Result<(), Error> {
+        match self {
+            UpdateTimestampVerifier::Trusted => verify_trusted_update(
+                time_now,
+                last_write_time,
+                last_package_time,
+                new_package_time,
+            ),
+            UpdateTimestampVerifier::Untrusted => verify_untrusted_update(
+                time_now,
+                last_write_time,
+                min_time_between_updates,
+                last_package_time,
+                new_package_time,
+            ),
+        }
+    }
+}
 
 /// MIN_TIME_BETWEEN_UPDATES_FOR_TRUSTED is set to 0,
 /// since trusted can update as long as write timestamp is increasing.
@@ -12,7 +60,9 @@ const MIN_TIME_BETWEEN_UPDATES_FOR_TRUSTED: TimestampMillis = TimestampMillis::f
 /// MAX_SIGNER_COUNT describes maximum number of signers in Config.
 const MAX_SIGNER_COUNT: usize = u8::MAX as usize;
 
-/// Verify if between writes at least `min_time_between_updates` time passed.
+/// Verifies if:
+/// * if `last_write_time` is not None if between `last_write_time` and `time_now`
+/// passed strictly more than `min_time_between_updates`.
 pub fn verify_write_timestamp(
     time_now: TimestampMillis,
     last_write_time: Option<TimestampMillis>,
@@ -30,7 +80,8 @@ pub fn verify_write_timestamp(
     }
 }
 
-/// Verify if the package timestamp is strictly increasing.
+/// Verifies if:
+/// * The package timestamp is strictly increasing.
 pub fn verify_package_timestamp(
     last_package_time: TimestampMillis,
     new_package_time: TimestampMillis,
@@ -42,8 +93,9 @@ pub fn verify_package_timestamp(
     Ok(())
 }
 
-/// Combines both [verify_package_timestamp] and [verify_write_timestamp].
-/// For trusted updater, the min_time_between_updates is equalt to 0.
+/// Verifies if:
+/// * Package timestamps are strictly increasing
+/// * This is the first write or the time between writes is stricly increasing
 pub fn verify_trusted_update(
     time_now: TimestampMillis,
     last_write_time: Option<TimestampMillis>,
@@ -59,7 +111,9 @@ pub fn verify_trusted_update(
     )
 }
 
-/// Combines both [verify_package_timestamp] and [verify_write_timestamp].
+/// Verifies if:
+/// * Package timestamps are strictly increasing
+/// * This is the first write or the time between writes is stricly greater than `min_time_between_updates`
 pub fn verify_untrusted_update(
     time_now: TimestampMillis,
     last_write_time: Option<TimestampMillis>,
@@ -72,6 +126,8 @@ pub fn verify_untrusted_update(
     verify_write_timestamp(time_now, last_write_time, min_time_between_updates)
 }
 
+/// Verifies if:
+/// * signer list is non empty and contains at least `threshold` of elements.
 fn verify_signer_count_in_threshold(signers: &[SignerAddress], threshold: u8) -> Result<(), Error> {
     if signers.len() < threshold as usize || signers.is_empty() {
         return Err(Error::ConfigInsufficientSignerCount(
@@ -83,6 +139,8 @@ fn verify_signer_count_in_threshold(signers: &[SignerAddress], threshold: u8) ->
     Ok(())
 }
 
+/// Verifies if:
+/// * signer list is not larger than max u8 value.
 fn verify_signer_count_not_exceeded(signers: &[SignerAddress]) -> Result<(), Error> {
     if signers.len() > MAX_SIGNER_COUNT {
         return Err(Error::ConfigExceededSignerCount(
