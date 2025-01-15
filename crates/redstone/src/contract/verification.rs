@@ -154,7 +154,7 @@ fn verify_signer_count_not_exceeded(signers: &[SignerAddress]) -> Result<(), Err
 
 /// Verifies if:
 /// * signer list contains no duplicates
-/// * signer list is non empty and contains at least `threshold` of elements.
+/// * signer list is non-empty and contains at least `threshold` of elements.
 /// * signer list is not larger than max u8 value.
 pub fn verify_signers_config(signers: &[SignerAddress], threshold: u8) -> Result<(), Error> {
     verify_signer_count_in_threshold(signers, threshold)?;

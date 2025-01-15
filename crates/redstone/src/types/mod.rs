@@ -11,7 +11,7 @@ pub use signer_address::SignerAddress;
 pub use timestamp_millis::TimestampMillis;
 pub use value::Value;
 
-/// We dont expect value to be larger than u256.
+/// We don't expect value to be larger than u256.
 ///  Adjust this once this no longer hold :)
 pub(crate) const VALUE_SIZE: usize = 32;
 
