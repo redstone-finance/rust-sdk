@@ -122,13 +122,13 @@ macro_rules! test_price_adapter_instantiate_impl {
                 }
             }
 
-            #[should_panic(expected = "Wrong signer count threshold value: 4")]
+            #[should_panic(expected = "Wrong configuration signer count, got 3 signers, expected at minimum 4")]
             #[test]
             fn [<test_instantiate_wrong_signer_count_threshold_ $id>]() {
                 <$price_adapter_impl>::instantiate(4, signers(), None);
             }
 
-            #[should_panic(expected = "Signers must not be empty")]
+            #[should_panic(expected = "Wrong configuration signer count, got 0 signers, expected at minimum 4")]
             #[test]
             fn [<test_instantiate_empty_signers_ $id>]() {
                 <$price_adapter_impl>::instantiate(4, vec![], None);
