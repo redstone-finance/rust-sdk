@@ -191,7 +191,7 @@ impl Display for Error {
                 value, data_package_index
             ),
             Error::ReocuringFeedId(feed) => {
-                write!(f, "Reocuriung FeedId: {feed:?} in data points")
+                write!(f, "Reocuring FeedId: {feed:?} in data points")
             }
             Error::ConfigInsufficientSignerCount(got, expected) => {
                 write!(f, "Wrong configuration signer count, got {got} signers, expected at minimum {expected}")
