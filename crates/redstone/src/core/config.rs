@@ -3,8 +3,11 @@ use alloc::vec::Vec;
 use derive_getters::Getters;
 
 use crate::{
-    contract::verification::verify_signers_config, network::error::Error,
-    utils::slice::check_no_duplicates, FeedId, SignerAddress, TimestampMillis,
+    contract::verification::verify_signers_config,
+    network::error::Error,
+    protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
+    utils::slice::check_no_duplicates,
+    FeedId, SignerAddress, TimestampMillis,
 };
 
 /// Configuration for a RedStone payload processor.
@@ -58,6 +61,10 @@ impl Config {
     /// * `signers` - List of identifiers for signers authorized to sign the data.
     /// * `feed_ids` - Identifiers for the data feeds from which values are aggregated.
     /// * `block_timestamp` - The current block time in timestamp format, used for verifying data timeliness.
+    /// * `max_timesstamp_delay_ms` - Maximum delay of the package agains the current block timestamp.
+    ///    If None is provieded then default config value is used.
+    /// * `max_timestamp_ahead_ms` - Maximum ahead of time of the package agains current block timestamp.
+    ///    If None is provieded then default config value is used.
     ///
     /// # Returns
     ///
@@ -68,16 +75,16 @@ impl Config {
         signers: Vec<SignerAddress>,
         feed_ids: Vec<FeedId>,
         block_timestamp: TimestampMillis,
-        max_timestamp_delay_ms: TimestampMillis,
-        max_timestamp_ahead_ms: TimestampMillis,
+        max_timestamp_delay_ms: Option<TimestampMillis>,
+        max_timestamp_ahead_ms: Option<TimestampMillis>,
     ) -> Result<Self, Error> {
         let config = Self {
             signer_count_threshold,
             signers,
             feed_ids,
             block_timestamp,
-            max_timestamp_delay_ms,
-            max_timestamp_ahead_ms,
+            max_timestamp_delay_ms: max_timestamp_delay_ms.unwrap_or(MAX_TIMESTAMP_DELAY_MS.into()),
+            max_timestamp_ahead_ms: max_timestamp_ahead_ms.unwrap_or(MAX_TIMESTAMP_AHEAD_MS.into()),
         };
 
         config.verify_signer_list()?;

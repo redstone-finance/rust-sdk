@@ -92,8 +92,8 @@ impl Config {
             signers.iter_into(),
             feed_ids.iter_into(),
             block_timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP.into()),
-            max_timestamp_delay_ms.unwrap_or(MAX_TIMESTAMP_DELAY_MS.into()),
-            max_timestamp_ahead_ms.unwrap_or(MAX_TIMESTAMP_AHEAD_MS.into()),
+            Some(max_timestamp_delay_ms.unwrap_or(MAX_TIMESTAMP_DELAY_MS.into())),
+            Some(max_timestamp_ahead_ms.unwrap_or(MAX_TIMESTAMP_AHEAD_MS.into())),
         )
         .unwrap()
     }
