@@ -3,8 +3,11 @@ use alloc::vec::Vec;
 use derive_getters::Getters;
 
 use crate::{
-    contract::verification::verify_signers_config, network::error::Error,
-    utils::slice::check_no_duplicates, FeedId, SignerAddress, TimestampMillis,
+    contract::verification::verify_signers_config,
+    network::error::Error,
+    protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
+    utils::slice::check_no_duplicates,
+    FeedId, SignerAddress, TimestampMillis,
 };
 
 /// Configuration for a RedStone payload processor.
@@ -35,6 +38,16 @@ pub struct Config {
     /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970) and allows
     /// for determining whether the data is current in the context of blockchain time.
     block_timestamp: TimestampMillis,
+
+    /// The maximum delay of the package in regards to the current block in the blockchain.
+    ///
+    /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970).
+    max_timestamp_delay_ms: TimestampMillis,
+
+    /// The maximum time package was created ahead of the current block in the blockchain.
+    ///
+    /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970).
+    max_timestamp_ahead_ms: TimestampMillis,
 }
 
 impl Config {
@@ -48,6 +61,10 @@ impl Config {
     /// * `signers` - List of identifiers for signers authorized to sign the data.
     /// * `feed_ids` - Identifiers for the data feeds from which values are aggregated.
     /// * `block_timestamp` - The current block time in timestamp format, used for verifying data timeliness.
+    /// * `max_timestamp_delay_ms` - Maximum delay of the package agains the current block timestamp.
+    ///    If None is provieded then default config value is used.
+    /// * `max_timestamp_ahead_ms` - Maximum ahead of time of the package agains current block timestamp.
+    ///    If None is provieded then default config value is used.
     ///
     /// # Returns
     ///
@@ -58,12 +75,16 @@ impl Config {
         signers: Vec<SignerAddress>,
         feed_ids: Vec<FeedId>,
         block_timestamp: TimestampMillis,
+        max_timestamp_delay_ms: Option<TimestampMillis>,
+        max_timestamp_ahead_ms: Option<TimestampMillis>,
     ) -> Result<Self, Error> {
         let config = Self {
             signer_count_threshold,
             signers,
             feed_ids,
             block_timestamp,
+            max_timestamp_delay_ms: max_timestamp_delay_ms.unwrap_or(MAX_TIMESTAMP_DELAY_MS.into()),
+            max_timestamp_ahead_ms: max_timestamp_ahead_ms.unwrap_or(MAX_TIMESTAMP_AHEAD_MS.into()),
         };
 
         config.verify_signer_list()?;
@@ -97,9 +118,12 @@ impl Config {
 #[cfg(feature = "helpers")]
 mod tests {
     use super::*;
-    use crate::helpers::{
-        hex::{hex_to_bytes, make_feed_id},
-        iter_into::IterInto,
+    use crate::{
+        core::test_helpers::MAX_TIMESTAMP_DELAY_MS,
+        helpers::{
+            hex::{hex_to_bytes, make_feed_id},
+            iter_into::IterInto,
+        },
     };
 
     #[test]
@@ -113,6 +137,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "BTS", "SOL"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         config.verify_feed_id_list()
@@ -129,6 +155,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec![],
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_feed_id_list();
@@ -148,6 +176,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", repeated_feed_id, "SOL", repeated_feed_id, "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_feed_id_list();
@@ -172,6 +202,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "BTS", "SOL"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         config.verify_signer_list()
@@ -184,6 +216,8 @@ mod tests {
             signers: vec![],
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_signer_list();
@@ -205,6 +239,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_signer_list();
@@ -229,6 +265,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_signer_list();
@@ -254,6 +292,8 @@ mod tests {
             signers,
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_signer_list();
