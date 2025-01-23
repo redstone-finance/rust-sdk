@@ -61,7 +61,7 @@ impl Config {
     /// * `signers` - List of identifiers for signers authorized to sign the data.
     /// * `feed_ids` - Identifiers for the data feeds from which values are aggregated.
     /// * `block_timestamp` - The current block time in timestamp format, used for verifying data timeliness.
-    /// * `max_timesstamp_delay_ms` - Maximum delay of the package agains the current block timestamp.
+    /// * `max_timestamp_delay_ms` - Maximum delay of the package agains the current block timestamp.
     ///    If None is provieded then default config value is used.
     /// * `max_timestamp_ahead_ms` - Maximum ahead of time of the package agains current block timestamp.
     ///    If None is provieded then default config value is used.
