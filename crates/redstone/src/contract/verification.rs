@@ -74,7 +74,12 @@ pub fn verify_write_timestamp(
                 .add(min_time_between_updates)
                 .is_same_or_after(time_now) =>
         {
-            Err(Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp)
+            Err(
+                Error::CurrentUpdateTimestampMustBeGreaterThanLatestUpdateTimestamp(
+                    write_time.add(min_time_between_updates),
+                    time_now,
+                ),
+            )
         }
         _ => Ok(()),
     }
@@ -87,7 +92,10 @@ pub fn verify_package_timestamp(
     new_package_time: TimestampMillis,
 ) -> Result<(), Error> {
     if new_package_time.is_same_or_before(last_package_time) {
-        return Err(Error::TimestampMustBeGreaterThanBefore);
+        return Err(Error::PackageTimestampMustBeGreaterThanBefore(
+            new_package_time,
+            last_package_time,
+        ));
     }
 
     Ok(())
@@ -189,7 +197,12 @@ mod tests {
 
         assert_eq!(
             res,
-            Err(Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp)
+            Err(
+                Error::CurrentUpdateTimestampMustBeGreaterThanLatestUpdateTimestamp(
+                    999.into(),
+                    999.into()
+                )
+            )
         );
     }
 
@@ -204,7 +217,12 @@ mod tests {
 
         assert_eq!(
             res,
-            Err(Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp)
+            Err(
+                Error::CurrentUpdateTimestampMustBeGreaterThanLatestUpdateTimestamp(
+                    900.into(),
+                    900.into()
+                )
+            )
         );
     }
 
@@ -217,10 +235,22 @@ mod tests {
     #[test]
     fn verify_package_timestamp_non_increase_is_err() {
         let res = verify_trusted_update(901.into(), Some(900.into()), 1.into(), 1.into());
-        assert_eq!(res, Err(Error::TimestampMustBeGreaterThanBefore));
+        assert_eq!(
+            res,
+            Err(Error::PackageTimestampMustBeGreaterThanBefore(
+                1.into(),
+                1.into()
+            ))
+        );
 
         let res =
             verify_untrusted_update(901.into(), Some(900.into()), 1.into(), 1.into(), 1.into());
-        assert_eq!(res, Err(Error::TimestampMustBeGreaterThanBefore));
+        assert_eq!(
+            res,
+            Err(Error::PackageTimestampMustBeGreaterThanBefore(
+                1.into(),
+                1.into()
+            ))
+        );
     }
 }
