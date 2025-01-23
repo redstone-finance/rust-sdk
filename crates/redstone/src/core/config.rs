@@ -35,6 +35,16 @@ pub struct Config {
     /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970) and allows
     /// for determining whether the data is current in the context of blockchain time.
     block_timestamp: TimestampMillis,
+
+    /// The maximum delay of the package in regards to the current block in the blockchain.
+    ///
+    /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970).
+    max_timestamp_delay_ms: TimestampMillis,
+
+    /// The maximum time package was created ahead of the current block in the blockchain.
+    ///
+    /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970).
+    max_timestamp_ahead_ms: TimestampMillis,
 }
 
 impl Config {
@@ -58,12 +68,16 @@ impl Config {
         signers: Vec<SignerAddress>,
         feed_ids: Vec<FeedId>,
         block_timestamp: TimestampMillis,
+        max_timestamp_delay_ms: TimestampMillis,
+        max_timestamp_ahead_ms: TimestampMillis,
     ) -> Result<Self, Error> {
         let config = Self {
             signer_count_threshold,
             signers,
             feed_ids,
             block_timestamp,
+            max_timestamp_delay_ms,
+            max_timestamp_ahead_ms,
         };
 
         config.verify_signer_list()?;
@@ -113,6 +127,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "BTS", "SOL"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
+            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
         };
 
         config.verify_feed_id_list()
@@ -129,6 +145,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec![],
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
+            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
         };
 
         let resutlt = config.verify_feed_id_list();
@@ -148,6 +166,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", repeated_feed_id, "SOL", repeated_feed_id, "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
+            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
         };
 
         let resutlt = config.verify_feed_id_list();
@@ -172,6 +192,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "BTS", "SOL"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
+            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
         };
 
         config.verify_signer_list()
@@ -184,6 +206,8 @@ mod tests {
             signers: vec![],
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
+            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
         };
 
         let resutlt = config.verify_signer_list();
@@ -205,6 +229,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
+            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
         };
 
         let resutlt = config.verify_signer_list();
@@ -229,6 +255,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
+            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
         };
 
         let resutlt = config.verify_signer_list();
@@ -254,6 +282,8 @@ mod tests {
             signers,
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
+            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
         };
 
         let resutlt = config.verify_signer_list();

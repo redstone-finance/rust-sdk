@@ -11,6 +11,8 @@ use crate::{
 };
 
 pub(crate) const TEST_BLOCK_TIMESTAMP: u64 = 2000000000000;
+pub(crate) const MAX_TIMESTAMP_DELAY_MS: u64 = 15 * 60 * 1000; // 15 minutes in milliseconds
+pub(crate) const MAX_TIMESTAMP_AHEAD_MS: u64 = 3 * 60 * 1000; // 3 minutes in milliseconds
 
 pub(crate) const TEST_SIGNER_ADDRESS_1: &str = "1ea62d73edF8ac05dfcea1a34b9796e937a29eFF";
 pub(crate) const TEST_SIGNER_ADDRESS_2: &str = "109b4a318a4f5ddcbca6349b45f881b4137deafb";
@@ -35,6 +37,8 @@ impl Config {
             vec![TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2],
             vec!["ETH", "BTC"],
             None,
+            None,
+            None,
         )
     }
 
@@ -51,6 +55,8 @@ impl Config {
             vec![TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2],
             vec!["ETH", "BTC"],
             Some(block_timestamp),
+            None,
+            None,
         )
     }
 
@@ -67,6 +73,8 @@ impl Config {
             signers,
             vec!["ETH", "BTC"],
             Some(block_timestamp),
+            None,
+            None,
         )
     }
 
@@ -76,12 +84,16 @@ impl Config {
         signers: Vec<&str>,
         feed_ids: Vec<&str>,
         block_timestamp: Option<TimestampMillis>,
+        max_timestamp_delay_ms: Option<TimestampMillis>,
+        max_timestamp_ahead_ms: Option<TimestampMillis>,
     ) -> Self {
         Self::try_new(
             signer_count_threshold.unwrap_or(2),
             signers.iter_into(),
             feed_ids.iter_into(),
             block_timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP.into()),
+            max_timestamp_delay_ms.unwrap_or(MAX_TIMESTAMP_DELAY_MS.into()),
+            max_timestamp_ahead_ms.unwrap_or(MAX_TIMESTAMP_AHEAD_MS.into()),
         )
         .unwrap()
     }
