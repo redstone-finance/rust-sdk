@@ -118,9 +118,12 @@ impl Config {
 #[cfg(feature = "helpers")]
 mod tests {
     use super::*;
-    use crate::helpers::{
-        hex::{hex_to_bytes, make_feed_id},
-        iter_into::IterInto,
+    use crate::{
+        core::test_helpers::MAX_TIMESTAMP_DELAY_MS,
+        helpers::{
+            hex::{hex_to_bytes, make_feed_id},
+            iter_into::IterInto,
+        },
     };
 
     #[test]
@@ -134,8 +137,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "BTS", "SOL"].iter_into(),
             block_timestamp: 2000000000000.into(),
-            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
-            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         config.verify_feed_id_list()
@@ -152,8 +155,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec![],
             block_timestamp: 2000000000000.into(),
-            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
-            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_feed_id_list();
@@ -173,8 +176,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", repeated_feed_id, "SOL", repeated_feed_id, "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
-            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
-            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_feed_id_list();
@@ -199,8 +202,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "BTS", "SOL"].iter_into(),
             block_timestamp: 2000000000000.into(),
-            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
-            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         config.verify_signer_list()
@@ -213,8 +216,8 @@ mod tests {
             signers: vec![],
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
-            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
-            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_signer_list();
@@ -236,8 +239,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
-            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
-            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_signer_list();
@@ -262,8 +265,8 @@ mod tests {
             .iter_into(),
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
-            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
-            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_signer_list();
@@ -289,8 +292,8 @@ mod tests {
             signers,
             feed_ids: vec!["ETH", "BTC", "SOL", "BTS"].iter_into(),
             block_timestamp: 2000000000000.into(),
-            max_timestamp_delay_ms: (15 * 60 * 1000).into(),
-            max_timestamp_ahead_ms: (3 * 60 * 1000).into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
         let resutlt = config.verify_signer_list();
