@@ -108,14 +108,14 @@ pub enum Error {
     /// Includes FeedId that is reocuring.
     ConfigReocuringFeedId(FeedId),
 
-    /// Indicates that the provided package timestamp is not greater than a previously written package timestamp.
+    /// Indicates that the provided data timestamp is not greater than a previously written package timestamp.
     ///
     /// For the price adapter to accept a new price update, the associated timestamp must be
     /// strictly greater than the timestamp of the last update. This error is raised if a new
     /// timestamp does not meet this criterion, ensuring the chronological integrity of price data.
     ///
     /// Includes the value of a current package timestamp and the timestamp of the previous package.
-    PackageTimestampMustBeGreaterThanBefore(TimestampMillis, TimestampMillis),
+    DataTimestampMustBeGreaterThanBefore(TimestampMillis, TimestampMillis),
 
     /// Indicates that the current update timestamp is not greater than the last update timestamp.
     ///
@@ -125,7 +125,7 @@ pub enum Error {
     /// integrity and consistency of the updates.
     ///
     /// Includes the value of a current update timestamp and the last update timestamp.
-    CurrentUpdateTimestampMustBeGreaterThanLatestUpdateTimestamp(TimestampMillis, TimestampMillis),
+    CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(TimestampMillis, TimestampMillis),
 }
 
 impl From<CryptoError> for Error {
@@ -155,8 +155,8 @@ impl Error {
             Error::CryptographicError(error) => 700 + error.code(),
             Error::TimestampTooOld(data_package_index, _) => 1000 + *data_package_index as u16,
             Error::TimestampTooFuture(data_package_index, _) => 1050 + *data_package_index as u16,
-            Error::PackageTimestampMustBeGreaterThanBefore(_, _) => 1101,
-            Error::CurrentUpdateTimestampMustBeGreaterThanLatestUpdateTimestamp(_, _) => 1102,
+            Error::DataTimestampMustBeGreaterThanBefore(_, _) => 1101,
+            Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(_, _) => 1102,
         }
     }
 }
@@ -220,13 +220,13 @@ impl Display for Error {
                     feed_id.as_hex_str()
                 )
             }
-            Error::PackageTimestampMustBeGreaterThanBefore(current, before) => {
+            Error::DataTimestampMustBeGreaterThanBefore(current, before) => {
                 write!(
                     f,
                     "Package timestamp: {current:?} must be greater than package timestamp before: {before:?}"
                 )
             }
-            Error::CurrentUpdateTimestampMustBeGreaterThanLatestUpdateTimestamp(current, last) => {
+            Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(current, last) => {
                 write!(
                     f,
                     "Current update timestamp: {current:?} must be greater than latest update timestamp: {last:?}"
