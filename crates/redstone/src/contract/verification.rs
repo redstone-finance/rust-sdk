@@ -74,7 +74,7 @@ pub fn verify_write_timestamp(
                 .add(min_time_between_updates)
                 .is_same_or_after(time_now) =>
         {
-            Err(Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp)
+            Err(Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(time_now, write_time))
         }
         _ => Ok(()),
     }
@@ -87,7 +87,10 @@ pub fn verify_package_timestamp(
     new_package_time: TimestampMillis,
 ) -> Result<(), Error> {
     if new_package_time.is_same_or_before(last_package_time) {
-        return Err(Error::TimestampMustBeGreaterThanBefore);
+        return Err(Error::DataTimestampMustBeGreaterThanBefore(
+            new_package_time,
+            last_package_time,
+        ));
     }
 
     Ok(())
@@ -189,7 +192,12 @@ mod tests {
 
         assert_eq!(
             res,
-            Err(Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp)
+            Err(
+                Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(
+                    999.into(),
+                    900.into()
+                )
+            )
         );
     }
 
@@ -204,7 +212,12 @@ mod tests {
 
         assert_eq!(
             res,
-            Err(Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp)
+            Err(
+                Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(
+                    900.into(),
+                    900.into()
+                )
+            )
         );
     }
 
@@ -217,10 +230,22 @@ mod tests {
     #[test]
     fn verify_package_timestamp_non_increase_is_err() {
         let res = verify_trusted_update(901.into(), Some(900.into()), 1.into(), 1.into());
-        assert_eq!(res, Err(Error::TimestampMustBeGreaterThanBefore));
+        assert_eq!(
+            res,
+            Err(Error::DataTimestampMustBeGreaterThanBefore(
+                1.into(),
+                1.into()
+            ))
+        );
 
         let res =
             verify_untrusted_update(901.into(), Some(900.into()), 1.into(), 1.into(), 1.into());
-        assert_eq!(res, Err(Error::TimestampMustBeGreaterThanBefore));
+        assert_eq!(
+            res,
+            Err(Error::DataTimestampMustBeGreaterThanBefore(
+                1.into(),
+                1.into()
+            ))
+        );
     }
 }
