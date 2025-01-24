@@ -31,11 +31,6 @@ Configuration module contains configuration for the RedStone payload processor [
   is a valid type to be used as config [redstone/trait.RedStoneConfig](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/trait.RedStoneConfig.html)
   Configuration requires to allow for perforimng two actions and to provide the Config type:
   - Crypto operations needed for address recovery. Different blockchains requires different cryptographic flavors.
-    Please check specific blockchain module for the implementation:
-    - Default [rust/redstone/rust_sdk_2/redstone/default_ext](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/default_ext/index.html)
-    - Solana [rust/redstone/rust_sdk_2/redstone/solana](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/solana/index.html)
-    - Radix [/rust/redstone/rust_sdk_2/redstone/radix](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/radix/index.html)
-    - Casper [rust/redstone/rust_sdk_2/redstone/casper](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/casper/index.html)
   - Environment in which we execute. Provides logging etc. The same situation of flavors applies for the Environment.
     Please check specific blockchain module for the implementation:
     - Default [rust/redstone/rust_sdk_2/redstone/default_ext](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/default_ext/index.html)
