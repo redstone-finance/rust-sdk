@@ -1,6 +1,6 @@
 //! Solana extension
 //!
-//! Implementations of the crypto operations using anchor_lang (solana) specific operations.
+//! Implementation of the config suited for the solana network, with the crypto operations using anchor_lang (solana) specific operations
 
 use alloc::string::ToString;
 

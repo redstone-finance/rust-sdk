@@ -14,7 +14,7 @@ use crate::{
 /// requires data integrity and authenticity checks. Implementations of this trait are responsible for
 /// defining the logic behind each validation step, ensuring that data conforms to expected rules and
 /// conditions.
-pub(crate) trait Validator {
+pub trait Validator {
     /// Retrieves the index of a given data feed.
     ///
     /// This method takes a `feed_id` representing the unique identifier of a data feed and

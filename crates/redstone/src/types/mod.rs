@@ -13,7 +13,7 @@ pub use value::Value;
 
 /// We dont expect value to be larger than u256.
 ///  Adjust this once this no longer hold :)
-pub(crate) const VALUE_SIZE: usize = 32;
+pub const VALUE_SIZE: usize = 32;
 
 pub trait Sanitized {
     fn sanitized(self) -> Self;

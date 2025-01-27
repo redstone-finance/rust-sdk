@@ -18,7 +18,7 @@ mod crypto;
 pub mod network;
 mod protocol;
 mod types;
-pub mod utils;
+mod utils;
 
 #[cfg(feature = "solana")]
 pub mod solana;

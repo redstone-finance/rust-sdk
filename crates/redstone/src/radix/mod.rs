@@ -1,6 +1,6 @@
 //! Radix extension
 //!
-//! Implementation of the config suited for the radix network.
+//! Default and standard implementation of the Environment trait.
 pub mod value_ext;
 
 use alloc::{string::String, vec::Vec};

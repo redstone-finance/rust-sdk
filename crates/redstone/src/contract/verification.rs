@@ -98,7 +98,7 @@ pub fn verify_package_timestamp(
 
 /// Verifies if:
 /// * Package timestamps are strictly increasing
-/// * This is the first write or the time between writes is stricly increasing
+/// * This is the first write or the time between writes is strictly increasing
 pub fn verify_trusted_update(
     time_now: TimestampMillis,
     last_write_time: Option<TimestampMillis>,
@@ -116,7 +116,7 @@ pub fn verify_trusted_update(
 
 /// Verifies if:
 /// * Package timestamps are strictly increasing
-/// * This is the first write or the time between writes is stricly greater than `min_time_between_updates`
+/// * This is the first write or the time between writes is strictly greater than `min_time_between_updates`
 pub fn verify_untrusted_update(
     time_now: TimestampMillis,
     last_write_time: Option<TimestampMillis>,
