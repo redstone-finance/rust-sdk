@@ -46,6 +46,7 @@ We try to follow conventions from [here](https://rust-lang.github.io/api-guideli
 
 - ./crates/redstone/src/core/test_helpers.rs - file should not be audited.
 - ./crates/redstone/src/helpers - directory should not be audited.
+- all test, imports and comments should not be included for audit.
 
 ### Other files
 

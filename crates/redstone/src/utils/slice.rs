@@ -10,7 +10,7 @@ use alloc::vec::Vec;
 ///
 /// Returns a `Result<(), T>` which contains first repeated element found in the slice or if there is no repeated
 /// element then Ok(()) otherwise.
-pub(crate) fn check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
+pub fn check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
 where
     T: PartialEq + Eq + Copy + Ord,
 {

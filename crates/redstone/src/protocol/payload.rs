@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub(crate) struct Payload {
+pub struct Payload {
     pub(crate) data_packages: Vec<DataPackage>,
 }
 

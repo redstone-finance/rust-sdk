@@ -32,7 +32,7 @@ Configuration module contains configuration for the RedStone payload processor [
   Configuration requires to allow for perforimng two actions and to provide the Config type:
   - Crypto operations needed for address recovery. Different blockchains requires different cryptographic flavors.
   - Environment in which we execute. Provides logging etc. The same situation of flavors applies for the Environment.
-    Please check specific blockchain module for the implementation:
+  - Please check specific blockchain module for the implementation of Crypto and Environment modules:
     - Default [rust/redstone/rust_sdk_2/redstone/default_ext](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/default_ext/index.html)
     - Solana [rust/redstone/rust_sdk_2/redstone/solana](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/solana/index.html)
     - Radix [/rust/redstone/rust_sdk_2/redstone/radix](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/radix/index.html)
@@ -73,3 +73,4 @@ For the specific verification primitive description look in to [rust/redstone/ru
 3. [`redstone` crate with `crypto_radix` and
    `network_radix`](https://docs.redstone.finance/rust/redstone/crypto_radix,network_radix/redstone/index.html)
    extension for Radix
+4. Solana [rust/redstone/rust_sdk_2/redstone/solana/enum.SolanaCrypto](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/solana/enum.SolanaCrypto.html)

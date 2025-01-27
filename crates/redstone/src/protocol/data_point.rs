@@ -7,7 +7,7 @@ use crate::{
 };
 
 #[derive(Clone, PartialEq, Eq)]
-pub(crate) struct DataPoint {
+pub struct DataPoint {
     pub(crate) feed_id: FeedId,
     pub(crate) value: Value,
 }
