@@ -10,11 +10,11 @@ pub type ProcessorResult = Result<ValidatedPayload, Error>;
 /// particularly focusing on time-sensitive data and its associated values, according to the `Config`.
 #[derive(Debug, Eq, PartialEq)]
 pub struct ValidatedPayload {
-    /// The minimum timestamp encountered during processing.
+    /// The timestamp encountered during processing.
     ///
-    /// This field captures the earliest time point (in milliseconds since the Unix epoch)
+    /// This field captures the time point (in milliseconds since the Unix epoch)
     /// among the processed data packages, indicating the starting boundary of the dataset's time range.
-    pub min_timestamp: TimestampMillis,
+    pub timestamp: TimestampMillis,
 
     /// A collection of values processed during the operation.
     ///
@@ -25,6 +25,6 @@ pub struct ValidatedPayload {
 
 impl From<ValidatedPayload> for (TimestampMillis, Vec<Value>) {
     fn from(validated_payload: ValidatedPayload) -> Self {
-        (validated_payload.min_timestamp, validated_payload.values)
+        (validated_payload.timestamp, validated_payload.values)
     }
 }

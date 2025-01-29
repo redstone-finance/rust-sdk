@@ -110,8 +110,8 @@ pub enum Error {
 
     /// Indicates that payload timestamps are not equal.
     ///
-    /// Contains the timestamp that is not equal to the first one in the payload.
-    TimestampDifferentThanOthers(TimestampMillis),
+    /// Contains the first timestamp and the one that is not equal to the first one.
+    TimestampDifferentThanOthers(TimestampMillis, TimestampMillis),
 
     /// Indicates that the provided data timestamp is not greater than a previously written package timestamp.
     ///
@@ -153,7 +153,7 @@ impl Error {
             Error::ConfigReocuringSigner(_) => 516,
             Error::ConfigEmptyFeedIds => 517,
             Error::ConfigReocuringFeedId(_) => 518,
-            Error::TimestampDifferentThanOthers(_) => 519,
+            Error::TimestampDifferentThanOthers(_, _) => 519,
             Error::InsufficientSignerCount(data_package_index, value, _) => {
                 (2000 + data_package_index * 10 + value) as u16
             }
@@ -226,10 +226,10 @@ impl Display for Error {
                     feed_id.as_hex_str()
                 )
             }
-            Error::TimestampDifferentThanOthers(value) => write!(
+            Error::TimestampDifferentThanOthers(first, outstandig) => write!(
                 f,
-                "Timestamp {:?} is not equal to the first in the payload.",
-                value
+                "Timestamp {:?} is not equal to the first on {:?} in the payload.",
+                outstandig, first
             ),
             Error::DataTimestampMustBeGreaterThanBefore(current, before) => {
                 write!(

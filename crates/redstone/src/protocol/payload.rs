@@ -27,14 +27,16 @@ impl Payload {
             .skip(1)
             .find(|ts| *ts != first_timestamp)
         {
-            return Err(Error::TimestampDifferentThanOthers(outstanding_ts));
+            return Err(Error::TimestampDifferentThanOthers(
+                first_timestamp,
+                outstanding_ts,
+            ));
         }
 
         Ok(first_timestamp)
     }
 }
 
-#[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
     use super::Payload;
@@ -70,11 +72,8 @@ mod tests {
                 (TEST_BLOCK_TIMESTAMP).into(),
             ),
         ];
-
         let payload = Payload { data_packages };
-
         let ts = payload.get_validated_timestamp(&config)?;
-
         assert_eq!(ts, TEST_BLOCK_TIMESTAMP.into());
 
         Ok(())
@@ -105,16 +104,25 @@ mod tests {
                 (TEST_BLOCK_TIMESTAMP).into(),
             ),
         ];
-
         let payload = Payload { data_packages };
-
         let result = payload.get_validated_timestamp(&config);
 
         assert_eq!(
             result,
             Err(Error::TimestampDifferentThanOthers(
+                TEST_BLOCK_TIMESTAMP.into(),
                 (TEST_BLOCK_TIMESTAMP + 5).into()
             ))
         );
+    }
+
+    #[test]
+    fn test_validate_all_timestamps_in_payload_is_empty() {
+        let config = Config::test_with_signer_count_threshold_or_default(None);
+        let data_packages = vec![];
+        let payload = Payload { data_packages };
+        let result = payload.get_validated_timestamp(&config);
+
+        assert_eq!(result, Err(Error::ArrayIsEmpty));
     }
 }

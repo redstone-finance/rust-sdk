@@ -58,10 +58,7 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
 
     Env::print(|| format!("{:?} {:?}", timestamp, values));
 
-    Ok(ValidatedPayload {
-        values,
-        min_timestamp: timestamp,
-    })
+    Ok(ValidatedPayload { values, timestamp })
 }
 
 #[cfg(feature = "helpers")]
@@ -121,7 +118,7 @@ mod tests {
         assert_eq!(
             result,
             Ok(ValidatedPayload {
-                min_timestamp: (TEST_BLOCK_TIMESTAMP + 400).into(),
+                timestamp: (TEST_BLOCK_TIMESTAMP + 400).into(),
                 values: vec![12u8, 31].iter_into()
             })
         );
@@ -150,7 +147,7 @@ mod tests {
         assert_eq!(
             result,
             Ok(ValidatedPayload {
-                min_timestamp: (TEST_BLOCK_TIMESTAMP + 5).into(),
+                timestamp: (TEST_BLOCK_TIMESTAMP + 5).into(),
                 values: vec![11u8, 31].iter_into()
             })
         );
