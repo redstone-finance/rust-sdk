@@ -52,15 +52,15 @@ impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
 }
 
 fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) -> ProcessorResult {
-    let min_timestamp = payload.get_min_validated_timestamp(config)?;
+    let timestamp = payload.get_validated_timestamp(config)?;
 
     let values = aggregate_values(payload.data_packages, config)?;
 
-    Env::print(|| format!("{:?} {:?}", min_timestamp, values));
+    Env::print(|| format!("{:?} {:?}", timestamp, values));
 
     Ok(ValidatedPayload {
         values,
-        min_timestamp,
+        min_timestamp: timestamp,
     })
 }
 
@@ -91,19 +91,19 @@ mod tests {
                 ETH,
                 11,
                 TEST_SIGNER_ADDRESS_1,
-                (TEST_BLOCK_TIMESTAMP + 5).into(),
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
             ),
             DataPackage::test_single_data_point(
                 ETH,
                 13,
                 TEST_SIGNER_ADDRESS_2,
-                (TEST_BLOCK_TIMESTAMP + 3).into(),
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
             ),
             DataPackage::test_single_data_point(
                 BTC,
                 32,
                 TEST_SIGNER_ADDRESS_2,
-                (TEST_BLOCK_TIMESTAMP - 2).into(),
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
             ),
             DataPackage::test_single_data_point(
                 BTC,
@@ -121,7 +121,7 @@ mod tests {
         assert_eq!(
             result,
             Ok(ValidatedPayload {
-                min_timestamp: (TEST_BLOCK_TIMESTAMP - 2).into(),
+                min_timestamp: (TEST_BLOCK_TIMESTAMP + 400).into(),
                 values: vec![12u8, 31].iter_into()
             })
         );
@@ -133,12 +133,12 @@ mod tests {
             DataPackage::test_multi_data_point(
                 vec![(ETH, 10), (BTC, 31)],
                 TEST_SIGNER_ADDRESS_2,
-                (TEST_BLOCK_TIMESTAMP + 3).into(),
+                (TEST_BLOCK_TIMESTAMP + 5).into(),
             ),
             DataPackage::test_multi_data_point(
                 vec![(ETH, 13), (BTC, 32)],
                 TEST_SIGNER_ADDRESS_1,
-                (TEST_BLOCK_TIMESTAMP + 400).into(),
+                (TEST_BLOCK_TIMESTAMP + 5).into(),
             ),
         ];
 
@@ -150,7 +150,7 @@ mod tests {
         assert_eq!(
             result,
             Ok(ValidatedPayload {
-                min_timestamp: (TEST_BLOCK_TIMESTAMP + 3).into(),
+                min_timestamp: (TEST_BLOCK_TIMESTAMP + 5).into(),
                 values: vec![11u8, 31].iter_into()
             })
         );
@@ -162,22 +162,22 @@ mod tests {
             DataPackage::test_multi_data_point(
                 vec![(BTC, 30), (ETH, 11)],
                 TEST_SIGNER_ADDRESS_1,
-                (TEST_BLOCK_TIMESTAMP + 5).into(),
+                (TEST_BLOCK_TIMESTAMP).into(),
             ),
             DataPackage::test_multi_data_point(
                 vec![(ETH, 10), (BTC, 31)],
                 TEST_SIGNER_ADDRESS_2,
-                (TEST_BLOCK_TIMESTAMP + 3).into(),
+                (TEST_BLOCK_TIMESTAMP).into(),
             ),
             DataPackage::test_multi_data_point(
                 vec![(BTC, 34), (ETH, 12)],
                 TEST_SIGNER_ADDRESS_2, // REPETITION OF A SIGNER
-                (TEST_BLOCK_TIMESTAMP - 2).into(),
+                (TEST_BLOCK_TIMESTAMP).into(),
             ),
             DataPackage::test_multi_data_point(
                 vec![(ETH, 13), (BTC, 32)],
                 TEST_SIGNER_ADDRESS_1,
-                (TEST_BLOCK_TIMESTAMP + 400).into(),
+                (TEST_BLOCK_TIMESTAMP).into(),
             ),
         ];
 
@@ -199,12 +199,12 @@ mod tests {
             DataPackage::test_multi_data_point(
                 vec![(ETH, 10), (BTC, 31), (BTC, 33)], // REPETITION IN DATAPOINTS HERE.
                 TEST_SIGNER_ADDRESS_2,
-                (TEST_BLOCK_TIMESTAMP + 3).into(),
+                (TEST_BLOCK_TIMESTAMP).into(),
             ),
             DataPackage::test_multi_data_point(
                 vec![(ETH, 13), (BTC, 32)],
                 TEST_SIGNER_ADDRESS_1,
-                (TEST_BLOCK_TIMESTAMP + 400).into(),
+                (TEST_BLOCK_TIMESTAMP).into(),
             ),
         ];
 
