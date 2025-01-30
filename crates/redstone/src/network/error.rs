@@ -108,6 +108,11 @@ pub enum Error {
     /// Includes FeedId that is reocuring.
     ConfigReocuringFeedId(FeedId),
 
+    /// Indicates that payload timestamps are not equal.
+    ///
+    /// Contains the first timestamp and the one that is not equal to the first one.
+    TimestampDifferentThanOthers(TimestampMillis, TimestampMillis),
+
     /// Indicates that the provided data timestamp is not greater than a previously written package timestamp.
     ///
     /// For the price adapter to accept a new price update, the associated timestamp must be
@@ -148,6 +153,7 @@ impl Error {
             Error::ConfigReocuringSigner(_) => 516,
             Error::ConfigEmptyFeedIds => 517,
             Error::ConfigReocuringFeedId(_) => 518,
+            Error::TimestampDifferentThanOthers(_, _) => 519,
             Error::InsufficientSignerCount(data_package_index, value, _) => {
                 (2000 + data_package_index * 10 + value) as u16
             }
@@ -220,6 +226,11 @@ impl Display for Error {
                     feed_id.as_hex_str()
                 )
             }
+            Error::TimestampDifferentThanOthers(first, outstandig) => write!(
+                f,
+                "Timestamp {:?} is not equal to the first on {:?} in the payload.",
+                outstandig, first
+            ),
             Error::DataTimestampMustBeGreaterThanBefore(current, before) => {
                 write!(
                     f,

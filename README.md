@@ -1,5 +1,8 @@
 # RustSDK - Audit guide
 
+This repository is an integral part of the https://github.com/redstone-finance/redstone-oracles-monorepo repository,
+especially of the solana-connector package (https://github.com/redstone-finance/redstone-oracles-monorepo/tree/main/packages/solana-connector) and is subject of all their licenses.
+
 <!-- TOC -->
 
 - [RustSDK - Audit guide](#rustsdk---audit-guide)
@@ -26,11 +29,11 @@ The direct path should look like:
 
 ### Documentation
 
-- Redstone crate documentation [./crates/redstone/README.md](./crates/redstone/README.md)
-  - RedstoneConfig is abstraction required as configuration for the RedStone protocol.
-    [redstone/trait.RedStoneConfig](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/trait.RedStoneConfig.html)
+- Redstone crate documentation [here](./crates/redstone/README.md)
+  - RedstoneConfig is abstraction required as configuration for the RedStone protocol
+    [here](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/trait.RedStoneConfig.html).
   - Process Payload function is the main processor of the RedStone payload
-    [redstone/core/processor/fn.process_payload](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/core/processor/fn.process_payload.html)
+    [here](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/core/processor/fn.process_payload.html).
 - General [RedStone Blockchain Oracles docs](https://docs.redstone.finance/docs/get-started/data-formatting-processing/)
   - Especially [The push model docs](https://docs.redstone.finance/docs/get-started/models/redstone-push/)
 
