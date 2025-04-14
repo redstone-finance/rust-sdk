@@ -27,4 +27,8 @@ pub trait PriceAdapterRunEnv {
     ) -> (u64, Vec<Value>);
 
     fn increase_time(&mut self);
+
+    fn increase_time_by(&mut self) {
+        
+    }
 }
