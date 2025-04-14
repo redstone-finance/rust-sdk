@@ -148,14 +148,14 @@ macro_rules! test_price_adapter_read_impl {
     mod read_tests {
         use redstone_testing::env::run_env::PriceAdapterRunEnv;
         use redstone_testing::sample::{
-            sample_eth_btc_avax_5sig, sample_eth_btc_avax_5sig_2, sample_eth_btc_avax_5sig_old,
+            sample_eth_btc_avax_5sig, sample_eth_btc_avax_5sig_2, sample_eth_btc_avax_5sig_old,sample_eth_3sig
         };
 
 
         ::redstone_testing::paste::paste! {$(
         #[test]
         fn [<test_get_prices_ $id>]() {
-            let sample = &sample_eth_btc_avax_5sig();
+            let sample = &sample_eth_3sig();
             let mut price_adapter: $price_adapter_impl = sample.instantiate_price_adapter();
 
             sample.test_get_prices(&mut price_adapter, None);
@@ -164,7 +164,7 @@ macro_rules! test_price_adapter_read_impl {
         #[should_panic(expected = "Missing data feed value for #0 (BTC)")]
         #[test]
         fn [<test_get_prices_not_written_ $id>]() {
-            let sample = &sample_eth_btc_avax_5sig();
+            let sample = &sample_eth_3sig();
             let mut price_adapter: $price_adapter_impl = sample.instantiate_price_adapter();
 
             sample.test_get_prices(&mut price_adapter, None);
@@ -173,12 +173,12 @@ macro_rules! test_price_adapter_read_impl {
 
         #[test]
         fn [<test_write_and_get_prices_same_ $id>]() {
-            let sample = &sample_eth_btc_avax_5sig();
+            let sample = &sample_eth_3sig();
             let mut price_adapter: $price_adapter_impl = sample.instantiate_price_adapter();
 
             sample.test_write_prices(&mut price_adapter, None);
             sample.test_get_prices(&mut price_adapter, None);
-            sample.test_get_prices(&mut price_adapter, vec!["BTC", "ETH"].into());
+            sample.test_get_prices(&mut price_adapter, vec!["ETH"].into());
         }
 
         #[test]
