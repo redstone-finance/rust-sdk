@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 redstone = { path = "../redstone", default-features = false, features = ["helpers"] }
 paste = { version = "1.0.6" }
+hex = "0.4.3"
