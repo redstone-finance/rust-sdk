@@ -74,7 +74,7 @@ pub fn sample_eth_3sig() -> Sample {
     Sample {
         content: include_str!("ETH_PRIMARY_3sig.hex"),
         values: hashmap![
-            "ETH" => 159504422175
+            "ETH" => 159504422175_u128
         ],
         timestamp: 1744563500000,
         system_timestamp: 0,
@@ -85,7 +85,7 @@ pub fn sample_eth_3sig_newer() -> Sample {
     Sample {
         content: include_str!("ETH_PRIMARY_3sig_newer.hex"),
         values: hashmap![
-            "ETH" => 159504422175
+            "ETH" => 159504422175_u128
         ],
         timestamp: 159526674144,
         system_timestamp: 1744563600000,
