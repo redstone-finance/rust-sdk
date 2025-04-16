@@ -110,7 +110,7 @@ pub fn sample_eth_3sig() -> Sample {
             "ETH" => 159504422175_u128
         ],
         timestamp: 1744563500000,
-        system_timestamp: 0,
+        system_timestamp: 1744563500000,
         signers: Signers::Primary,
     }
 }
