@@ -1,3 +1,4 @@
+pub mod avax_signers_scenarios;
 pub mod env;
 pub mod primary_signers_scenarios;
 pub mod sample;

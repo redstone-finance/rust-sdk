@@ -1,8 +1,11 @@
-use core::time::Duration;
+use core::{clone, time::Duration};
 
 use redstone::Value;
 
-use crate::env::{PriceAdapterRunEnv, Signer};
+use crate::{
+    env::{PriceAdapterRunEnv, Signer},
+    sample::Sample,
+};
 
 enum Action {
     WritePrice {
@@ -176,5 +179,27 @@ impl Scenario {
                 }
             };
         }
+    }
+    pub fn scenario_steps_from_sample(self, sample: Sample, init_time: bool) -> Self {
+        let feeds: Vec<_> = sample.values.keys().map(std::ops::Deref::deref).collect();
+        let scenario = if init_time {
+            self.then_set_clock(Duration::from_millis(sample.system_timestamp))
+        } else {
+            self
+        };
+
+        scenario
+            .then_write_prices(feeds.clone(), sample.content, Signer::Untrusted)
+            .then_check_prices(
+                feeds,
+                sample
+                    .values
+                    .values()
+                    .cloned()
+                    .into_iter()
+                    .map(Into::into)
+                    .collect(),
+                sample.timestamp,
+            )
     }
 }
