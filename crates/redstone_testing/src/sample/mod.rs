@@ -133,7 +133,7 @@ pub fn sample_eth_3sig_newer() -> Sample {
         values: hashmap![
             "ETH" => 159504422175_u128
         ],
-        timestamp: 159526674144,
+        timestamp: 1744563600000,
         system_timestamp: 1744563600000,
         signers: Signers::Primary,
     }
