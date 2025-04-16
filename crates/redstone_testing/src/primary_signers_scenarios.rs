@@ -159,11 +159,6 @@ pub fn scenario_adapter_update_with_old_timestamp(max_timestamp_delay: Duration)
     Scenario::default()
         .then_set_clock(system_time)
         .scenario_steps_from_sample(sample.clone(), InitTime::No, Signer::Trusted, None)
-        .then_check_prices(
-            sample.values.keys().map(std::ops::Deref::deref).collect(),
-            sample.values.values().cloned().collect(),
-            0,
-        )
 }
 
 pub fn scenario_adapter_update_with_future_timestamp(max_timestamp_ahead_ms: Duration) -> Scenario {

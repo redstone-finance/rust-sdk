@@ -1,8 +1,9 @@
+use alloc::vec::Vec;
+
 use crate::{
     core::validator::Validator, network::error::Error, protocol::data_package::DataPackage,
     TimestampMillis,
 };
-use alloc::vec::Vec;
 
 #[derive(Clone, Debug)]
 pub struct Payload {
