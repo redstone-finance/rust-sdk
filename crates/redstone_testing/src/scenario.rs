@@ -38,6 +38,11 @@ enum Action {
     },
 }
 
+pub enum InitTime {
+    No,
+    SetToSampleTime,
+}
+
 #[derive(Default)]
 pub struct Scenario {
     actions: Vec<Action>,
@@ -177,17 +182,26 @@ impl Scenario {
             };
         }
     }
+
     pub fn scenario_steps_from_sample(
         self,
         sample: Sample,
-        init_time: bool,
+        init_time: InitTime,
         signer: Signer,
+        feeds_overwrite: Option<Vec<&str>>,
     ) -> Self {
         let feeds: Vec<_> = sample.values.keys().map(std::ops::Deref::deref).collect();
-        let scenario = if init_time {
-            self.then_set_clock(Duration::from_millis(sample.system_timestamp))
-        } else {
-            self
+
+        let scenario = match init_time {
+            InitTime::No => self,
+            InitTime::SetToSampleTime => {
+                self.then_set_clock(Duration::from_millis(sample.system_timestamp))
+            }
+        };
+
+        let feeds = match feeds_overwrite {
+            Some(feeds) => feeds,
+            None => feeds,
         };
 
         scenario
