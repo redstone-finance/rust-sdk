@@ -2,6 +2,7 @@ use core::time::Duration;
 
 use redstone::Value;
 
+#[derive(Clone, Copy, Debug)]
 pub enum Signer {
     Trusted,
     Untrusted,
