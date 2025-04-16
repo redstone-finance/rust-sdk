@@ -180,7 +180,7 @@ impl Scenario {
             };
         }
     }
-    pub fn scenario_steps_from_sample(self, sample: Sample, init_time: bool) -> Self {
+    pub fn scenario_steps_from_sample(self, sample: Sample, init_time: bool, signer: Signer) -> Self {
         let feeds: Vec<_> = sample.values.keys().map(std::ops::Deref::deref).collect();
         let scenario = if init_time {
             self.then_set_clock(Duration::from_millis(sample.system_timestamp))
@@ -189,7 +189,7 @@ impl Scenario {
         };
 
         scenario
-            .then_write_prices(feeds.clone(), sample.content, Signer::Untrusted)
+            .then_write_prices(feeds.clone(), sample.content, signer)
             .then_check_prices(
                 feeds,
                 sample

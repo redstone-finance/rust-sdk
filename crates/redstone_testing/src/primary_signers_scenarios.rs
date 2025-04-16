@@ -13,9 +13,9 @@ pub fn scenario_trusted_updates_twice_without_waiting_for_threshold(
     let second_sample = sample_eth_3sig_newer();
 
     Scenario::new()
-        .scenario_steps_from_sample(first_sample, true)
+        .scenario_steps_from_sample(first_sample, true, Signer::Trusted)
         .then_advance_clock(less_than_threshold_duration)
-        .scenario_steps_from_sample(second_sample, false)
+        .scenario_steps_from_sample(second_sample, false, Signer::Trusted)
 }
 
 pub fn scenario_untrusted_updates_twice_waiting_for_threshold(threshold: Duration) -> Scenario {
