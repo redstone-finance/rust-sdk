@@ -2,7 +2,10 @@ use core::{ops::Add, time::Duration};
 
 use crate::{
     env::Signer,
-    sample::{sample_eth_2sig, sample_eth_3sig, sample_eth_3sig_newer},
+    sample::{
+        sample_btc_5sig, sample_btc_eth_3sig, sample_btc_eth_3sig_newer, sample_eth_2sig,
+        sample_eth_3sig, sample_eth_3sig_newer, Sample,
+    },
     scenario::{InitTime, Scenario},
 };
 
@@ -92,4 +95,103 @@ pub fn scenario_missing_feed_in_payload() -> Scenario {
         Signer::Trusted,
         Some(vec!["BTC"]),
     )
+}
+
+pub fn scenario_2_feed_update(threshold: Duration) -> Scenario {
+    let more_than_threshold = threshold.add(Duration::from_secs(1));
+    let first_sample = sample_btc_eth_3sig();
+    let second_sample = sample_btc_eth_3sig_newer();
+
+    Scenario::default()
+        .scenario_steps_from_sample(
+            first_sample,
+            InitTime::SetToSampleTime,
+            Signer::Trusted,
+            None,
+        )
+        .then_advance_clock(more_than_threshold)
+        .scenario_steps_from_sample(second_sample, InitTime::No, Signer::Trusted, None)
+}
+
+pub fn scenario_payload_with_multiple_feed_update_one(threshold: Duration) -> Scenario {
+    let more_than_threshold = threshold.add(Duration::from_secs(1));
+    let first_sample = sample_btc_eth_3sig();
+    let second_sample = sample_btc_eth_3sig_newer();
+
+    Scenario::default()
+        .scenario_steps_from_sample(
+            first_sample,
+            InitTime::SetToSampleTime,
+            Signer::Trusted,
+            Some(vec!["ETH"]),
+        )
+        .then_advance_clock(more_than_threshold)
+        .scenario_steps_from_sample(
+            second_sample,
+            InitTime::No,
+            Signer::Trusted,
+            Some(vec!["ETH"]),
+        )
+}
+
+pub fn scenario_with_5_signers(threshold: Duration) -> Scenario {
+    let more_than_threshold = threshold.add(Duration::from_secs(1));
+    let first_sample = sample_btc_5sig();
+    let second_sample = sample_btc_5sig();
+
+    Scenario::default()
+        .scenario_steps_from_sample(
+            first_sample,
+            InitTime::SetToSampleTime,
+            Signer::Trusted,
+            None,
+        )
+        .then_advance_clock(more_than_threshold)
+        .scenario_steps_from_sample(second_sample, InitTime::No, Signer::Trusted, None)
+}
+
+pub fn scenario_adapter_update_with_old_timestamp(max_timestamp_delay: Duration) -> Scenario {
+    let sample = Sample::any_valid();
+
+    let system_time =
+        Duration::from_millis(sample.timestamp) + max_timestamp_delay + Duration::from_secs(1);
+
+    Scenario::default()
+        .then_set_clock(system_time)
+        .scenario_steps_from_sample(sample, InitTime::No, Signer::Trusted, None)
+}
+
+pub fn scenario_adapter_update_with_future_timestamp(max_timestamp_ahead_ms: Duration) -> Scenario {
+    let sample = Sample::any_valid();
+
+    let system_time =
+        Duration::from_millis(sample.timestamp) - max_timestamp_ahead_ms - Duration::from_secs(1);
+
+    Scenario::default()
+        .then_set_clock(system_time)
+        .scenario_steps_from_sample(sample, InitTime::No, Signer::Trusted, None)
+}
+
+pub fn scenario_adapter_update_with_almost_old_timestamp(
+    max_timestamp_delay: Duration,
+) -> Scenario {
+    let sample = Sample::any_valid();
+
+    let system_time = Duration::from_millis(sample.timestamp) + max_timestamp_delay;
+
+    Scenario::default()
+        .then_set_clock(system_time)
+        .scenario_steps_from_sample(sample, InitTime::No, Signer::Trusted, None)
+}
+
+pub fn scenario_adapter_update_with_almost_future_timestamp(
+    max_timestamp_ahead_ms: Duration,
+) -> Scenario {
+    let sample = Sample::any_valid();
+
+    let system_time = Duration::from_millis(sample.timestamp) - max_timestamp_ahead_ms;
+
+    Scenario::default()
+        .then_set_clock(system_time)
+        .scenario_steps_from_sample(sample, InitTime::No, Signer::Trusted, None)
 }

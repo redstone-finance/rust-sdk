@@ -42,6 +42,10 @@ impl Sample {
     pub fn feeds(&self) -> Vec<String> {
         self.values.keys().cloned().collect()
     }
+
+    pub fn any_valid() -> Self {
+        sample_eth_3sig()
+    }
 }
 
 pub fn sample_eth_btc_avax_5sig_old() -> Sample {
@@ -113,5 +117,51 @@ pub fn sample_eth_3sig_newer() -> Sample {
         ],
         timestamp: 1744563600000,
         system_timestamp: 1744563600000,
+    }
+}
+
+pub fn sample_btc_eth_3sig() -> Sample {
+    Sample {
+        content: include_str!("ETH_BTC_PRIMARY_3sig.hex"),
+        values: hashmap![
+            "ETH" =>  156537608660_u128,
+            "BTC" => 8396083019375_u128
+        ],
+        timestamp: 1744829560000,
+        system_timestamp: 1744829560000,
+    }
+}
+
+pub fn sample_btc_eth_3sig_newer() -> Sample {
+    Sample {
+        content: include_str!("ETH_BTC_PRIMARY_3sig_newer.hex"),
+        values: hashmap![
+            "ETH" =>  156537608660_u128,
+            "BTC" => 8396083019375_u128
+        ],
+        timestamp: 1744829650000,
+        system_timestamp: 1744829650000,
+    }
+}
+
+pub fn sample_btc_5sig() -> Sample {
+    Sample {
+        content: include_str!("BTC_PRIMARY_5sig.hex"),
+        values: hashmap![
+            "BTC" => 8396201558811_u128
+        ],
+        timestamp: 1744829680000,
+        system_timestamp: 1744829680000,
+    }
+}
+
+pub fn sample_btc_5sig_newer() -> Sample {
+    Sample {
+        content: include_str!("BTC_PRIMARY_5sig_newer.hex"),
+        values: hashmap![
+            "BTC" => 8407244389442_u128
+        ],
+        timestamp: 1744829750000,
+        system_timestamp: 1744829750000,
     }
 }
