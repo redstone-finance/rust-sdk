@@ -209,7 +209,7 @@ pub fn scenario_trusted_updates_twice_without_waiting_for_threshold(
 }
 
 pub fn scenario_untrusted_updates_twice_waiting_for_threshold(threshold: Duration) -> Scenario {
-    let more_than_threshold = threshold.add(Duration::from_millis(1));
+    let more_than_threshold = threshold.add(Duration::from_secs(1));
     let first_sample = sample_eth_3sig();
     let second_sample = sample_eth_3sig_newer();
 
