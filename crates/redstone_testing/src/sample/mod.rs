@@ -119,7 +119,7 @@ pub fn sample_eth_2sig() -> Sample {
     Sample {
         content: include_str!("ETH_PRIMARY_2sig.hex"),
         values: hashmap![
-            "ETH" => 12345
+            "ETH" => 12345_u128
         ],
         timestamp: 1744563500000,
         system_timestamp: 1744563500000,
