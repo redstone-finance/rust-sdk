@@ -31,28 +31,11 @@ pub const PRIMARY_SIGNERS: [&str; 5] = [
 ];
 
 #[derive(Debug, Clone)]
-pub enum Signers {
-    Primary,
-    Avax,
-}
-
-pub fn all_samples() -> Vec<Sample> {
-    vec![
-        sample_eth_btc_avax_5sig_old(),
-        sample_eth_btc_avax_5sig(),
-        sample_eth_btc_avax_5sig_2(),
-        sample_eth_3sig(),
-        sample_eth_3sig_newer(),
-    ]
-}
-
-#[derive(Debug, Clone)]
 pub struct Sample {
     pub content: &'static str,
     pub values: HashMap<String, Value>,
     pub timestamp: u64,
     pub system_timestamp: u64,
-    pub signers: Signers,
 }
 
 impl Sample {
@@ -71,7 +54,6 @@ pub fn sample_eth_btc_avax_5sig_old() -> Sample {
         ],
         timestamp: 1707738270000,
         system_timestamp: SAMPLE_SYSTEM_TIMESTAMP_OLD,
-        signers: Signers::Avax,
     }
 }
 
@@ -85,7 +67,6 @@ pub fn sample_eth_btc_avax_5sig() -> Sample {
         ],
         timestamp: 1725975800000,
         system_timestamp: SAMPLE_SYSTEM_TIMESTAMP,
-        signers: Signers::Avax,
     }
 }
 
@@ -99,7 +80,6 @@ pub fn sample_eth_btc_avax_5sig_2() -> Sample {
         ],
         timestamp: 1725975870000,
         system_timestamp: SAMPLE_SYSTEM_TIMESTAMP_2,
-        signers: Signers::Primary,
     }
 }
 
@@ -111,7 +91,6 @@ pub fn sample_eth_3sig() -> Sample {
         ],
         timestamp: 1744563500000,
         system_timestamp: 1744563500000,
-        signers: Signers::Primary,
     }
 }
 
@@ -123,7 +102,6 @@ pub fn sample_eth_2sig() -> Sample {
         ],
         timestamp: 1744563500000,
         system_timestamp: 1744563500000,
-        signers: Signers::Primary,
     }
 }
 
@@ -135,6 +113,5 @@ pub fn sample_eth_3sig_newer() -> Sample {
         ],
         timestamp: 1744563600000,
         system_timestamp: 1744563600000,
-        signers: Signers::Primary,
     }
 }
