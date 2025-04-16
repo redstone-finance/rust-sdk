@@ -1,4 +1,4 @@
-use core::{clone, time::Duration};
+use core::time::Duration;
 
 use redstone::Value;
 
@@ -38,15 +38,12 @@ enum Action {
     },
 }
 
+#[derive(Default)]
 pub struct Scenario {
     actions: Vec<Action>,
 }
 
 impl Scenario {
-    pub fn new() -> Self {
-        Self { actions: vec![] }
-    }
-
     pub fn then_set_clock(mut self, to: Duration) -> Self {
         self.actions.push(Action::SetClock { to });
 
@@ -180,7 +177,12 @@ impl Scenario {
             };
         }
     }
-    pub fn scenario_steps_from_sample(self, sample: Sample, init_time: bool, signer: Signer) -> Self {
+    pub fn scenario_steps_from_sample(
+        self,
+        sample: Sample,
+        init_time: bool,
+        signer: Signer,
+    ) -> Self {
         let feeds: Vec<_> = sample.values.keys().map(std::ops::Deref::deref).collect();
         let scenario = if init_time {
             self.then_set_clock(Duration::from_millis(sample.system_timestamp))
@@ -192,13 +194,7 @@ impl Scenario {
             .then_write_prices(feeds.clone(), sample.content, signer)
             .then_check_prices(
                 feeds,
-                sample
-                    .values
-                    .values()
-                    .cloned()
-                    .into_iter()
-                    .map(Into::into)
-                    .collect(),
+                sample.values.values().cloned().collect(),
                 sample.timestamp,
             )
     }

@@ -1,9 +1,10 @@
+use core::{ops::Add, time::Duration};
+
 use crate::{
     env::Signer,
     sample::{sample_eth_2sig, sample_eth_3sig, sample_eth_3sig_newer},
     scenario::Scenario,
 };
-use core::{ops::Add, time::Duration};
 
 pub fn scenario_trusted_updates_twice_without_waiting_for_threshold(
     threshold: Duration,
@@ -12,7 +13,7 @@ pub fn scenario_trusted_updates_twice_without_waiting_for_threshold(
     let first_sample = sample_eth_3sig();
     let second_sample = sample_eth_3sig_newer();
 
-    Scenario::new()
+    Scenario::default()
         .scenario_steps_from_sample(first_sample, true, Signer::Trusted)
         .then_advance_clock(less_than_threshold_duration)
         .scenario_steps_from_sample(second_sample, false, Signer::Trusted)
@@ -23,57 +24,25 @@ pub fn scenario_untrusted_updates_twice_waiting_for_threshold(threshold: Duratio
     let first_sample = sample_eth_3sig();
     let second_sample = sample_eth_3sig_newer();
 
-    let feed = "ETH";
-
-    Scenario::new()
-        .then_set_clock(Duration::from_millis(first_sample.system_timestamp))
-        .then_write_price(feed, first_sample.content, Signer::Untrusted)
-        .then_check_prices(
-            vec![feed],
-            vec![*first_sample.values.get(feed).unwrap()],
-            first_sample.timestamp,
-        )
+    Scenario::default()
+        .scenario_steps_from_sample(first_sample, true, Signer::Untrusted)
         .then_advance_clock(more_than_threshold)
-        .then_write_price(feed, second_sample.content, Signer::Untrusted)
-        .then_check_prices(
-            vec![feed],
-            vec![*second_sample.values.get(feed).unwrap()],
-            second_sample.timestamp,
-        )
+        .scenario_steps_from_sample(second_sample, false, Signer::Untrusted)
 }
 
 pub fn scenario_updating_twice_with_the_same_timestamp() -> Scenario {
-    let first_sample = sample_eth_3sig();
+    let sample = sample_eth_3sig();
 
-    let feed = "ETH";
-
-    Scenario::new()
-        .then_set_clock(Duration::from_millis(first_sample.system_timestamp))
-        .then_write_price(feed, first_sample.content, Signer::Trusted)
-        .then_check_prices(
-            vec![feed],
-            vec![*first_sample.values.get(feed).unwrap()],
-            first_sample.timestamp,
-        )
-        .then_advance_clock(Duration::from_millis(1))
-        .then_write_price(feed, first_sample.content, Signer::Trusted)
+    Scenario::default()
+        .scenario_steps_from_sample(sample.clone(), true, Signer::Trusted)
+        .then_advance_clock(Duration::from_secs(1))
+        .scenario_steps_from_sample(sample, false, Signer::Trusted)
 }
 
 pub fn scenario_updating_with_only_2_signers() -> Scenario {
     let sample = sample_eth_2sig();
 
-    let feed = "ETH";
-
-    Scenario::new()
-        .then_set_clock(Duration::from_millis(sample.system_timestamp))
-        .then_write_price(feed, sample.content, Signer::Trusted)
-        .then_check_prices(
-            vec![feed],
-            vec![*sample.values.get(feed).unwrap()],
-            sample.timestamp,
-        )
-        .then_advance_clock(Duration::from_millis(1))
-        .then_write_price(feed, sample.content, Signer::Trusted)
+    Scenario::default().scenario_steps_from_sample(sample.clone(), true, Signer::Trusted)
 }
 
 pub fn scenario_untrusted_updates_twice_without_waiting_for_threshold(
@@ -83,21 +52,8 @@ pub fn scenario_untrusted_updates_twice_without_waiting_for_threshold(
     let first_sample = sample_eth_3sig();
     let second_sample = sample_eth_3sig_newer();
 
-    let feed = "ETH";
-
-    Scenario::new()
-        .then_set_clock(Duration::from_millis(first_sample.system_timestamp))
-        .then_write_price(feed, first_sample.content, Signer::Untrusted)
-        .then_check_prices(
-            vec![feed],
-            vec![*first_sample.values.get(feed).unwrap()],
-            first_sample.timestamp,
-        )
+    Scenario::default()
+        .scenario_steps_from_sample(first_sample, true, Signer::Untrusted)
         .then_advance_clock(less_than_threshold_duration)
-        .then_write_price(feed, second_sample.content, Signer::Untrusted)
-        .then_check_prices(
-            vec![feed],
-            vec![*second_sample.values.get(feed).unwrap()],
-            second_sample.timestamp,
-        )
+        .scenario_steps_from_sample(second_sample, false, Signer::Untrusted)
 }
