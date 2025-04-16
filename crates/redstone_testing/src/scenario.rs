@@ -1,4 +1,4 @@
-use core::time::Duration;
+use core::{ops::Add, time::Duration};
 
 use redstone::Value;
 
@@ -201,6 +201,30 @@ pub fn scenario_trusted_updates_twice_without_waiting_for_threshold(
         )
         .then_advance_clock(less_than_threshold_duration)
         .then_write_price(feed, second_sample.content, Signer::Trusted)
+        .then_check_prices(
+            vec![feed],
+            vec![*second_sample.values.get(feed).unwrap()],
+            second_sample.timestamp,
+        )
+}
+
+pub fn scenario_untrusted_updates_twice_waiting_for_threshold(threshold: Duration) -> Scenario {
+    let more_than_threshold = threshold.add(Duration::from_millis(1));
+    let first_sample = sample_eth_3sig();
+    let second_sample = sample_eth_3sig_newer();
+
+    let feed = "ETH";
+
+    Scenario::new()
+        .then_set_clock(Duration::from_millis(first_sample.system_timestamp))
+        .then_write_price(feed, first_sample.content, Signer::Untrusted)
+        .then_check_prices(
+            vec![feed],
+            vec![*first_sample.values.get(feed).unwrap()],
+            first_sample.timestamp,
+        )
+        .then_advance_clock(more_than_threshold)
+        .then_write_price(feed, second_sample.content, Signer::Untrusted)
         .then_check_prices(
             vec![feed],
             vec![*second_sample.values.get(feed).unwrap()],
