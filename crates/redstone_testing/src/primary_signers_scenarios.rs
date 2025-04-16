@@ -3,8 +3,8 @@ use core::{ops::Add, time::Duration};
 use crate::{
     env::Signer,
     sample::{
-        sample_btc_5sig, sample_btc_eth_3sig, sample_btc_eth_3sig_newer, sample_eth_2sig,
-        sample_eth_3sig, sample_eth_3sig_newer, Sample,
+        sample_btc_5sig, sample_btc_5sig_newer, sample_btc_eth_3sig, sample_btc_eth_3sig_newer,
+        sample_eth_2sig, sample_eth_3sig, sample_eth_3sig_newer, Sample,
     },
     scenario::{InitTime, Scenario},
 };
@@ -137,7 +137,7 @@ pub fn scenario_payload_with_multiple_feed_update_one(threshold: Duration) -> Sc
 pub fn scenario_with_5_signers(threshold: Duration) -> Scenario {
     let more_than_threshold = threshold.add(Duration::from_secs(1));
     let first_sample = sample_btc_5sig();
-    let second_sample = sample_btc_5sig();
+    let second_sample = sample_btc_5sig_newer();
 
     Scenario::default()
         .scenario_steps_from_sample(
@@ -158,7 +158,12 @@ pub fn scenario_adapter_update_with_old_timestamp(max_timestamp_delay: Duration)
 
     Scenario::default()
         .then_set_clock(system_time)
-        .scenario_steps_from_sample(sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample(sample.clone(), InitTime::No, Signer::Trusted, None)
+        .then_check_prices(
+            sample.values.keys().map(std::ops::Deref::deref).collect(),
+            sample.values.values().cloned().collect(),
+            0,
+        )
 }
 
 pub fn scenario_adapter_update_with_future_timestamp(max_timestamp_ahead_ms: Duration) -> Scenario {

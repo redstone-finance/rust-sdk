@@ -148,7 +148,7 @@ pub fn sample_btc_5sig() -> Sample {
     Sample {
         content: include_str!("BTC_PRIMARY_5sig.hex"),
         values: hashmap![
-            "BTC" => 8396201558811_u128
+            "BTC" => 8396206788771_u128
         ],
         timestamp: 1744829680000,
         system_timestamp: 1744829680000,
