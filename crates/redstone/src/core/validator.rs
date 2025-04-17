@@ -1,12 +1,8 @@
 use alloc::vec::Vec;
 
 use crate::{
-    core::config::Config,
-    network::error::Error,
-    protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
-    types::Value,
-    utils::filter::FilterSome,
-    FeedId, SignerAddress, TimestampMillis,
+    core::config::Config, network::error::Error, types::Value, utils::filter::FilterSome, FeedId,
+    SignerAddress, TimestampMillis,
 };
 /// A trait defining validation operations for data feeds and signers.
 ///
@@ -122,12 +118,13 @@ impl Validator for Config {
         timestamp: TimestampMillis,
     ) -> Result<TimestampMillis, Error> {
         if !timestamp
-            .add(MAX_TIMESTAMP_DELAY_MS)
+            .add(*self.max_timestamp_delay_ms())
             .is_same_or_after(*self.block_timestamp())
         {
             return Err(Error::TimestampTooOld(index, timestamp));
         }
-        if !timestamp.is_same_or_before(self.block_timestamp().add(MAX_TIMESTAMP_AHEAD_MS)) {
+        if !timestamp.is_same_or_before(self.block_timestamp().add(*self.max_timestamp_ahead_ms()))
+        {
             return Err(Error::TimestampTooFuture(index, timestamp));
         }
 

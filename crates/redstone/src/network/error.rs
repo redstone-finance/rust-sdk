@@ -1,5 +1,8 @@
 use alloc::{string::String, vec::Vec};
-use core::fmt::{Debug, Display, Formatter};
+use core::{
+    fmt::{Debug, Display, Formatter},
+    num::TryFromIntError,
+};
 
 use crate::{
     network::as_str::{AsAsciiStr, AsHexStr},
@@ -131,11 +134,23 @@ pub enum Error {
     ///
     /// Includes the value of a current update timestamp and the last update timestamp.
     CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(TimestampMillis, TimestampMillis),
+
+    /// Indicates error while converting from one type of the integer to the other.
+    NumberConversionFail,
+
+    /// Indicates error of usize overflow.
+    UsizeOverflow,
 }
 
 impl From<CryptoError> for Error {
     fn from(value: CryptoError) -> Self {
         Self::CryptographicError(value)
+    }
+}
+
+impl From<TryFromIntError> for Error {
+    fn from(_: TryFromIntError) -> Self {
+        Self::NumberConversionFail
     }
 }
 
@@ -163,6 +178,8 @@ impl Error {
             Error::TimestampTooFuture(data_package_index, _) => 1050 + *data_package_index as u16,
             Error::DataTimestampMustBeGreaterThanBefore(_, _) => 1101,
             Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(_, _) => 1102,
+            Error::NumberConversionFail => 1200,
+            Error::UsizeOverflow => 1300,
         }
     }
 }
@@ -233,16 +250,20 @@ impl Display for Error {
             ),
             Error::DataTimestampMustBeGreaterThanBefore(current, before) => {
                 write!(
-                    f,
-                    "Package timestamp: {current:?} must be greater than package timestamp before: {before:?}"
-                )
+                            f,
+                            "Package timestamp: {current:?} must be greater than package timestamp before: {before:?}"
+                        )
             }
             Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(current, last) => {
                 write!(
-                    f,
-                    "Current update timestamp: {current:?} must be greater than latest update timestamp: {last:?}"
-                )
+                            f,
+                            "Current update timestamp: {current:?} must be greater than latest update timestamp: {last:?}"
+                        )
             }
+            Error::NumberConversionFail => {
+                write!(f, "Number conversion failed")
+            }
+            Error::UsizeOverflow => write!(f, "Usize overflow"),
         }
     }
 }
