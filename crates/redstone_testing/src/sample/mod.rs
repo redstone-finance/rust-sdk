@@ -1,5 +1,3 @@
-pub mod sample_test_helpers;
-
 use std::collections::HashMap;
 
 use redstone::Value;
@@ -15,12 +13,38 @@ macro_rules! hashmap {
 pub const SAMPLE_SYSTEM_TIMESTAMP_OLD: u64 = 1707738300;
 pub const SAMPLE_SYSTEM_TIMESTAMP: u64 = 1725975900;
 pub const SAMPLE_SYSTEM_TIMESTAMP_2: u64 = 1725976000;
-pub const SIGNERS: [&str; 5] = [
-    "0x109B4a318A4F5ddcbCA6349B45f881B4137deaFB",
-    "0x12470f7aba85c8b81d63137dd5925d6ee114952b",
-    "0x1ea62d73edf8ac05dfcea1a34b9796e937a29eff",
-    "0x83cba8c619fb629b81a65c2e67fe15cf3e3c9747",
-    "0x2c59617248994D12816EE1Fa77CE0a64eEB456BF",
+
+pub const DEFAULT_SIGNERS_THRESHOLD: u8 = 3;
+
+#[derive(Debug, Clone, Copy)]
+pub enum Signers {
+    Avax,
+    Primary,
+}
+
+impl Signers {
+    pub fn get_signers(&self) -> Vec<&str> {
+        match self {
+            Signers::Avax => AVAX_SIGNERS.to_vec(),
+            Signers::Primary => PRIMARY_SIGNERS.to_vec(),
+        }
+    }
+}
+
+pub const AVAX_SIGNERS: [&str; 5] = [
+    "109B4a318A4F5ddcbCA6349B45f881B4137deaFB",
+    "12470f7aba85c8b81d63137dd5925d6ee114952b",
+    "1ea62d73edf8ac05dfcea1a34b9796e937a29eff",
+    "83cba8c619fb629b81a65c2e67fe15cf3e3c9747",
+    "2c59617248994D12816EE1Fa77CE0a64eEB456BF",
+];
+
+pub const PRIMARY_SIGNERS: [&str; 5] = [
+    "8bb8f32df04c8b654987daaed53d6b6091e3b774",
+    "deb22f54738d54976c4c0fe5ce6d408e40d88499",
+    "51ce04be4b3e32572c4ec9135221d0691ba7d202",
+    "dd682daec5a90dd295d14da4b0bec9281017b5be",
+    "9c5ae89c4af6aa32ce58588dbaf90d18a855b6de",
 ];
 
 #[derive(Debug, Clone)]
@@ -29,6 +53,17 @@ pub struct Sample {
     pub values: HashMap<String, Value>,
     pub timestamp: u64,
     pub system_timestamp: u64,
+    pub signers: Signers,
+}
+
+impl Sample {
+    pub fn feeds(&self) -> Vec<String> {
+        self.values.keys().cloned().collect()
+    }
+
+    pub fn any_valid() -> Self {
+        sample_eth_3sig()
+    }
 }
 
 pub fn sample_eth_btc_avax_5sig_old() -> Sample {
@@ -41,6 +76,7 @@ pub fn sample_eth_btc_avax_5sig_old() -> Sample {
         ],
         timestamp: 1707738270000,
         system_timestamp: SAMPLE_SYSTEM_TIMESTAMP_OLD,
+        signers: Signers::Avax,
     }
 }
 
@@ -54,6 +90,7 @@ pub fn sample_eth_btc_avax_5sig() -> Sample {
         ],
         timestamp: 1725975800000,
         system_timestamp: SAMPLE_SYSTEM_TIMESTAMP,
+        signers: Signers::Avax,
     }
 }
 
@@ -67,5 +104,92 @@ pub fn sample_eth_btc_avax_5sig_2() -> Sample {
         ],
         timestamp: 1725975870000,
         system_timestamp: SAMPLE_SYSTEM_TIMESTAMP_2,
+        signers: Signers::Avax,
+    }
+}
+
+pub fn sample_eth_3sig() -> Sample {
+    Sample {
+        content: include_str!("ETH_PRIMARY_3sig.hex"),
+        values: hashmap![
+            "ETH" => 159504422175_u128
+        ],
+        timestamp: 1744563500000,
+        system_timestamp: 1744563500000,
+        signers: Signers::Primary,
+    }
+}
+
+pub fn sample_eth_2sig() -> Sample {
+    Sample {
+        content: include_str!("ETH_PRIMARY_2sig.hex"),
+        values: hashmap![
+            "ETH" => 12345_u128
+        ],
+        timestamp: 1744563500000,
+        system_timestamp: 1744563500000,
+        signers: Signers::Avax,
+    }
+}
+
+pub fn sample_eth_3sig_newer() -> Sample {
+    Sample {
+        content: include_str!("ETH_PRIMARY_3sig_newer.hex"),
+        values: hashmap![
+            "ETH" => 159526674144_u128
+        ],
+        timestamp: 1744563600000,
+        system_timestamp: 1744563600000,
+        signers: Signers::Primary,
+    }
+}
+
+pub fn sample_btc_eth_3sig() -> Sample {
+    Sample {
+        content: include_str!("ETH_BTC_PRIMARY_3sig.hex"),
+        values: hashmap![
+            "ETH" =>  156537608660_u128,
+            "BTC" => 8396083019375_u128
+        ],
+        timestamp: 1744829560000,
+        system_timestamp: 1744829560000,
+        signers: Signers::Primary,
+    }
+}
+
+pub fn sample_btc_eth_3sig_newer() -> Sample {
+    Sample {
+        content: include_str!("ETH_BTC_PRIMARY_3sig_newer.hex"),
+        values: hashmap![
+            "ETH" =>  156537608660_u128,
+            "BTC" => 8396083019375_u128
+        ],
+        timestamp: 1744829650000,
+        system_timestamp: 1744829650000,
+        signers: Signers::Primary,
+    }
+}
+
+pub fn sample_btc_5sig() -> Sample {
+    Sample {
+        content: include_str!("BTC_PRIMARY_5sig.hex"),
+        values: hashmap![
+            "BTC" => 8396206788771_u128
+        ],
+        timestamp: 1744829680000,
+        system_timestamp: 1744829680000,
+        signers: Signers::Primary,
+    }
+}
+
+pub fn sample_btc_5sig_newer() -> Sample {
+    Sample {
+        content: include_str!("BTC_PRIMARY_5sig_newer.hex"),
+        values: hashmap![
+            "BTC" => 8407244389442_u128
+        ],
+        timestamp: 1744829750000,
+        system_timestamp: 1744829750000,
+        signers: Signers::Primary,
     }
 }
