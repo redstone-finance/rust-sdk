@@ -1,4 +1,5 @@
 use alloc::vec::Vec;
+use core::convert::TryInto;
 use core::marker::PhantomData;
 
 use crate::{
@@ -70,10 +71,11 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         let value_size = payload.try_trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS)?;
         let timestamp = payload.try_trim_end(TIMESTAMP_BS)?;
 
-        let size = data_point_count * (value_size + DATA_FEED_ID_BS as u64)
-            + DATA_POINT_VALUE_BYTE_SIZE_BS as u64
-            + TIMESTAMP_BS as u64
-            + DATA_POINTS_COUNT_BS as u64;
+        let size: u64 = data_point_count
+            * (value_size + TryInto::<u64>::try_into(DATA_FEED_ID_BS)?)
+            + TryInto::<u64>::try_into(DATA_POINT_VALUE_BYTE_SIZE_BS)?
+            + TryInto::<u64>::try_into(TIMESTAMP_BS)?
+            + TryInto::<u64>::try_into(DATA_POINTS_COUNT_BS)?;
 
         let signable_bytes: Vec<_> = tmp.trim_end(size.try_into()?);
         let signer_address = C::recover_address(signable_bytes, signature)?;
