@@ -12,11 +12,14 @@ const ECDSA_N_DIV_2: U256 = U256([
     9223372036854775807,
 ]);
 
+const SIGNATURE_SIZE_BS: usize = 65;
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum CryptoError {
     RecoveryByte(u8),
     Signature(Vec<u8>),
     RecoverPreHash,
+    InvalidSignatureLen(usize),
 }
 impl CryptoError {
     pub fn code(&self) -> u16 {
@@ -24,6 +27,7 @@ impl CryptoError {
             CryptoError::RecoveryByte(byte) => *byte as u16,
             CryptoError::Signature(vec) => vec.len() as u16,
             CryptoError::RecoverPreHash => 0,
+            CryptoError::InvalidSignatureLen(len) => *len as u16,
         }
     }
 }
@@ -43,12 +47,16 @@ pub trait Crypto {
         message: A,
         signature: B,
     ) -> Result<SignerAddress, CryptoError> {
-        check_signature_malleability(signature.as_ref())?;
-        let recovery_byte = signature.as_ref()[64]; // 65-byte representation
+        let signature = signature.as_ref();
+        if signature.len() != SIGNATURE_SIZE_BS {
+            return Err(CryptoError::InvalidSignatureLen(signature.len()));
+        }
+        check_signature_malleability(signature)?;
+        let recovery_byte = signature[64]; // 65-byte representation
         let msg_hash = Self::keccak256(message);
         let key = Self::recover_public_key(
             recovery_byte - (if recovery_byte >= 27 { 27 } else { 0 }),
-            &signature.as_ref()[..64],
+            &signature[..64],
             msg_hash,
         )?;
         let key_hash = Self::keccak256(&key.as_ref()[1..]); // skip first uncompressed-key byte
@@ -69,7 +77,7 @@ fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
 #[cfg(test)]
 #[allow(dead_code)] // this is test template for crypto implementations
 pub mod recovery_key_tests {
-    use alloc::borrow::ToOwned;
+    use alloc::{borrow::ToOwned, string::ToString};
 
     use crate::{helpers::hex::hex_to_bytes, Crypto, CryptoError};
 
@@ -145,13 +153,13 @@ pub mod recovery_key_tests {
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
         let msg =
-        b"4254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000058f32c910a001924dc0bd5000000020000001";
+        hex_to_bytes("4254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000058f32c910a001924dc0bd5000000020000001".to_string());
 
         let signature =
-        b"6307247862e106f0d4b3cde75805ababa67325953145aa05bdd219d90a741e0eeba79b756bf3af6db6c26a8ed3810e3c584379476fd83096218e9deb95a7617e1b";
+        hex_to_bytes("6307247862e106f0d4b3cde75805ababa67325953145aa05bdd219d90a741e0eeba79b756bf3af6db6c26a8ed3810e3c584379476fd83096218e9deb95a7617e1b".to_string());
 
-        let result = T::recover_address(msg, signature);
-        assert_eq!(result, Err(CryptoError::RecoveryByte(74)));
+        let result = T::recover_address(&msg, &signature);
+        assert_eq!(result, Err(CryptoError::Signature(signature)));
     }
 
     fn u8_slice<const N: usize>(str: &str) -> [u8; N] {

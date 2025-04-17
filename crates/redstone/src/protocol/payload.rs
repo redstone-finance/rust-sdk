@@ -15,7 +15,7 @@ impl Payload {
         &self,
         validator: &impl Validator,
     ) -> Result<TimestampMillis, Error> {
-        let Some(first_package) = self.data_packages.get(0) else {
+        let Some(first_package) = self.data_packages.first() else {
             return Err(Error::ArrayIsEmpty);
         };
 

@@ -1,4 +1,5 @@
 use alloc::vec::Vec;
+use core::convert::TryInto;
 use core::marker::PhantomData;
 
 use crate::{
@@ -41,10 +42,12 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
     }
 
     fn trim_metadata(payload: &mut Vec<u8>) -> Result<usize, Error> {
-        let unsigned_metadata_size = payload.try_trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS)?;
+        let unsigned_metadata_size = payload
+            .try_trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS)?
+            .try_into()?;
         let _: Vec<u8> = payload.trim_end(unsigned_metadata_size);
 
-        let data_package_count = payload.try_trim_end(DATA_PACKAGES_COUNT_BS)?;
+        let data_package_count = payload.try_trim_end(DATA_PACKAGES_COUNT_BS)?.try_into()?;
 
         Ok(data_package_count)
     }
@@ -67,15 +70,21 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         let data_point_count = payload.try_trim_end(DATA_POINTS_COUNT_BS)?;
         let value_size = payload.try_trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS)?;
         let timestamp = payload.try_trim_end(TIMESTAMP_BS)?;
-        let size = data_point_count * (value_size + DATA_FEED_ID_BS)
-            + DATA_POINT_VALUE_BYTE_SIZE_BS
-            + TIMESTAMP_BS
-            + DATA_POINTS_COUNT_BS;
 
-        let signable_bytes: Vec<_> = tmp.trim_end(size);
+        let size: u64 = data_point_count
+            * (value_size + TryInto::<u64>::try_into(DATA_FEED_ID_BS)?)
+            + TryInto::<u64>::try_into(DATA_POINT_VALUE_BYTE_SIZE_BS)?
+            + TryInto::<u64>::try_into(TIMESTAMP_BS)?
+            + TryInto::<u64>::try_into(DATA_POINTS_COUNT_BS)?;
+
+        let signable_bytes: Vec<_> = tmp.trim_end(size.try_into()?);
         let signer_address = C::recover_address(signable_bytes, signature)?;
 
-        let data_points = Self::trim_data_points(payload, data_point_count, value_size)?;
+        let data_points = Self::trim_data_points(
+            payload,
+            data_point_count.try_into()?,
+            value_size.try_into()?,
+        )?;
 
         Ok(DataPackage {
             data_points,
@@ -268,7 +277,7 @@ mod tests {
         }
     }
 
-    #[should_panic(expected = "range end index 64 out of range for slice of length 0")]
+    #[should_panic(expected = "CryptographicError(InvalidSignatureLen(0))")]
     #[test]
     fn test_trim_data_packages_bigger_number() {
         test_trim_data_packages_of(3, "");
