@@ -14,6 +14,23 @@ pub const SAMPLE_SYSTEM_TIMESTAMP_OLD: u64 = 1707738300;
 pub const SAMPLE_SYSTEM_TIMESTAMP: u64 = 1725975900;
 pub const SAMPLE_SYSTEM_TIMESTAMP_2: u64 = 1725976000;
 
+pub const DEFAULT_SIGNERS_THRESHOLD: u8 = 3;
+
+#[derive(Debug, Clone, Copy)]
+pub enum Signers {
+    Avax,
+    Primary,
+}
+
+impl Signers {
+    pub fn get_signers(&self) -> Vec<&str> {
+        match self {
+            Signers::Avax => AVAX_SIGNERS.to_vec(),
+            Signers::Primary => PRIMARY_SIGNERS.to_vec(),
+        }
+    }
+}
+
 pub const AVAX_SIGNERS: [&str; 5] = [
     "0x109B4a318A4F5ddcbCA6349B45f881B4137deaFB",
     "0x12470f7aba85c8b81d63137dd5925d6ee114952b",
@@ -36,6 +53,7 @@ pub struct Sample {
     pub values: HashMap<String, Value>,
     pub timestamp: u64,
     pub system_timestamp: u64,
+    pub signers: Signers,
 }
 
 impl Sample {
@@ -58,6 +76,7 @@ pub fn sample_eth_btc_avax_5sig_old() -> Sample {
         ],
         timestamp: 1707738270000,
         system_timestamp: SAMPLE_SYSTEM_TIMESTAMP_OLD,
+        signers: Signers::Avax,
     }
 }
 
@@ -71,6 +90,7 @@ pub fn sample_eth_btc_avax_5sig() -> Sample {
         ],
         timestamp: 1725975800000,
         system_timestamp: SAMPLE_SYSTEM_TIMESTAMP,
+        signers: Signers::Avax,
     }
 }
 
@@ -84,6 +104,7 @@ pub fn sample_eth_btc_avax_5sig_2() -> Sample {
         ],
         timestamp: 1725975870000,
         system_timestamp: SAMPLE_SYSTEM_TIMESTAMP_2,
+        signers: Signers::Avax,
     }
 }
 
@@ -95,6 +116,7 @@ pub fn sample_eth_3sig() -> Sample {
         ],
         timestamp: 1744563500000,
         system_timestamp: 1744563500000,
+        signers: Signers::Primary,
     }
 }
 
@@ -106,6 +128,7 @@ pub fn sample_eth_2sig() -> Sample {
         ],
         timestamp: 1744563500000,
         system_timestamp: 1744563500000,
+        signers: Signers::Avax,
     }
 }
 
@@ -117,6 +140,7 @@ pub fn sample_eth_3sig_newer() -> Sample {
         ],
         timestamp: 1744563600000,
         system_timestamp: 1744563600000,
+        signers: Signers::Primary,
     }
 }
 
@@ -129,6 +153,7 @@ pub fn sample_btc_eth_3sig() -> Sample {
         ],
         timestamp: 1744829560000,
         system_timestamp: 1744829560000,
+        signers: Signers::Primary,
     }
 }
 
@@ -141,6 +166,7 @@ pub fn sample_btc_eth_3sig_newer() -> Sample {
         ],
         timestamp: 1744829650000,
         system_timestamp: 1744829650000,
+        signers: Signers::Primary,
     }
 }
 
@@ -152,6 +178,7 @@ pub fn sample_btc_5sig() -> Sample {
         ],
         timestamp: 1744829680000,
         system_timestamp: 1744829680000,
+        signers: Signers::Primary,
     }
 }
 
@@ -163,5 +190,6 @@ pub fn sample_btc_5sig_newer() -> Sample {
         ],
         timestamp: 1744829750000,
         system_timestamp: 1744829750000,
+        signers: Signers::Primary,
     }
 }

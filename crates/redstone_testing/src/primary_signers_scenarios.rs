@@ -4,7 +4,7 @@ use crate::{
     env::Signer,
     sample::{
         sample_btc_5sig, sample_btc_5sig_newer, sample_btc_eth_3sig, sample_btc_eth_3sig_newer,
-        sample_eth_2sig, sample_eth_3sig, sample_eth_3sig_newer, Sample,
+        sample_eth_2sig, sample_eth_3sig, sample_eth_3sig_newer, Sample, DEFAULT_SIGNERS_THRESHOLD,
     },
     scenario::{InitTime, Scenario},
 };
@@ -17,7 +17,7 @@ pub fn scenario_trusted_updates_twice_without_waiting_for_threshold(
     let second_sample = sample_eth_3sig_newer();
 
     Scenario::default()
-        .scenario_steps_from_sample(
+        .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
             Signer::Trusted,
@@ -33,7 +33,7 @@ pub fn scenario_untrusted_updates_twice_waiting_for_threshold(threshold: Duratio
     let second_sample = sample_eth_3sig_newer();
 
     Scenario::default()
-        .scenario_steps_from_sample(
+        .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
             Signer::Untrusted,
@@ -47,7 +47,7 @@ pub fn scenario_updating_twice_with_the_same_timestamp() -> Scenario {
     let sample = sample_eth_3sig();
 
     Scenario::default()
-        .scenario_steps_from_sample(
+        .scenario_steps_from_sample_with_initialization(
             sample.clone(),
             InitTime::SetToSampleTime,
             Signer::Trusted,
@@ -60,7 +60,7 @@ pub fn scenario_updating_twice_with_the_same_timestamp() -> Scenario {
 pub fn scenario_updating_with_only_2_signers() -> Scenario {
     let sample = sample_eth_2sig();
 
-    Scenario::default().scenario_steps_from_sample(
+    Scenario::default().scenario_steps_from_sample_with_initialization(
         sample.clone(),
         InitTime::SetToSampleTime,
         Signer::Trusted,
@@ -76,7 +76,7 @@ pub fn scenario_untrusted_updates_twice_without_waiting_for_threshold(
     let second_sample = sample_eth_3sig_newer();
 
     Scenario::default()
-        .scenario_steps_from_sample(
+        .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
             Signer::Untrusted,
@@ -103,7 +103,7 @@ pub fn scenario_2_feed_update(threshold: Duration) -> Scenario {
     let second_sample = sample_btc_eth_3sig_newer();
 
     Scenario::default()
-        .scenario_steps_from_sample(
+        .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
             Signer::Trusted,
@@ -119,7 +119,7 @@ pub fn scenario_payload_with_multiple_feed_update_one(threshold: Duration) -> Sc
     let second_sample = sample_btc_eth_3sig_newer();
 
     Scenario::default()
-        .scenario_steps_from_sample(
+        .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
             Signer::Trusted,
@@ -140,7 +140,7 @@ pub fn scenario_with_5_signers(threshold: Duration) -> Scenario {
     let second_sample = sample_btc_5sig_newer();
 
     Scenario::default()
-        .scenario_steps_from_sample(
+        .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
             Signer::Trusted,
@@ -158,7 +158,12 @@ pub fn scenario_adapter_update_with_old_timestamp(max_timestamp_delay: Duration)
 
     Scenario::default()
         .then_set_clock(system_time)
-        .scenario_steps_from_sample(sample.clone(), InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample_with_initialization(
+            sample.clone(),
+            InitTime::No,
+            Signer::Trusted,
+            None,
+        )
 }
 
 pub fn scenario_adapter_update_with_future_timestamp(max_timestamp_ahead_ms: Duration) -> Scenario {
@@ -169,7 +174,7 @@ pub fn scenario_adapter_update_with_future_timestamp(max_timestamp_ahead_ms: Dur
 
     Scenario::default()
         .then_set_clock(system_time)
-        .scenario_steps_from_sample(sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample_with_initialization(sample, InitTime::No, Signer::Trusted, None)
 }
 
 pub fn scenario_adapter_update_with_almost_old_timestamp(
@@ -181,7 +186,7 @@ pub fn scenario_adapter_update_with_almost_old_timestamp(
 
     Scenario::default()
         .then_set_clock(system_time)
-        .scenario_steps_from_sample(sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample_with_initialization(sample, InitTime::No, Signer::Trusted, None)
 }
 
 pub fn scenario_adapter_update_with_almost_future_timestamp(
@@ -193,5 +198,13 @@ pub fn scenario_adapter_update_with_almost_future_timestamp(
 
     Scenario::default()
         .then_set_clock(system_time)
-        .scenario_steps_from_sample(sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample_with_initialization(sample, InitTime::No, Signer::Trusted, None)
+}
+
+pub fn scenario_check_initalization() -> Scenario {
+    let sample = Sample::any_valid();
+
+    Scenario::default()
+        .then_initialize(sample.signers, DEFAULT_SIGNERS_THRESHOLD)
+        .then_check_unique_threshold_count(DEFAULT_SIGNERS_THRESHOLD)
 }

@@ -4,10 +4,14 @@ use redstone::Value;
 
 use crate::{
     env::{PriceAdapterRunEnv, Signer},
-    sample::Sample,
+    sample::{Sample, Signers, DEFAULT_SIGNERS_THRESHOLD},
 };
 
 enum Action {
+    Initialize {
+        signers: Signers,
+        unique_signer_threshold: u8,
+    },
     WritePrice {
         feed_id: String,
         payload: String,
@@ -35,6 +39,9 @@ enum Action {
     },
     SetClock {
         to: Duration,
+    },
+    CheckUniqueSignerCount {
+        expected: u8,
     },
 }
 
@@ -113,6 +120,22 @@ impl Scenario {
         self
     }
 
+    pub fn then_initialize(mut self, signers: Signers, unique_signer_threshold: u8) -> Self {
+        self.actions.push(Action::Initialize {
+            signers,
+            unique_signer_threshold,
+        });
+
+        self
+    }
+
+    pub fn then_check_unique_threshold_count(mut self, expected: u8) -> Self {
+        self.actions
+            .push(Action::CheckUniqueSignerCount { expected });
+
+        self
+    }
+
     pub fn run<P: PriceAdapterRunEnv>(self, mut price_adapter: P) {
         for action in self.actions {
             match action {
@@ -152,6 +175,7 @@ impl Scenario {
                             .map(|feed| feed.as_bytes().to_vec())
                             .collect(),
                     );
+
                     assert_eq!(timestamp, expected_timestamp);
                     assert_eq!(values, expected_values);
                 }
@@ -176,8 +200,27 @@ impl Scenario {
                             .collect(),
                         signer,
                     );
+
                     assert_eq!(timestamp, expected_timestamp);
                     assert_eq!(values, expected_values);
+                }
+                Action::Initialize {
+                    signers,
+                    unique_signer_threshold,
+                } => {
+                    price_adapter.initialize(
+                        signers
+                            .get_signers()
+                            .into_iter()
+                            .map(|signer| hex::decode(signer).unwrap())
+                            .collect(),
+                        unique_signer_threshold,
+                    );
+                }
+                Action::CheckUniqueSignerCount { expected } => {
+                    let unique_signer_count = price_adapter.unique_signer_threshold();
+
+                    assert_eq!(unique_signer_count, expected);
                 }
             };
         }
@@ -211,5 +254,16 @@ impl Scenario {
                 sample.values.values().cloned().collect(),
                 sample.timestamp,
             )
+    }
+
+    pub fn scenario_steps_from_sample_with_initialization(
+        self,
+        sample: Sample,
+        init_time: InitTime,
+        signer: Signer,
+        feeds_overwrite: Option<Vec<&str>>,
+    ) -> Self {
+        self.then_initialize(sample.signers, DEFAULT_SIGNERS_THRESHOLD)
+            .scenario_steps_from_sample(sample, init_time, signer, feeds_overwrite)
     }
 }

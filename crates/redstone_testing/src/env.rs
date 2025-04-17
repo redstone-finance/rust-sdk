@@ -10,6 +10,8 @@ pub enum Signer {
 
 pub trait PriceAdapterRunEnv {
     fn set_time_to(&mut self, to: Duration);
+    fn unique_signer_threshold(&self) -> u8;
+    fn initialize(&mut self, _signers: Vec<Vec<u8>>, _unique_signer_threshold: u8) {}
     fn read_timestamp(&mut self, feed_id: Option<&str>) -> u64;
     fn read_prices(&mut self, feed_ids: Vec<Vec<u8>>) -> Vec<Value>;
     fn read_prices_and_timestamp(&mut self, feed_ids: Vec<Vec<u8>>) -> (Vec<Value>, u64);
