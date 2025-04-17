@@ -1,8 +1,9 @@
+use alloc::vec::Vec;
+
 use crate::{
     core::validator::Validator, network::error::Error, protocol::data_package::DataPackage,
     TimestampMillis,
 };
-use alloc::vec::Vec;
 
 #[derive(Clone, Debug)]
 pub struct Payload {
@@ -14,7 +15,7 @@ impl Payload {
         &self,
         validator: &impl Validator,
     ) -> Result<TimestampMillis, Error> {
-        let Some(first_package) = self.data_packages.get(0) else {
+        let Some(first_package) = self.data_packages.first() else {
             return Err(Error::ArrayIsEmpty);
         };
 

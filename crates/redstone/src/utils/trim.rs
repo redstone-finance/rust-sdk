@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 
-use crate::{network::error::Error, FeedId, Value};
+use crate::{network::error::Error, FeedId};
 
 pub trait Trim<T>
 where
@@ -31,15 +31,6 @@ impl Trim<FeedId> for Vec<u8> {
         let v: Vec<_> = self.trim_end(len);
 
         v.into()
-    }
-}
-
-impl TryTrim<usize> for Vec<u8> {
-    fn try_trim_end(&mut self, len: usize) -> Result<usize, Error> {
-        let y: u64 = self.try_trim_end(len)?;
-
-        y.try_into()
-            .map_err(|_| Error::NumberOverflow(Value::from(y)))
     }
 }
 
@@ -86,12 +77,6 @@ mod tests {
 
         let (_, result) = test_try_trim_end(3);
         assert_eq!(result, Ok(256u64.pow(2) * 30));
-
-        let (_, result) = test_try_trim_end(3);
-        assert_eq!(result, Ok(256usize.pow(2) * 30));
-
-        let (_, result): (_, Vec<u8>) = test_trim_end(3);
-        assert_eq!(result.as_slice(), &REDSTONE_MARKER[6..]);
     }
 
     #[test]
@@ -101,10 +86,10 @@ mod tests {
         assert_eq!(rest.as_slice(), &REDSTONE_MARKER);
 
         let (_, result) = test_try_trim_end(0);
-        assert_eq!(result, Ok(0_usize));
+        assert_eq!(result, Ok(0));
 
         let (_, result) = test_try_trim_end(0);
-        assert_eq!(result, Ok(0_usize));
+        assert_eq!(result, Ok(0));
 
         let (_, result): (_, Vec<u8>) = test_trim_end(0);
         assert_eq!(result, Vec::<u8>::new());
@@ -132,7 +117,7 @@ mod tests {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let (_, result) = test_try_trim_end(size);
-            assert_eq!(result, Ok(823907890102272usize));
+            assert_eq!(result, Ok(823907890102272));
         }
 
         let (_rest, result): (_, Vec<u8>) = test_trim_end(size);
@@ -148,17 +133,6 @@ mod tests {
 
         assert_eq!(bytes, expected_bytes);
         assert_eq!(x, 18446744073709551615);
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    #[test]
-    fn test_trim_end_u64_overflow_usize_wasm32() {
-        let (_, output): (_, Result<usize, _>) = test_try_trim_end(REDSTONE_MARKER_BS);
-
-        assert_eq!(
-            output,
-            Err(Error::NumberOverflow(823907890102272_u64.into()))
-        );
     }
 
     #[test]

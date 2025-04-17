@@ -62,7 +62,7 @@ const MAX_SIGNER_COUNT: usize = u8::MAX as usize;
 
 /// Verifies if:
 /// * if `last_write_time` is not None if between `last_write_time` and `time_now`
-/// passed strictly more than `min_time_between_updates`.
+///     passed strictly more than `min_time_between_updates`.
 pub fn verify_write_timestamp(
     time_now: TimestampMillis,
     last_write_time: Option<TimestampMillis>,
