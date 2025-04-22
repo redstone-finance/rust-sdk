@@ -3,29 +3,33 @@ use core::time::Duration;
 use redstone::Value;
 
 use crate::{
-    env::{PriceAdapterRunEnv, Signer},
-    sample::{Sample, Signers, DEFAULT_SIGNERS_THRESHOLD},
+    env::PriceAdapterRunEnv,
+    package_signers::Signers,
+    sample::{Sample, DEFAULT_SIGNERS_THRESHOLD},
+    signer::ContractUpdateSigner,
 };
 
+struct Initialize {
+    signers: Signers,
+    unique_signer_threshold: u8,
+}
+
 enum Action {
-    Initialize {
-        signers: Signers,
-        unique_signer_threshold: u8,
-    },
+    Initialize(Initialize),
     WritePrice {
         feed_id: String,
         payload: String,
-        signer: Signer,
+        signer: ContractUpdateSigner,
     },
     WritePrices {
         feed_ids: Vec<String>,
         payload: String,
-        signer: Signer,
+        signer: ContractUpdateSigner,
     },
     GetPrices {
         feed_ids: Vec<String>,
         payload: String,
-        signer: Signer,
+        signer: ContractUpdateSigner,
         expected_values: Vec<Value>,
         expected_timestamp: u64,
     },
@@ -40,7 +44,7 @@ enum Action {
     SetClock {
         to: Duration,
     },
-    CheckUniqueSignerCount {
+    CheckUniqueContractUpdateSignerCount {
         expected: u8,
     },
 }
@@ -62,7 +66,12 @@ impl Scenario {
         self
     }
 
-    pub fn then_write_price(mut self, feed_id: &str, payload: &str, signer: Signer) -> Self {
+    pub fn then_write_price(
+        mut self,
+        feed_id: &str,
+        payload: &str,
+        signer: ContractUpdateSigner,
+    ) -> Self {
         self.actions.push(Action::WritePrice {
             feed_id: feed_id.to_string(),
             payload: payload.to_string(),
@@ -78,7 +87,12 @@ impl Scenario {
         self
     }
 
-    pub fn then_write_prices(mut self, feed_ids: Vec<&str>, payload: &str, signer: Signer) -> Self {
+    pub fn then_write_prices(
+        mut self,
+        feed_ids: Vec<&str>,
+        payload: &str,
+        signer: ContractUpdateSigner,
+    ) -> Self {
         self.actions.push(Action::WritePrices {
             feed_ids: feed_ids.iter().map(|feed| feed.to_string()).collect(),
             payload: payload.to_string(),
@@ -106,7 +120,7 @@ impl Scenario {
         mut self,
         feed_ids: Vec<&str>,
         payload: &str,
-        signer: Signer,
+        signer: ContractUpdateSigner,
         expected_values: Vec<Value>,
         expected_timestamp: u64,
     ) -> Self {
@@ -121,17 +135,17 @@ impl Scenario {
     }
 
     pub fn then_initialize(mut self, signers: Signers, unique_signer_threshold: u8) -> Self {
-        self.actions.push(Action::Initialize {
+        self.actions.push(Action::Initialize(Initialize {
             signers,
             unique_signer_threshold,
-        });
+        }));
 
         self
     }
 
     pub fn then_check_unique_threshold_count(mut self, expected: u8) -> Self {
         self.actions
-            .push(Action::CheckUniqueSignerCount { expected });
+            .push(Action::CheckUniqueContractUpdateSignerCount { expected });
 
         self
     }
@@ -204,10 +218,10 @@ impl Scenario {
                     assert_eq!(timestamp, expected_timestamp);
                     assert_eq!(values, expected_values);
                 }
-                Action::Initialize {
+                Action::Initialize(Initialize {
                     signers,
                     unique_signer_threshold,
-                } => {
+                }) => {
                     price_adapter.initialize(
                         signers
                             .get_signers()
@@ -217,7 +231,7 @@ impl Scenario {
                         unique_signer_threshold,
                     );
                 }
-                Action::CheckUniqueSignerCount { expected } => {
+                Action::CheckUniqueContractUpdateSignerCount { expected } => {
                     let unique_signer_count = price_adapter.unique_signer_threshold();
 
                     assert_eq!(unique_signer_count, expected);
@@ -230,7 +244,7 @@ impl Scenario {
         self,
         sample: Sample,
         init_time: InitTime,
-        signer: Signer,
+        signer: ContractUpdateSigner,
         feeds_overwrite: Option<Vec<&str>>,
     ) -> Self {
         let feeds: Vec<_> = sample.values.keys().map(std::ops::Deref::deref).collect();
@@ -260,7 +274,7 @@ impl Scenario {
         self,
         sample: Sample,
         init_time: InitTime,
-        signer: Signer,
+        signer: ContractUpdateSigner,
         feeds_overwrite: Option<Vec<&str>>,
     ) -> Self {
         self.then_initialize(sample.signers, DEFAULT_SIGNERS_THRESHOLD)

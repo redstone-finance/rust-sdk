@@ -1,12 +1,12 @@
 use core::{ops::Add, time::Duration};
 
 use crate::{
-    env::Signer,
     sample::{
         sample_btc_5sig, sample_btc_5sig_newer, sample_btc_eth_3sig, sample_btc_eth_3sig_newer,
         sample_eth_2sig, sample_eth_3sig, sample_eth_3sig_newer, Sample, DEFAULT_SIGNERS_THRESHOLD,
     },
     scenario::{InitTime, Scenario},
+    signer::ContractUpdateSigner,
 };
 
 pub fn scenario_trusted_updates_twice_without_waiting_for_threshold(
@@ -20,11 +20,16 @@ pub fn scenario_trusted_updates_twice_without_waiting_for_threshold(
         .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
-            Signer::Trusted,
+            ContractUpdateSigner::Trusted,
             None,
         )
         .then_advance_clock(less_than_threshold_duration)
-        .scenario_steps_from_sample(second_sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample(
+            second_sample,
+            InitTime::No,
+            ContractUpdateSigner::Trusted,
+            None,
+        )
 }
 
 pub fn scenario_untrusted_updates_twice_waiting_for_threshold(threshold: Duration) -> Scenario {
@@ -36,11 +41,16 @@ pub fn scenario_untrusted_updates_twice_waiting_for_threshold(threshold: Duratio
         .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
-            Signer::Untrusted,
+            ContractUpdateSigner::Untrusted,
             None,
         )
         .then_advance_clock(more_than_threshold)
-        .scenario_steps_from_sample(second_sample, InitTime::No, Signer::Untrusted, None)
+        .scenario_steps_from_sample(
+            second_sample,
+            InitTime::No,
+            ContractUpdateSigner::Untrusted,
+            None,
+        )
 }
 
 pub fn scenario_updating_twice_with_the_same_timestamp() -> Scenario {
@@ -50,11 +60,11 @@ pub fn scenario_updating_twice_with_the_same_timestamp() -> Scenario {
         .scenario_steps_from_sample_with_initialization(
             sample.clone(),
             InitTime::SetToSampleTime,
-            Signer::Trusted,
+            ContractUpdateSigner::Trusted,
             None,
         )
         .then_advance_clock(Duration::from_secs(1))
-        .scenario_steps_from_sample(sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample(sample, InitTime::No, ContractUpdateSigner::Trusted, None)
 }
 
 pub fn scenario_updating_with_only_2_signers() -> Scenario {
@@ -63,7 +73,7 @@ pub fn scenario_updating_with_only_2_signers() -> Scenario {
     Scenario::default().scenario_steps_from_sample_with_initialization(
         sample.clone(),
         InitTime::SetToSampleTime,
-        Signer::Trusted,
+        ContractUpdateSigner::Trusted,
         None,
     )
 }
@@ -79,11 +89,16 @@ pub fn scenario_untrusted_updates_twice_without_waiting_for_threshold(
         .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
-            Signer::Untrusted,
+            ContractUpdateSigner::Untrusted,
             None,
         )
         .then_advance_clock(less_than_threshold_duration)
-        .scenario_steps_from_sample(second_sample, InitTime::No, Signer::Untrusted, None)
+        .scenario_steps_from_sample(
+            second_sample,
+            InitTime::No,
+            ContractUpdateSigner::Untrusted,
+            None,
+        )
 }
 
 pub fn scenario_missing_feed_in_payload() -> Scenario {
@@ -92,7 +107,7 @@ pub fn scenario_missing_feed_in_payload() -> Scenario {
     Scenario::default().scenario_steps_from_sample(
         sample,
         InitTime::SetToSampleTime,
-        Signer::Trusted,
+        ContractUpdateSigner::Trusted,
         Some(vec!["BTC"]),
     )
 }
@@ -106,11 +121,16 @@ pub fn scenario_2_feed_update(threshold: Duration) -> Scenario {
         .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
-            Signer::Trusted,
+            ContractUpdateSigner::Trusted,
             None,
         )
         .then_advance_clock(more_than_threshold)
-        .scenario_steps_from_sample(second_sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample(
+            second_sample,
+            InitTime::No,
+            ContractUpdateSigner::Trusted,
+            None,
+        )
 }
 
 pub fn scenario_payload_with_multiple_feed_update_one(threshold: Duration) -> Scenario {
@@ -122,14 +142,14 @@ pub fn scenario_payload_with_multiple_feed_update_one(threshold: Duration) -> Sc
         .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
-            Signer::Trusted,
+            ContractUpdateSigner::Trusted,
             Some(vec!["ETH"]),
         )
         .then_advance_clock(more_than_threshold)
         .scenario_steps_from_sample(
             second_sample,
             InitTime::No,
-            Signer::Trusted,
+            ContractUpdateSigner::Trusted,
             Some(vec!["ETH"]),
         )
 }
@@ -143,11 +163,16 @@ pub fn scenario_with_5_signers(threshold: Duration) -> Scenario {
         .scenario_steps_from_sample_with_initialization(
             first_sample,
             InitTime::SetToSampleTime,
-            Signer::Trusted,
+            ContractUpdateSigner::Trusted,
             None,
         )
         .then_advance_clock(more_than_threshold)
-        .scenario_steps_from_sample(second_sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample(
+            second_sample,
+            InitTime::No,
+            ContractUpdateSigner::Trusted,
+            None,
+        )
 }
 
 pub fn scenario_adapter_update_with_old_timestamp(max_timestamp_delay: Duration) -> Scenario {
@@ -161,7 +186,7 @@ pub fn scenario_adapter_update_with_old_timestamp(max_timestamp_delay: Duration)
         .scenario_steps_from_sample_with_initialization(
             sample.clone(),
             InitTime::No,
-            Signer::Trusted,
+            ContractUpdateSigner::Trusted,
             None,
         )
 }
@@ -174,7 +199,12 @@ pub fn scenario_adapter_update_with_future_timestamp(max_timestamp_ahead_ms: Dur
 
     Scenario::default()
         .then_set_clock(system_time)
-        .scenario_steps_from_sample_with_initialization(sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample_with_initialization(
+            sample,
+            InitTime::No,
+            ContractUpdateSigner::Trusted,
+            None,
+        )
 }
 
 pub fn scenario_adapter_update_with_almost_old_timestamp(
@@ -186,7 +216,12 @@ pub fn scenario_adapter_update_with_almost_old_timestamp(
 
     Scenario::default()
         .then_set_clock(system_time)
-        .scenario_steps_from_sample_with_initialization(sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample_with_initialization(
+            sample,
+            InitTime::No,
+            ContractUpdateSigner::Trusted,
+            None,
+        )
 }
 
 pub fn scenario_adapter_update_with_almost_future_timestamp(
@@ -198,7 +233,12 @@ pub fn scenario_adapter_update_with_almost_future_timestamp(
 
     Scenario::default()
         .then_set_clock(system_time)
-        .scenario_steps_from_sample_with_initialization(sample, InitTime::No, Signer::Trusted, None)
+        .scenario_steps_from_sample_with_initialization(
+            sample,
+            InitTime::No,
+            ContractUpdateSigner::Trusted,
+            None,
+        )
 }
 
 pub fn scenario_check_initalization() -> Scenario {
