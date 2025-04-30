@@ -1,4 +1,4 @@
-CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged
+CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged --features="helpers"
 DOC=cargo doc --no-deps --document-private-items
 TEST=RUST_BACKTRACE=full cargo test --features="helpers"
 BENCH=RUST_BACKTRACE=full cargo bench
