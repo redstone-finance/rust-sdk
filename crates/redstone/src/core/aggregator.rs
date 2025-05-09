@@ -187,13 +187,19 @@ mod make_value_signer_matrix {
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
-    use crate::{core::{
-        aggregator::{make_value_signer_matrix, Matrix},
-        config::Config,
-        test_helpers::{AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2},
-    }, helpers::iter_into::IterInto, network::error::Error, protocol::data_package::DataPackage, Value};
     use crate::core::test_helpers::TEST_SIGNER_ADDRESS_3;
     use crate::helpers::hex::hex_to_bytes;
+    use crate::{
+        core::{
+            aggregator::{make_value_signer_matrix, Matrix},
+            config::Config,
+            test_helpers::{AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2},
+        },
+        helpers::iter_into::IterInto,
+        network::error::Error,
+        protocol::data_package::DataPackage,
+        Value,
+    };
 
     #[test]
     fn test_make_value_signer_matrix_empty() -> Result<(), Error> {
@@ -294,7 +300,10 @@ mod make_value_signer_matrix {
             DataPackage::test_single_data_point(ETH, 202, TEST_SIGNER_ADDRESS_3, None),
         ];
 
-        let perms: Vec<Vec<_>> = data_packages.iter().permutations(data_packages.len()).collect();
+        let perms: Vec<Vec<_>> = data_packages
+            .iter()
+            .permutations(data_packages.len())
+            .collect();
         for perm in perms {
             let p: Vec<_> = perm.iter().map(|&v| v.clone()).collect();
 
@@ -302,10 +311,12 @@ mod make_value_signer_matrix {
 
             assert_eq!(
                 result,
-                Err(Error::SignerNotRecognized(hex_to_bytes(TEST_SIGNER_ADDRESS_3.into()).into()))
+                Err(Error::SignerNotRecognized(
+                    hex_to_bytes(TEST_SIGNER_ADDRESS_3.into()).into()
+                ))
             );
         }
-        
+
         Ok(())
     }
 
