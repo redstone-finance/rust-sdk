@@ -1,6 +1,6 @@
 [package]
 name = "redstone"
-version = "2.0.1"
+version = "2.0.2"
 edition = "2021"
 authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"

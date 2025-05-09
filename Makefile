@@ -1,4 +1,4 @@
-CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged
+CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged --features="helpers"
 DOC=cargo doc --no-deps --document-private-items
 TEST=RUST_BACKTRACE=full cargo test --features="helpers"
 BENCH=RUST_BACKTRACE=full cargo bench
@@ -9,7 +9,7 @@ RUST_SDK_DIR=crates/redstone
 
 prepare:
 	@rustup target add wasm32-unknown-unknown
-	cargo install wasm-bindgen-cli wasm-pack
+	cargo install wasm-bindgen-cli wasm-pack --locked
 
 test: clippy
 	@for features in $(WASM32_FEATURE_SETS); do \

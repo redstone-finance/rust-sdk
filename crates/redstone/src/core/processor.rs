@@ -185,7 +185,7 @@ mod tests {
 
         assert_eq!(
             result,
-            Err(Error::ReocuringFeedId(BTC.as_bytes().to_vec().into()))
+            Err(Error::ReoccurringFeedId(BTC.as_bytes().to_vec().into()))
         );
     }
 
@@ -213,7 +213,7 @@ mod tests {
 
         assert_eq!(
             result,
-            Err(Error::ReocuringFeedId(BTC.as_bytes().to_vec().into()))
+            Err(Error::ReoccurringFeedId(BTC.as_bytes().to_vec().into()))
         );
     }
 }
