@@ -96,7 +96,7 @@ impl Config {
     #[inline]
     fn verify_feed_id_list(&self) -> Result<(), Error> {
         self.verify_feed_id_list_empty()?;
-        check_no_duplicates(&self.feed_ids).map_err(Error::ConfigReocuringFeedId)
+        check_no_duplicates(&self.feed_ids).map_err(Error::ConfigReoccurringFeedId)
     }
 
     #[inline(always)]
@@ -184,7 +184,7 @@ mod tests {
 
         assert_eq!(
             resutlt,
-            Err(Error::ConfigReocuringFeedId(make_feed_id(repeated_feed_id)))
+            Err(Error::ConfigReoccurringFeedId(make_feed_id(repeated_feed_id)))
         );
     }
 
@@ -273,7 +273,7 @@ mod tests {
 
         assert_eq!(
             resutlt,
-            Err(Error::ConfigReocuringSigner(
+            Err(Error::ConfigReoccurringSigner(
                 hex_to_bytes(repeated.into()).into()
             ))
         );

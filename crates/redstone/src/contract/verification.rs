@@ -163,7 +163,7 @@ pub fn verify_signers_config(signers: &[SignerAddress], threshold: u8) -> Result
     verify_signer_count_in_threshold(signers, threshold)?;
     verify_signer_count_not_exceeded(signers)?;
 
-    check_no_duplicates(signers).map_err(Error::ConfigReocuringSigner)
+    check_no_duplicates(signers).map_err(Error::ConfigReoccurringSigner)
 }
 
 #[cfg(test)]

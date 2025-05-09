@@ -63,9 +63,10 @@ fn aggregate_matrix(matrix: Matrix, config: &Config) -> Result<Vec<Value>, Error
 }
 
 /// Makes the value signer matrix.
-/// This function may fail if DataPackage contains DataPoints with reocuring FeedId
-/// or if FeedId has a wrong ASCII representation.
-/// Chekck FeedId crate for more details.
+/// This function may fail if DataPackage contains DataPoints with reoccurring FeedId
+/// or if FeedId has a wrong ASCII representation,
+/// or the recovered signer is not recognized.
+/// Check FeedId crate for more details.
 fn make_value_signer_matrix(
     config: &Config,
     data_packages: Vec<DataPackage>,
@@ -74,14 +75,14 @@ fn make_value_signer_matrix(
 
     for data_package in data_packages.iter() {
         let Some(signer_index) = config.signer_index(&data_package.signer_address) else {
-            continue;
+            return Err(Error::SignerNotRecognized(data_package.signer_address))
         };
         'data_points_iter: for data_point in data_package.data_points.iter() {
             let Some(feed_index) = config.feed_index(data_point.feed_id) else {
                 continue 'data_points_iter;
             };
             if matrix[feed_index][signer_index].is_some() {
-                return Err(Error::ReocuringFeedId(data_point.feed_id));
+                return Err(Error::ReoccurringFeedId(data_point.feed_id));
             }
             matrix[feed_index][signer_index] = data_point.value.into();
         }
@@ -281,7 +282,7 @@ mod make_value_signer_matrix {
 
         assert_eq!(
             result,
-            Err(Error::ReocuringFeedId(BTC.as_bytes().to_vec().into()))
+            Err(Error::ReoccurringFeedId(BTC.as_bytes().to_vec().into()))
         );
 
         Ok(())
