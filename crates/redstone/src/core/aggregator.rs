@@ -75,7 +75,7 @@ fn make_value_signer_matrix(
 
     for data_package in data_packages.iter() {
         let Some(signer_index) = config.signer_index(&data_package.signer_address) else {
-            return Err(Error::SignerNotRecognized(data_package.signer_address))
+            return Err(Error::SignerNotRecognized(data_package.signer_address));
         };
         'data_points_iter: for data_point in data_package.data_points.iter() {
             let Some(feed_index) = config.feed_index(data_point.feed_id) else {

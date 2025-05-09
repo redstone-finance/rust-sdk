@@ -184,7 +184,9 @@ mod tests {
 
         assert_eq!(
             resutlt,
-            Err(Error::ConfigReoccurringFeedId(make_feed_id(repeated_feed_id)))
+            Err(Error::ConfigReoccurringFeedId(make_feed_id(
+                repeated_feed_id
+            )))
         );
     }
 
