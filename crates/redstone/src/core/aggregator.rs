@@ -183,7 +183,7 @@ mod aggregate_matrix_tests {
 #[cfg(test)]
 mod make_value_signer_matrix {
     use alloc::vec::Vec;
-
+    use itertools::Itertools;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
@@ -294,13 +294,18 @@ mod make_value_signer_matrix {
             DataPackage::test_single_data_point(ETH, 202, TEST_SIGNER_ADDRESS_3, None),
         ];
 
-        let result = test_make_value_signer_matrix_of(data_packages, vec![vec![]]);
+        let perms: Vec<Vec<_>> = data_packages.iter().permutations(data_packages.len()).collect();
+        for perm in perms {
+            let p: Vec<_> = perm.iter().map(|&v| v.clone()).collect();
 
-        assert_eq!(
-            result,
-            Err(Error::SignerNotRecognized(hex_to_bytes(TEST_SIGNER_ADDRESS_3.into()).into()))
-        );
+            let result = test_make_value_signer_matrix_of(p, vec![vec![]]);
 
+            assert_eq!(
+                result,
+                Err(Error::SignerNotRecognized(hex_to_bytes(TEST_SIGNER_ADDRESS_3.into()).into()))
+            );
+        }
+        
         Ok(())
     }
 
