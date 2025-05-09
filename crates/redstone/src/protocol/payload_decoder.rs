@@ -63,13 +63,20 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         Ok(data_packages)
     }
 
-    fn trim_data_package(payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
-        let signature: Vec<u8> = payload.trim_end(SIGNATURE_BS);
-        let mut tmp = payload.clone();
+    fn extract_signed_data(payload: &Vec<u8>) -> Result<(u64, u64, u64, u64), Error> {
+        let payload_len = payload.len();
 
-        let data_point_count = payload.try_trim_end(DATA_POINTS_COUNT_BS)?;
-        let value_size = payload.try_trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS)?;
-        let timestamp = payload.try_trim_end(TIMESTAMP_BS)?;
+        let mut start = payload_len - DATA_POINTS_COUNT_BS;
+        let mut end = payload_len;
+        let data_point_count = payload[start..end].to_vec().try_trim_end(end - start)?;
+
+        end = start;
+        start -= DATA_POINT_VALUE_BYTE_SIZE_BS;
+        let value_size = payload[start..end].to_vec().try_trim_end(end - start)?;
+
+        end = start;
+        start -= TIMESTAMP_BS;
+        let timestamp = payload[start..end].to_vec().try_trim_end(end - start)?;
 
         let size: u64 = data_point_count
             * (value_size + TryInto::<u64>::try_into(DATA_FEED_ID_BS)?)
@@ -77,7 +84,15 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
             + TryInto::<u64>::try_into(TIMESTAMP_BS)?
             + TryInto::<u64>::try_into(DATA_POINTS_COUNT_BS)?;
 
-        let signable_bytes: Vec<_> = tmp.trim_end(size.try_into()?);
+        Ok((data_point_count, value_size, timestamp, size))
+    }
+
+    fn trim_data_package(payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
+        let signature: Vec<u8> = payload.trim_end(SIGNATURE_BS);
+
+        let (data_point_count, value_size, timestamp, size) = Self::extract_signed_data(payload)?;
+
+        let signable_bytes: Vec<_> = payload.trim_end(size.try_into()?);
         let signer_address = C::recover_address(signable_bytes, signature)?;
 
         let data_points = Self::trim_data_points(
