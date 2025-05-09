@@ -64,6 +64,11 @@ pub enum Error {
     /// was included in a message or transaction.
     NonEmptyPayloadRemainder(usize),
 
+    /// Indicates that the recovered signer address is not recognized.
+    ///
+    /// Includes SignerAddress that was recovered.
+    SignerNotRecognized(SignerAddress),
+
     /// Indicates that the number of signers does not meet the required threshold.
     ///
     /// This variant includes the current number of signers, the required threshold, and
@@ -82,34 +87,36 @@ pub enum Error {
     /// acceptance window.
     TimestampTooFuture(usize, TimestampMillis),
 
-    /// Indicates that a FeedId is reocuring in data points.
+    /// Indicates that a FeedId is reoccurring in data points.
     ///
-    /// Includes FeedId that is reocuring.
-    ReocuringFeedId(FeedId),
+    /// Includes FeedId that is reoccurring.
+    ReoccurringFeedId(FeedId),
 
-    ///  ConfigInsufficientSignerCount occurs when number of signer count is not at least equal required signer threshold.
+    /// ConfigInsufficientSignerCount occurs
+    /// when the number of signers is not at least equal the required signer threshold.
     ///
     /// Includes current config signer list length and minimum required signer count.
     ConfigInsufficientSignerCount(u8, u8),
 
-    /// ConfigExceededSignerCount occurs when number of signer count is larger than config max allowed signer count.
-    /// Look in to core::config crate to acknowladge constant value.
+    /// ConfigExceededSignerCount occurs
+    /// when the number of signers is larger than the config max-allowed signer count.
+    /// Look in to core::config crate to acknowledge constant value.
     ///
     /// Includes current config signer list length and maximum allowed signer count per config.
     ConfigExceededSignerCount(usize, usize),
 
-    /// Indicates that a SignerAddress is reocuring on config signer list.
+    /// Indicates that a SignerAddress is reoccurring on the config signer list.
     ///
-    /// Includes SignerAddress that is reocuring.
-    ConfigReocuringSigner(SignerAddress),
+    /// Includes SignerAddress that is reoccurring.
+    ConfigReoccurringSigner(SignerAddress),
 
-    /// Indicates that list doesn't contain FeedIds.
+    /// Indicates that the list doesn't contain FeedIds.
     ConfigEmptyFeedIds,
 
-    /// Indicates that a FeedId is reocuring on config feed_ids list.
+    /// Indicates that a FeedId is reoccurring on the config feed_ids list.
     ///
-    /// Includes FeedId that is reocuring.
-    ConfigReocuringFeedId(FeedId),
+    /// Includes FeedId that is reoccurring.
+    ConfigReoccurringFeedId(FeedId),
 
     /// Indicates that payload timestamps are not equal.
     ///
@@ -132,7 +139,7 @@ pub enum Error {
     /// is not outdated or stale compared to the existing records, thereby maintaining the chronological
     /// integrity and consistency of the updates.
     ///
-    /// Includes the value of a current update timestamp and the last update timestamp.
+    /// Includes the value of the current update timestamp and the last update timestamp.
     CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(TimestampMillis, TimestampMillis),
 
     /// Indicates error while converting from one type of the integer to the other.
@@ -162,13 +169,14 @@ impl Error {
             Error::ArrayIsEmpty => 510,
             Error::WrongRedStoneMarker(_) => 511,
             Error::NonEmptyPayloadRemainder(_) => 512,
-            Error::ReocuringFeedId(_) => 513,
+            Error::ReoccurringFeedId(_) => 513,
             Error::ConfigInsufficientSignerCount(_, _) => 514,
             Error::ConfigExceededSignerCount(_, _) => 515,
-            Error::ConfigReocuringSigner(_) => 516,
+            Error::ConfigReoccurringSigner(_) => 516,
             Error::ConfigEmptyFeedIds => 517,
-            Error::ConfigReocuringFeedId(_) => 518,
+            Error::ConfigReoccurringFeedId(_) => 518,
             Error::TimestampDifferentThanOthers(_, _) => 519,
+            Error::SignerNotRecognized(_) => 520,
             Error::InsufficientSignerCount(data_package_index, value, _) => {
                 (2000 + data_package_index * 10 + value) as u16
             }
@@ -198,6 +206,9 @@ impl Display for Error {
             Error::NonEmptyPayloadRemainder(len) => {
                 write!(f, "Non empty payload len remainder: {}", len)
             }
+            Error::SignerNotRecognized(signer) => {
+                write!(f, "Signer not recognized: {:?}", signer)
+            }
             Error::InsufficientSignerCount(data_package_index, value, feed_id) => write!(
                 f,
                 "Insufficient signer count {} for #{} ({})",
@@ -217,8 +228,8 @@ impl Display for Error {
                 "Timestamp {:?} is too future for #{}",
                 value, data_package_index
             ),
-            Error::ReocuringFeedId(feed) => {
-                write!(f, "Reocuring FeedId: {feed:?} in data points")
+            Error::ReoccurringFeedId(feed) => {
+                write!(f, "Reoccurring FeedId: {feed:?} in data points")
             }
             Error::ConfigInsufficientSignerCount(got, expected) => {
                 write!(f, "Wrong configuration signer count, got {got} signers, expected at minimum {expected}")
@@ -226,27 +237,27 @@ impl Display for Error {
             Error::ConfigExceededSignerCount(got, allowed) => {
                 write!(f, "Wrong configuration signer count, got {got} signers, allowed maximum is {allowed}")
             }
-            Error::ConfigReocuringSigner(signer_address) => {
+            Error::ConfigReoccurringSigner(signer_address) => {
                 write!(
                     f,
-                    "Wrong configuration, signer address {} is reocuring on the signer list",
+                    "Wrong configuration, signer address {} is reoccurring on the signer list",
                     signer_address.as_hex_str()
                 )
             }
             Error::ConfigEmptyFeedIds => {
                 write!(f, "Empty configuration feed ids list")
             }
-            Error::ConfigReocuringFeedId(feed_id) => {
+            Error::ConfigReoccurringFeedId(feed_id) => {
                 write!(
                     f,
-                    "Wrong configuration, feed id {} is reocuring on the feed_ids list",
+                    "Wrong configuration, feed id {} is reoccurring on the feed_ids list",
                     feed_id.as_hex_str()
                 )
             }
-            Error::TimestampDifferentThanOthers(first, outstandig) => write!(
+            Error::TimestampDifferentThanOthers(first, outstanding) => write!(
                 f,
                 "Timestamp {:?} is not equal to the first on {:?} in the payload.",
-                outstandig, first
+                outstanding, first
             ),
             Error::DataTimestampMustBeGreaterThanBefore(current, before) => {
                 write!(
