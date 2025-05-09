@@ -74,7 +74,7 @@ fn make_value_signer_matrix(
     let mut matrix = vec![vec![None; config.signers().len()]; config.feed_ids().len()];
 
     for data_package in data_packages.iter() {
-        let Some(signer_index) = config.signer_index(&data_package.signer_address) else {
+        let signer_index = config.signer_index(&data_package.signer_address).ok_or(Error::SignerNotRecognized(data_package.signer_address))?;
             return Err(Error::SignerNotRecognized(data_package.signer_address));
         };
         'data_points_iter: for data_point in data_package.data_points.iter() {
