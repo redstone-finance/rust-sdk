@@ -187,17 +187,13 @@ mod make_value_signer_matrix {
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
-    use crate::{
-        core::{
-            aggregator::{make_value_signer_matrix, Matrix},
-            config::Config,
-            test_helpers::{AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2},
-        },
-        helpers::iter_into::IterInto,
-        network::error::Error,
-        protocol::data_package::DataPackage,
-        Value,
-    };
+    use crate::{core::{
+        aggregator::{make_value_signer_matrix, Matrix},
+        config::Config,
+        test_helpers::{AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2},
+    }, helpers::iter_into::IterInto, network::error::Error, protocol::data_package::DataPackage, Value};
+    use crate::core::test_helpers::TEST_SIGNER_ADDRESS_3;
+    use crate::helpers::hex::hex_to_bytes;
 
     #[test]
     fn test_make_value_signer_matrix_empty() -> Result<(), Error> {
@@ -283,6 +279,26 @@ mod make_value_signer_matrix {
         assert_eq!(
             result,
             Err(Error::ReoccurringFeedId(BTC.as_bytes().to_vec().into()))
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_make_value_signer_matrix_wrong_signer() -> Result<(), Error> {
+        let data_packages = vec![
+            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 202, TEST_SIGNER_ADDRESS_3, None),
+        ];
+
+        let result = test_make_value_signer_matrix_of(data_packages, vec![vec![]]);
+
+        assert_eq!(
+            result,
+            Err(Error::SignerNotRecognized(hex_to_bytes(TEST_SIGNER_ADDRESS_3.into()).into()))
         );
 
         Ok(())
