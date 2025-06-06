@@ -14,7 +14,7 @@ extern crate alloc;
 
 pub mod contract;
 pub mod core;
-mod crypto;
+pub mod crypto;
 pub mod network;
 mod protocol;
 mod types;

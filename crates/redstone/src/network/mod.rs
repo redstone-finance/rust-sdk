@@ -8,7 +8,7 @@ pub trait Environment {
     fn print<F: FnOnce() -> String>(print_content: F);
 }
 
-/// Default and standard implementation of the `Environmet` trait.
+/// Default and standard implementation of the `Environment` trait.
 /// Uses panic and println macros in implementation of trait function.
 pub struct StdEnv;
 
