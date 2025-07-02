@@ -39,6 +39,7 @@ impl Payload {
 }
 
 #[cfg(test)]
+#[cfg(feature = "helpers")]
 mod tests {
     use super::Payload;
     use crate::{core::config::Config, network::error::Error, protocol::data_package::DataPackage};

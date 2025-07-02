@@ -14,8 +14,8 @@ prepare:
 test: clippy
 	@for features in $(WASM32_FEATURE_SETS); do \
 		cd $(RUST_SDK_DIR); \
-        echo "Running tests with features: $$features"; \
-        (wasm-pack test --node --no-default-features --features="helpers" --features=$$features); \
+        echo "Running tests with features: $$features and without default features"; \
+        (cargo test --target wasm32-unknown-unknown --no-default-features --features="helpers" --features=$$features); \
 		cd -; \
     done
 	@for features in $(FEATURE_SETS); do \

@@ -1,10 +1,9 @@
 use alloc::vec::Vec;
 use core::convert::TryInto;
-use core::marker::PhantomData;
 
 use crate::{
     crypto::Crypto,
-    network::{error::Error, Environment},
+    network::error::Error,
     protocol::{
         constants::{
             DATA_FEED_ID_BS, DATA_PACKAGES_COUNT_BS, DATA_POINTS_COUNT_BS,
@@ -20,12 +19,18 @@ use crate::{
     TimestampMillis,
 };
 
-pub struct PayloadDecoder<Env: Environment, C: Crypto>(PhantomData<(Env, C)>);
+pub struct PayloadDecoder<'a, C: Crypto> {
+    crypto: &'a C,
+}
 
-impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
-    pub fn make_payload(payload_bytes: &mut Vec<u8>) -> Result<Payload, Error> {
+impl<'a, C: Crypto> PayloadDecoder<'a, C> {
+    pub fn new<'b: 'a>(crypto: &'b C) -> Self {
+        Self { crypto }
+    }
+
+    pub fn make_payload(&self, payload_bytes: &mut Vec<u8>) -> Result<Payload, Error> {
         trim_redstone_marker(payload_bytes)?;
-        let payload = Self::trim_payload(payload_bytes)?;
+        let payload = self.trim_payload(payload_bytes)?;
 
         if !payload_bytes.is_empty() {
             return Err(Error::NonEmptyPayloadRemainder(payload_bytes.len()));
@@ -34,14 +39,14 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         Ok(payload)
     }
 
-    fn trim_payload(payload: &mut Vec<u8>) -> Result<Payload, Error> {
-        let data_package_count = Self::trim_metadata(payload)?;
-        let data_packages = Self::trim_data_packages(payload, data_package_count)?;
+    fn trim_payload(&self, payload: &mut Vec<u8>) -> Result<Payload, Error> {
+        let data_package_count = self.trim_metadata(payload)?;
+        let data_packages = self.trim_data_packages(payload, data_package_count)?;
 
         Ok(Payload { data_packages })
     }
 
-    fn trim_metadata(payload: &mut Vec<u8>) -> Result<usize, Error> {
+    fn trim_metadata(&self, payload: &mut Vec<u8>) -> Result<usize, Error> {
         let unsigned_metadata_size = payload
             .try_trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS)?
             .try_into()?;
@@ -52,18 +57,22 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
         Ok(data_package_count)
     }
 
-    fn trim_data_packages(payload: &mut Vec<u8>, count: usize) -> Result<Vec<DataPackage>, Error> {
+    fn trim_data_packages(
+        &self,
+        payload: &mut Vec<u8>,
+        count: usize,
+    ) -> Result<Vec<DataPackage>, Error> {
         let mut data_packages = Vec::with_capacity(count);
 
         for _ in 0..count {
-            let data_package = Self::trim_data_package(payload)?;
+            let data_package = self.trim_data_package(payload)?;
             data_packages.push(data_package);
         }
 
         Ok(data_packages)
     }
 
-    fn trim_data_package(payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
+    fn trim_data_package(&self, payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
         let signature: Vec<u8> = payload.trim_end(SIGNATURE_BS);
         let mut tmp = payload.clone();
 
@@ -78,7 +87,7 @@ impl<Env: Environment, C: Crypto> PayloadDecoder<Env, C> {
             + TryInto::<u64>::try_into(DATA_POINTS_COUNT_BS)?;
 
         let signable_bytes: Vec<_> = tmp.trim_end(size.try_into()?);
-        let signer_address = C::recover_address(signable_bytes, signature)?;
+        let signer_address = self.crypto.recover_address(signable_bytes, signature)?;
 
         let data_points = Self::trim_data_points(
             payload,
@@ -139,7 +148,7 @@ mod tests {
     use crate::{
         default_ext::DefaultCrypto,
         helpers::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex},
-        network::{error::Error, StdEnv},
+        network::error::Error,
         protocol::{
             constants::{
                 DATA_FEED_ID_BS, DATA_POINTS_COUNT_BS, DATA_POINT_VALUE_BYTE_SIZE_BS,
@@ -153,7 +162,7 @@ mod tests {
         Value,
     };
 
-    type TestProcessor = PayloadDecoder<StdEnv, DefaultCrypto>;
+    type TestProcessor<'a> = PayloadDecoder<'a, DefaultCrypto>;
 
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
@@ -172,7 +181,7 @@ mod tests {
             PAYLOAD_METADATA_WITH_UNSIGNED_BYTES,
         ] {
             let mut bytes = hex_to_bytes(prefix.to_owned() + bytes_str);
-            let result = TestProcessor::trim_metadata(&mut bytes);
+            let result = TestProcessor::new(&DefaultCrypto).trim_metadata(&mut bytes);
 
             assert_eq!(bytes, hex_to_bytes(prefix.into()));
             assert_eq!(result, Ok(15));
@@ -184,7 +193,9 @@ mod tests {
         let payload_hex = sample_payload_bytes();
 
         let mut bytes = payload_hex[..payload_hex.len() - REDSTONE_MARKER_BS].into();
-        let payload = TestProcessor::trim_payload(&mut bytes).unwrap();
+        let payload = TestProcessor::new(&DefaultCrypto)
+            .trim_payload(&mut bytes)
+            .unwrap();
 
         assert_eq!(bytes, Vec::<u8>::new());
         assert_eq!(payload.data_packages.len(), 15);
@@ -193,7 +204,9 @@ mod tests {
     #[test]
     fn test_make_payload() {
         let mut payload_hex = sample_payload_bytes();
-        let payload = TestProcessor::make_payload(&mut payload_hex).unwrap();
+        let payload = TestProcessor::new(&DefaultCrypto)
+            .make_payload(&mut payload_hex)
+            .unwrap();
 
         assert_eq!(payload.data_packages.len(), 15);
     }
@@ -202,7 +215,7 @@ mod tests {
     fn test_make_payload_with_prefix() {
         let payload_hex = sample_payload_hex();
         let mut bytes = hex_to_bytes("12".to_owned() + &payload_hex);
-        let res = TestProcessor::make_payload(&mut bytes);
+        let res = TestProcessor::new(&DefaultCrypto).make_payload(&mut bytes);
 
         assert!(matches!(res, Err(Error::NonEmptyPayloadRemainder(1))));
     }
@@ -249,7 +262,9 @@ mod tests {
     #[test]
     fn test_trim_data_packages_single() {
         let mut bytes = hex_to_bytes(DATA_PACKAGE_BYTES_1.into());
-        let data_packages = TestProcessor::trim_data_packages(&mut bytes, 1).unwrap();
+        let data_packages = TestProcessor::new(&DefaultCrypto)
+            .trim_data_packages(&mut bytes, 1)
+            .unwrap();
         assert_eq!(data_packages.len(), 1);
         assert_eq!(bytes, Vec::<u8>::new());
 
@@ -261,7 +276,9 @@ mod tests {
             hex_to_bytes((prefix.to_owned() + DATA_PACKAGE_BYTES_1) + DATA_PACKAGE_BYTES_2);
         let mut bytes = input.clone();
 
-        let data_packages = TestProcessor::trim_data_packages(&mut bytes, count).unwrap();
+        let data_packages = TestProcessor::new(&DefaultCrypto)
+            .trim_data_packages(&mut bytes, count)
+            .unwrap();
 
         assert_eq!(data_packages.len(), count);
         assert_eq!(
@@ -326,7 +343,9 @@ mod tests {
 
     fn test_trim_data_package_of(bytes_str: &str, expected_value: u128, signer_address: &str) {
         let mut bytes: Vec<u8> = hex_to_bytes(bytes_str.into());
-        let result = TestProcessor::trim_data_package(&mut bytes).unwrap();
+        let result = TestProcessor::new(&DefaultCrypto)
+            .trim_data_package(&mut bytes)
+            .unwrap();
         assert_eq!(
             bytes,
             hex_to_bytes(bytes_str[..bytes_str.len() - 2 * (DATA_PACKAGE_SIZE)].into())
