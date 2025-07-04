@@ -14,12 +14,14 @@ pub fn check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
 where
     T: PartialEq + Eq + Copy + Ord,
 {
-    match slice.len() {
-        x if x < 20 => quadratic_check_no_duplicates(slice),
-        _ => sort_check_no_duplicates(slice),
-    }
+    quadratic_check_no_duplicates(slice)
+    // match slice.len() {
+    //     x if x < 20 => quadratic_check_no_duplicates(slice),
+    //     _ => sort_check_no_duplicates(slice),
+    // }
 }
 
+#[inline]
 fn quadratic_check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
 where
     T: PartialEq + Eq + Copy,
