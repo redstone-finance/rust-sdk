@@ -161,32 +161,33 @@ impl From<TryFromIntError> for Error {
 
 impl Error {
     pub fn code(&self) -> u16 {
-        match self {
-            Error::ContractError(content) => content.code as u16,
-            Error::NumberOverflow(_) => 509,
-            Error::ArrayIsEmpty => 510,
-            Error::WrongRedStoneMarker(_) => 511,
-            Error::NonEmptyPayloadRemainder(_) => 512,
-            Error::ReoccurringFeedId(_) => 513,
-            Error::ConfigInsufficientSignerCount(_, _) => 514,
-            Error::ConfigExceededSignerCount(_, _) => 515,
-            Error::ConfigReoccurringSigner(_) => 516,
-            Error::ConfigEmptyFeedIds => 517,
-            Error::ConfigReoccurringFeedId(_) => 518,
-            Error::TimestampDifferentThanOthers(_, _) => 519,
-            Error::SignerNotRecognized(_) => 520,
-            Error::InsufficientSignerCount(data_package_index, value, _) => {
-                (2000 + data_package_index * 10 + value) as u16
-            }
-            Error::SizeNotSupported(size) => 600 + *size as u16,
-            Error::CryptographicError(error) => 700 + error.code(),
-            Error::TimestampTooOld(data_package_index, _) => 1000 + *data_package_index as u16,
-            Error::TimestampTooFuture(data_package_index, _) => 1050 + *data_package_index as u16,
-            Error::DataTimestampMustBeGreaterThanBefore(_, _) => 1101,
-            Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(_, _) => 1102,
-            Error::NumberConversionFail => 1200,
-            Error::UsizeOverflow => 1300,
-        }
+        0
+        // match self {
+        //     Error::ContractError(content) => content.code as u16,
+        //     Error::NumberOverflow(_) => 509,
+        //     Error::ArrayIsEmpty => 510,
+        //     Error::WrongRedStoneMarker(_) => 511,
+        //     Error::NonEmptyPayloadRemainder(_) => 512,
+        //     Error::ReoccurringFeedId(_) => 513,
+        //     Error::ConfigInsufficientSignerCount(_, _) => 514,
+        //     Error::ConfigExceededSignerCount(_, _) => 515,
+        //     Error::ConfigReoccurringSigner(_) => 516,
+        //     Error::ConfigEmptyFeedIds => 517,
+        //     Error::ConfigReoccurringFeedId(_) => 518,
+        //     Error::TimestampDifferentThanOthers(_, _) => 519,
+        //     Error::SignerNotRecognized(_) => 520,
+        //     Error::InsufficientSignerCount(data_package_index, value, _) => {
+        //         (2000 + data_package_index * 10 + value) as u16
+        //     }
+        //     Error::SizeNotSupported(size) => 600 + *size as u16,
+        //     Error::CryptographicError(error) => 700 + error.code(),
+        //     Error::TimestampTooOld(data_package_index, _) => 1000 + *data_package_index as u16,
+        //     Error::TimestampTooFuture(data_package_index, _) => 1050 + *data_package_index as u16,
+        //     Error::DataTimestampMustBeGreaterThanBefore(_, _) => 1101,
+        //     Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(_, _) => 1102,
+        //     Error::NumberConversionFail => 1200,
+        //     Error::UsizeOverflow => 1300,
+        // }
     }
 }
 
