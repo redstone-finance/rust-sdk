@@ -4,11 +4,9 @@ use core::{
     num::TryFromIntError,
 };
 
-use crate::{
-    network::as_str::{AsAsciiStr, AsHexStr},
-    types::Value,
-    CryptoError, FeedId, SignerAddress, TimestampMillis,
-};
+#[cfg(feature = "helpers")]
+use crate::network::as_str::{AsAsciiStr, AsHexStr};
+use crate::{types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ContractErrorContent {
