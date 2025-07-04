@@ -45,7 +45,7 @@ impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
         let mut bytes = payload_bytes.into();
         let payload = PayloadDecoder::new(self.crypto_mut()).make_payload(&mut bytes.0)?;
 
-        T::Environment::print(|| format!("{:?}", payload));
+        // T::Environment::print(|| format!("{:?}", payload));
 
         make_processor_result::<T::Environment>(self.config(), payload)
     }
@@ -56,7 +56,7 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
 
     let values = aggregate_values(payload.data_packages, config)?;
 
-    Env::print(|| format!("{:?} {:?}", timestamp, values));
+    // Env::print(|| format!("{:?} {:?}", timestamp, values));
 
     Ok(ValidatedPayload { values, timestamp })
 }
