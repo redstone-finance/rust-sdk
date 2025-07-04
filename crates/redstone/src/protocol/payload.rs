@@ -21,18 +21,27 @@ impl Payload {
 
         let first_timestamp = validator.validate_timestamp(0, first_package.timestamp)?;
 
-        if let Some(outstanding_ts) = self
-            .data_packages
-            .iter()
-            .map(|package| package.timestamp)
-            .skip(1)
-            .find(|ts| *ts != first_timestamp)
-        {
-            return Err(Error::TimestampDifferentThanOthers(
-                first_timestamp,
-                outstanding_ts,
-            ));
+        for x in &self.data_packages {
+            if x.timestamp != first_timestamp {
+                return Err(Error::TimestampDifferentThanOthers(
+                    first_timestamp,
+                    x.timestamp,
+                ));
+            }
         }
+
+        // if let Some(outstanding_ts) = self
+        //     .data_packages
+        //     .iter()
+        //     .map(|package| package.timestamp)
+        //     .skip(1)
+        //     .find(|ts| *ts != first_timestamp)
+        // {
+        //     return Err(Error::TimestampDifferentThanOthers(
+        //         first_timestamp,
+        //         outstanding_ts,
+        //     ));
+        // }
 
         Ok(first_timestamp)
     }
