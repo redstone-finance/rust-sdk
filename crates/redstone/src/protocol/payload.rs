@@ -5,7 +5,7 @@ use crate::{
     TimestampMillis,
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Payload {
     pub(crate) data_packages: Vec<DataPackage>,
 }
