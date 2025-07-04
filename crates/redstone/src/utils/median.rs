@@ -45,12 +45,12 @@ where
         }
 
         let median = match len {
-            1 => self[0],
-            2 => self[0].avg(self[1]),
-            3 => maybe_pick_median(self[0], self[1], self[2]).unwrap_or_else(|| {
-                maybe_pick_median(self[1], self[0], self[2])
-                    .unwrap_or_else(|| maybe_pick_median(self[1], self[2], self[0]).unwrap())
-            }),
+            // 1 => self[0],
+            // 2 => self[0].avg(self[1]),
+            // 3 => maybe_pick_median(self[0], self[1], self[2]).unwrap_or_else(|| {
+            //     maybe_pick_median(self[1], self[0], self[2])
+            //         .unwrap_or_else(|| maybe_pick_median(self[1], self[2], self[0]).unwrap())
+            // }),
             _ => {
                 let mut values = self;
                 values.sort();
