@@ -40,12 +40,12 @@ pub struct SolanaCrypto;
 impl Crypto for SolanaCrypto {
     type KeccakOutput = [u8; 32];
 
-    fn keccak256(&self, input: impl AsRef<[u8]>) -> Self::KeccakOutput {
+    fn keccak256(&mut self, input: impl AsRef<[u8]>) -> Self::KeccakOutput {
         hash(input.as_ref()).to_bytes()
     }
 
     fn recover_public_key(
-        &self,
+        &mut self,
         recovery_byte: u8,
         signature_bytes: impl AsRef<[u8]>,
         message_hash: Self::KeccakOutput,
@@ -78,6 +78,6 @@ mod tests {
 
     #[test]
     fn test_default_crypto_impl() {
-        run_all_testcases(&SolanaCrypto);
+        run_all_testcases(&mut SolanaCrypto);
     }
 }

@@ -20,15 +20,15 @@ use crate::{
 };
 
 pub struct PayloadDecoder<'a, C: Crypto> {
-    crypto: &'a C,
+    crypto: &'a mut C,
 }
 
 impl<'a, C: Crypto> PayloadDecoder<'a, C> {
-    pub fn new<'b: 'a>(crypto: &'b C) -> Self {
+    pub fn new<'b: 'a>(crypto: &'b mut C) -> Self {
         Self { crypto }
     }
 
-    pub fn make_payload(&self, payload_bytes: &mut Vec<u8>) -> Result<Payload, Error> {
+    pub fn make_payload(&mut self, payload_bytes: &mut Vec<u8>) -> Result<Payload, Error> {
         trim_redstone_marker(payload_bytes)?;
         let payload = self.trim_payload(payload_bytes)?;
 
@@ -39,7 +39,7 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
         Ok(payload)
     }
 
-    fn trim_payload(&self, payload: &mut Vec<u8>) -> Result<Payload, Error> {
+    fn trim_payload(&mut self, payload: &mut Vec<u8>) -> Result<Payload, Error> {
         let data_package_count = self.trim_metadata(payload)?;
         let data_packages = self.trim_data_packages(payload, data_package_count)?;
 
@@ -58,7 +58,7 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
     }
 
     fn trim_data_packages(
-        &self,
+        &mut self,
         payload: &mut Vec<u8>,
         count: usize,
     ) -> Result<Vec<DataPackage>, Error> {
@@ -72,7 +72,7 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
         Ok(data_packages)
     }
 
-    fn trim_data_package(&self, payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
+    fn trim_data_package(&mut self, payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
         let signature: Vec<u8> = payload.trim_end(SIGNATURE_BS);
         let mut tmp = payload.clone();
 
@@ -181,7 +181,7 @@ mod tests {
             PAYLOAD_METADATA_WITH_UNSIGNED_BYTES,
         ] {
             let mut bytes = hex_to_bytes(prefix.to_owned() + bytes_str);
-            let result = TestProcessor::new(&DefaultCrypto).trim_metadata(&mut bytes);
+            let result = TestProcessor::new(&mut DefaultCrypto).trim_metadata(&mut bytes);
 
             assert_eq!(bytes, hex_to_bytes(prefix.into()));
             assert_eq!(result, Ok(15));
@@ -193,7 +193,7 @@ mod tests {
         let payload_hex = sample_payload_bytes();
 
         let mut bytes = payload_hex[..payload_hex.len() - REDSTONE_MARKER_BS].into();
-        let payload = TestProcessor::new(&DefaultCrypto)
+        let payload = TestProcessor::new(&mut DefaultCrypto)
             .trim_payload(&mut bytes)
             .unwrap();
 
@@ -204,7 +204,7 @@ mod tests {
     #[test]
     fn test_make_payload() {
         let mut payload_hex = sample_payload_bytes();
-        let payload = TestProcessor::new(&DefaultCrypto)
+        let payload = TestProcessor::new(&mut DefaultCrypto)
             .make_payload(&mut payload_hex)
             .unwrap();
 
@@ -215,7 +215,7 @@ mod tests {
     fn test_make_payload_with_prefix() {
         let payload_hex = sample_payload_hex();
         let mut bytes = hex_to_bytes("12".to_owned() + &payload_hex);
-        let res = TestProcessor::new(&DefaultCrypto).make_payload(&mut bytes);
+        let res = TestProcessor::new(&mut DefaultCrypto).make_payload(&mut bytes);
 
         assert!(matches!(res, Err(Error::NonEmptyPayloadRemainder(1))));
     }
@@ -262,7 +262,7 @@ mod tests {
     #[test]
     fn test_trim_data_packages_single() {
         let mut bytes = hex_to_bytes(DATA_PACKAGE_BYTES_1.into());
-        let data_packages = TestProcessor::new(&DefaultCrypto)
+        let data_packages = TestProcessor::new(&mut DefaultCrypto)
             .trim_data_packages(&mut bytes, 1)
             .unwrap();
         assert_eq!(data_packages.len(), 1);
@@ -276,7 +276,7 @@ mod tests {
             hex_to_bytes((prefix.to_owned() + DATA_PACKAGE_BYTES_1) + DATA_PACKAGE_BYTES_2);
         let mut bytes = input.clone();
 
-        let data_packages = TestProcessor::new(&DefaultCrypto)
+        let data_packages = TestProcessor::new(&mut DefaultCrypto)
             .trim_data_packages(&mut bytes, count)
             .unwrap();
 
@@ -343,7 +343,7 @@ mod tests {
 
     fn test_trim_data_package_of(bytes_str: &str, expected_value: u128, signer_address: &str) {
         let mut bytes: Vec<u8> = hex_to_bytes(bytes_str.into());
-        let result = TestProcessor::new(&DefaultCrypto)
+        let result = TestProcessor::new(&mut DefaultCrypto)
             .trim_data_package(&mut bytes)
             .unwrap();
         assert_eq!(

@@ -35,17 +35,17 @@ impl CryptoError {
 pub trait Crypto {
     type KeccakOutput: AsRef<[u8]>;
 
-    fn keccak256(&self, input: impl AsRef<[u8]>) -> Self::KeccakOutput;
+    fn keccak256(&mut self, input: impl AsRef<[u8]>) -> Self::KeccakOutput;
 
     fn recover_public_key(
-        &self,
+        &mut self,
         recovery_byte: u8,
         signature_bytes: impl AsRef<[u8]>,
         message_hash: Self::KeccakOutput,
     ) -> Result<Bytes, CryptoError>;
 
     fn recover_address<A: AsRef<[u8]>, B: AsRef<[u8]>>(
-        &self,
+        &mut self,
         message: A,
         signature: B,
     ) -> Result<SignerAddress, CryptoError> {
@@ -95,7 +95,7 @@ pub mod recovery_key_tests {
     const ADDRESS_V28: &str = "12470f7aBA85c8b81D63137DD5925D6EE114952b";
 
     /// run testcases against implementation of the RecovePublicKey.
-    pub fn run_all_testcases<T>(crypto: &T)
+    pub fn run_all_testcases<T>(crypto: &mut T)
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
@@ -106,7 +106,7 @@ pub mod recovery_key_tests {
         test_signature_malleability(crypto);
     }
 
-    fn test_recover_public_key_v27<T>(crypto: &T)
+    fn test_recover_public_key_v27<T>(crypto: &mut T)
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
@@ -116,7 +116,7 @@ pub mod recovery_key_tests {
         assert_eq!(Ok(hex_to_bytes(PUBLIC_KEY_V27.into()).into()), public_key);
     }
 
-    fn test_recover_public_key_v28<T>(crypto: &T)
+    fn test_recover_public_key_v28<T>(crypto: &mut T)
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
@@ -126,7 +126,7 @@ pub mod recovery_key_tests {
         assert_eq!(Ok(hex_to_bytes(PUBLIC_KEY_V28.into()).into()), public_key);
     }
 
-    fn test_recover_address_1b<T>(crypto: &T)
+    fn test_recover_address_1b<T>(crypto: &mut T)
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
@@ -138,7 +138,7 @@ pub mod recovery_key_tests {
         assert_eq!(Ok(hex_to_bytes(ADDRESS_V27.into()).into()), address);
     }
 
-    fn test_recover_address_1c<T>(crypto: &T)
+    fn test_recover_address_1c<T>(crypto: &mut T)
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {
@@ -150,7 +150,7 @@ pub mod recovery_key_tests {
         assert_eq!(Ok(hex_to_bytes(ADDRESS_V28.into()).into()), address);
     }
 
-    fn test_signature_malleability<T>(crypto: &T)
+    fn test_signature_malleability<T>(crypto: &mut T)
     where
         T: Crypto<KeccakOutput = [u8; 32]>,
     {

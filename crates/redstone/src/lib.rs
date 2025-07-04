@@ -48,7 +48,7 @@ pub trait RedStoneConfig {
     /// Returns config for payload decoding and validation.
     fn config(&self) -> &Config;
     /// Crypto operations needed for address recovery.
-    fn crypto(&self) -> &impl Crypto;
+    fn crypto_mut(&mut self) -> &mut impl Crypto;
 }
 
 pub struct RedStoneConfigImpl<C, E> {
@@ -78,8 +78,8 @@ where
         &self.inner
     }
 
-    fn crypto(&self) -> &impl Crypto {
-        &self.crypto
+    fn crypto_mut(&mut self) -> &mut impl Crypto {
+        &mut self.crypto
     }
 }
 
