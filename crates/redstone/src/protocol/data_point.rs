@@ -1,7 +1,7 @@
 use core::fmt::{Debug, Formatter};
 
 use crate::{
-    network::as_str::{AsAsciiStr, AsHexStr},
+    // network::as_str::{AsAsciiStr, AsHexStr},
     types::Value,
     FeedId,
 };
@@ -17,8 +17,10 @@ impl Debug for DataPoint {
         write!(
             f,
             "DataPoint {{\n      feed_id: {:?} (0x{}), value: {:?}\n   }}",
-            self.feed_id.as_ascii_str(),
-            self.feed_id.as_hex_str(),
+            100,
+            200,
+            // self.feed_id.as_ascii_str(),
+            // self.feed_id.as_hex_str(),
             self.value,
         )
     }

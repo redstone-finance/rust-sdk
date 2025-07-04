@@ -194,6 +194,7 @@ impl Error {
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        #[cfg(feature = "helpers")]
         match self {
             Error::ContractError(boxed) => write!(f, "Contract error: {}", boxed.msg),
             Error::NumberOverflow(number) => write!(f, "Number overflow: {}", number.to_u256()),
@@ -276,5 +277,8 @@ impl Display for Error {
             }
             Error::UsizeOverflow => write!(f, "Usize overflow"),
         }
+
+        #[cfg(not(feature = "helpers"))]
+        Ok(())
     }
 }

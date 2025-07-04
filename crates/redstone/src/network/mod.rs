@@ -1,3 +1,4 @@
+#[cfg(feature = "helpers")]
 pub mod as_str;
 pub mod error;
 use alloc::string::String;
