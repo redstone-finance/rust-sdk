@@ -2,8 +2,8 @@ CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged --features="hel
 DOC=cargo doc --no-deps --document-private-items
 TEST=RUST_BACKTRACE=full cargo test --features="helpers"
 BENCH=RUST_BACKTRACE=full cargo bench
-FEATURE_SETS="crypto_k256" "crypto_k256,casper" "crypto_secp256k1" "crypto_secp256k1,casper" "crypto_secp256k1,casper-test" "crypto_secp256k1,radix" "solana" "radix" "default-crypto"
-WASM32_FEATURE_SETS="solana" "radix"
+FEATURE_SETS="crypto_k256" "crypto_k256,casper" "crypto_secp256k1" "crypto_secp256k1,casper" "crypto_secp256k1,casper-test" "crypto_secp256k1,radix" "solana" "radix" "soroban" "default-crypto"
+WASM32_FEATURE_SETS="solana" "radix" "soroban"
 
 RUST_SDK_DIR=crates/redstone
 
