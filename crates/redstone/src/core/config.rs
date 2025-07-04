@@ -1,7 +1,5 @@
 use alloc::vec::Vec;
 
-use derive_getters::Getters;
-
 use crate::{
     contract::verification::verify_signers_config,
     network::error::Error,
@@ -14,40 +12,40 @@ use crate::{
 ///
 /// Specifies the parameters necessary for the verification and aggregation of values
 /// from various data points passed by the RedStone payload.
-#[derive(Debug, Getters)]
+#[derive(Debug)]
 pub struct Config {
     /// The minimum number of signers required validating the data.
     ///
     /// Specifies how many unique signers (from different addresses) are required
     /// for the data to be considered valid and trustworthy.
-    signer_count_threshold: u8,
+    pub signer_count_threshold: u8,
 
     /// List of identifiers for signers authorized to sign the data.
     ///
     /// Each signer is identified by a unique, network-specific byte string (`Bytes`),
     /// which represents their address.
-    signers: Vec<SignerAddress>,
+    pub signers: Vec<SignerAddress>,
 
     /// Identifiers for the data feeds from which values are aggregated.
     ///
     /// Each data feed id is represented by the `FeedId` type.
-    feed_ids: Vec<FeedId>,
+    pub feed_ids: Vec<FeedId>,
 
     /// The current block time in timestamp format, used for verifying data timeliness.
     ///
     /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970) and allows
     /// for determining whether the data is current in the context of blockchain time.
-    block_timestamp: TimestampMillis,
+    pub block_timestamp: TimestampMillis,
 
     /// The maximum delay of the package in regards to the current block in the blockchain.
     ///
     /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970).
-    max_timestamp_delay_ms: TimestampMillis,
+    pub max_timestamp_delay_ms: TimestampMillis,
 
     /// The maximum time package was created ahead of the current block in the blockchain.
     ///
     /// The value's been expressed in milliseconds since the Unix epoch (January 1, 1970).
-    max_timestamp_ahead_ms: TimestampMillis,
+    pub max_timestamp_ahead_ms: TimestampMillis,
 }
 
 impl Config {

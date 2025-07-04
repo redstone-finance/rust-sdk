@@ -85,12 +85,12 @@ pub trait Validator {
 impl Validator for Config {
     #[inline]
     fn feed_index(&self, feed_id: FeedId) -> Option<usize> {
-        self.feed_ids().iter().position(|&elt| elt == feed_id)
+        self.feed_ids.iter().position(|&elt| elt == feed_id)
     }
 
     #[inline]
     fn signer_index(&self, signer: &SignerAddress) -> Option<usize> {
-        self.signers().iter().position(|elt| elt == signer)
+        self.signers.iter().position(|elt| elt == signer)
     }
 
     #[inline]
@@ -100,11 +100,11 @@ impl Validator for Config {
         values: &[Option<Value>],
     ) -> Result<Vec<Value>, Error> {
         let values = values.filter_some();
-        if values.len() < *self.signer_count_threshold() as usize {
+        if values.len() < self.signer_count_threshold as usize {
             return Err(Error::InsufficientSignerCount(
                 index,
                 values.len(),
-                self.feed_ids()[index],
+                self.feed_ids[index],
             ));
         }
 
@@ -118,13 +118,12 @@ impl Validator for Config {
         timestamp: TimestampMillis,
     ) -> Result<TimestampMillis, Error> {
         if !timestamp
-            .add(*self.max_timestamp_delay_ms())
-            .is_same_or_after(*self.block_timestamp())
+            .add(self.max_timestamp_delay_ms)
+            .is_same_or_after(self.block_timestamp)
         {
             return Err(Error::TimestampTooOld(index, timestamp));
         }
-        if !timestamp.is_same_or_before(self.block_timestamp().add(*self.max_timestamp_ahead_ms()))
-        {
+        if !timestamp.is_same_or_before(self.block_timestamp.add(self.max_timestamp_ahead_ms)) {
             return Err(Error::TimestampTooFuture(index, timestamp));
         }
 
