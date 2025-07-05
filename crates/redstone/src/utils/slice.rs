@@ -14,10 +14,7 @@ pub fn check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
 where
     T: PartialEq + Eq + Copy + Ord,
 {
-    match slice.len() {
-        x if x < 20 => quadratic_check_no_duplicates(slice),
-        _ => sort_check_no_duplicates(slice),
-    }
+    quadratic_check_no_duplicates(slice)
 }
 
 #[inline]
@@ -39,20 +36,6 @@ where
             if a == b {
                 return Err(*a);
             }
-        }
-    }
-    Ok(())
-}
-
-fn sort_check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
-where
-    T: PartialEq + Eq + Copy + Ord,
-{
-    let mut slice: Vec<T> = slice.to_vec();
-    slice.sort_unstable();
-    for i in 1..slice.len() {
-        if slice[i - 1] == slice[i] {
-            return Err(slice[i]);
         }
     }
     Ok(())
