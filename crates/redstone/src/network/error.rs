@@ -4,8 +4,6 @@ use core::{
     num::TryFromIntError,
 };
 
-#[cfg(feature = "helpers")]
-use crate::network::as_str::{AsAsciiStr, AsHexStr};
 use crate::{
     network::as_str::AsHexStr, types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis,
 };

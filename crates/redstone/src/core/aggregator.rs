@@ -71,7 +71,7 @@ fn make_value_signer_matrix(
     config: &Config,
     data_packages: Vec<DataPackage>,
 ) -> Result<Matrix, Error> {
-    let mut matrix = vec![vec![None; config.signers.len()]; config.feed_ids.len()];
+    let mut matrix = vec![vec![None; config.signers().len()]; config.feed_ids().len()];
 
     for data_package in data_packages.iter() {
         let signer_index = config
