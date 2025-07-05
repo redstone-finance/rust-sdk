@@ -9,7 +9,6 @@ version = "2.0.2"
 default = ["default-crypto", "std"]
 
 std = [
-    "extra",
     "getrandom/std",
     "hex?/std",
     "k256?/std",
