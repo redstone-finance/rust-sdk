@@ -1,10 +1,8 @@
-use alloc::vec::Vec;
-
 /// Performs lookup for repeated value in the slice.
 ///
 /// # Arguments
 ///
-/// * `slice` - A `&[T]` slice where `T` implements `PartialEq`, `Eq`, `Copy` and `Ord` traits.
+/// * `slice` - A `&[T]` slice where `T` implements `PartialEq`, `Eq`, `Copy`` traits.
 ///
 /// # Returns
 ///
@@ -12,25 +10,19 @@ use alloc::vec::Vec;
 /// element then Ok(()) otherwise.
 pub fn check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
 where
-    T: PartialEq + Eq + Copy + Ord,
-{
-    quadratic_check_no_duplicates(slice)
-}
-
-#[inline]
-fn quadratic_check_no_duplicates<T>(slice: &[T]) -> Result<(), T>
-where
     T: PartialEq + Eq + Copy,
 {
     if slice.len() < 2 {
         return Ok(());
     }
+
     if slice.len() == 2 {
         if slice[0] == slice[1] {
             return Err(slice[0]);
         }
         return Ok(());
     }
+
     for (i, a) in slice.iter().enumerate() {
         for b in slice.iter().skip(i + 1) {
             if a == b {
