@@ -6,7 +6,9 @@ use core::{
 
 #[cfg(feature = "helpers")]
 use crate::network::as_str::{AsAsciiStr, AsHexStr};
-use crate::{types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis};
+use crate::{
+    network::as_str::AsHexStr, types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis,
+};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ContractErrorContent {
@@ -161,39 +163,37 @@ impl From<TryFromIntError> for Error {
 
 impl Error {
     pub fn code(&self) -> u16 {
-        0
-        // match self {
-        //     Error::ContractError(content) => content.code as u16,
-        //     Error::NumberOverflow(_) => 509,
-        //     Error::ArrayIsEmpty => 510,
-        //     Error::WrongRedStoneMarker(_) => 511,
-        //     Error::NonEmptyPayloadRemainder(_) => 512,
-        //     Error::ReoccurringFeedId(_) => 513,
-        //     Error::ConfigInsufficientSignerCount(_, _) => 514,
-        //     Error::ConfigExceededSignerCount(_, _) => 515,
-        //     Error::ConfigReoccurringSigner(_) => 516,
-        //     Error::ConfigEmptyFeedIds => 517,
-        //     Error::ConfigReoccurringFeedId(_) => 518,
-        //     Error::TimestampDifferentThanOthers(_, _) => 519,
-        //     Error::SignerNotRecognized(_) => 520,
-        //     Error::InsufficientSignerCount(data_package_index, value, _) => {
-        //         (2000 + data_package_index * 10 + value) as u16
-        //     }
-        //     Error::SizeNotSupported(size) => 600 + *size as u16,
-        //     Error::CryptographicError(error) => 700 + error.code(),
-        //     Error::TimestampTooOld(data_package_index, _) => 1000 + *data_package_index as u16,
-        //     Error::TimestampTooFuture(data_package_index, _) => 1050 + *data_package_index as u16,
-        //     Error::DataTimestampMustBeGreaterThanBefore(_, _) => 1101,
-        //     Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(_, _) => 1102,
-        //     Error::NumberConversionFail => 1200,
-        //     Error::UsizeOverflow => 1300,
-        // }
+        match self {
+            Error::ContractError(content) => content.code as u16,
+            Error::NumberOverflow(_) => 509,
+            Error::ArrayIsEmpty => 510,
+            Error::WrongRedStoneMarker(_) => 511,
+            Error::NonEmptyPayloadRemainder(_) => 512,
+            Error::ReoccurringFeedId(_) => 513,
+            Error::ConfigInsufficientSignerCount(_, _) => 514,
+            Error::ConfigExceededSignerCount(_, _) => 515,
+            Error::ConfigReoccurringSigner(_) => 516,
+            Error::ConfigEmptyFeedIds => 517,
+            Error::ConfigReoccurringFeedId(_) => 518,
+            Error::TimestampDifferentThanOthers(_, _) => 519,
+            Error::SignerNotRecognized(_) => 520,
+            Error::InsufficientSignerCount(data_package_index, value, _) => {
+                (2000 + data_package_index * 10 + value) as u16
+            }
+            Error::SizeNotSupported(size) => 600 + *size as u16,
+            Error::CryptographicError(error) => 700 + error.code(),
+            Error::TimestampTooOld(data_package_index, _) => 1000 + *data_package_index as u16,
+            Error::TimestampTooFuture(data_package_index, _) => 1050 + *data_package_index as u16,
+            Error::DataTimestampMustBeGreaterThanBefore(_, _) => 1101,
+            Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(_, _) => 1102,
+            Error::NumberConversionFail => 1200,
+            Error::UsizeOverflow => 1300,
+        }
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        #[cfg(feature = "helpers")]
         match self {
             Error::ContractError(boxed) => write!(f, "Contract error: {}", boxed.msg),
             Error::NumberOverflow(number) => write!(f, "Number overflow: {}", number.to_u256()),
@@ -214,7 +214,7 @@ impl Display for Error {
                 "Insufficient signer count {} for #{} ({})",
                 value,
                 data_package_index,
-                feed_id.as_ascii_str()
+                feed_id.as_hex_str()
             ),
             Error::TimestampTooOld(data_package_index, value) => {
                 write!(
@@ -276,8 +276,5 @@ impl Display for Error {
             }
             Error::UsizeOverflow => write!(f, "Usize overflow"),
         }
-
-        #[cfg(not(feature = "helpers"))]
-        Ok(())
     }
 }
