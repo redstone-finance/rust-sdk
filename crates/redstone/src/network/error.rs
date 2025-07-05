@@ -4,13 +4,13 @@ use core::{
     num::TryFromIntError,
 };
 
-use crate::{
-    network::as_str::{AsAsciiStr, AsHexStr},
-    types::Value,
-    CryptoError, FeedId, SignerAddress, TimestampMillis,
-};
+#[cfg(feature = "extra")]
+use crate::network::as_str::AsHexStr;
 
-#[derive(Clone, Eq, PartialEq, Debug)]
+use crate::{types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis};
+
+#[derive(Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "extra", derive(Debug))]
 pub struct ContractErrorContent {
     pub code: u8,
     pub msg: String,
@@ -20,7 +20,8 @@ pub struct ContractErrorContent {
 ///
 /// These errors include issues with contract logic, data types,
 /// cryptographic operations, and conditions specific to the requirements.
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "extra", derive(Debug))]
 pub enum Error {
     /// Represents errors that arise from the contract itself.
     ///
@@ -192,6 +193,7 @@ impl Error {
     }
 }
 
+#[cfg(feature = "extra")]
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -214,7 +216,7 @@ impl Display for Error {
                 "Insufficient signer count {} for #{} ({})",
                 value,
                 data_package_index,
-                feed_id.as_ascii_str()
+                feed_id.as_hex_str()
             ),
             Error::TimestampTooOld(data_package_index, value) => {
                 write!(
@@ -276,5 +278,19 @@ impl Display for Error {
             }
             Error::UsizeOverflow => write!(f, "Usize overflow"),
         }
+    }
+}
+
+#[cfg(not(feature = "extra"))]
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Error code: {}.", self.code())
+    }
+}
+
+#[cfg(not(feature = "extra"))]
+impl Debug for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Error code: {}.", self.code())
     }
 }

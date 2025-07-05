@@ -184,19 +184,20 @@ mod aggregate_matrix_tests {
 #[cfg(test)]
 mod make_value_signer_matrix {
     use alloc::vec::Vec;
+
     use itertools::Itertools;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
-    use crate::core::test_helpers::TEST_SIGNER_ADDRESS_3;
-    use crate::helpers::hex::hex_to_bytes;
     use crate::{
         core::{
             aggregator::{make_value_signer_matrix, Matrix},
             config::Config,
-            test_helpers::{AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2},
+            test_helpers::{
+                AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2, TEST_SIGNER_ADDRESS_3,
+            },
         },
-        helpers::iter_into::IterInto,
+        helpers::{hex::hex_to_bytes, iter_into::IterInto},
         network::error::Error,
         protocol::data_package::DataPackage,
         Value,

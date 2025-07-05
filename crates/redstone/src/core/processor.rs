@@ -21,7 +21,7 @@ use crate::{
 ///
 /// * Returns a `ProcessorResult` in case of successful payload processing. Will panic in case of bad input.
 pub fn process_payload(
-    config: &impl RedStoneConfig,
+    config: &mut impl RedStoneConfig,
     payload_bytes: impl Into<Bytes>,
 ) -> ProcessorResult {
     config.process_payload(payload_bytes)
@@ -37,14 +37,15 @@ trait RedStonePayloadProcessor {
     /// # Returns
     ///
     /// * Returns a `ProcessorResult` in case of successful payload processing. Will panic in case of bad input.
-    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult;
+    fn process_payload(&mut self, payload_bytes: impl Into<Bytes>) -> ProcessorResult;
 }
 
 impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
-    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
+    fn process_payload(&mut self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
         let mut bytes = payload_bytes.into();
-        let payload = PayloadDecoder::<T::Environment, T::Crypto>::make_payload(&mut bytes.0)?;
+        let payload = PayloadDecoder::new(self.crypto_mut()).make_payload(&mut bytes.0)?;
 
+        #[cfg(feature = "extra")]
         T::Environment::print(|| format!("{:?}", payload));
 
         make_processor_result::<T::Environment>(self.config(), payload)
@@ -56,6 +57,7 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
 
     let values = aggregate_values(payload.data_packages, config)?;
 
+    #[cfg(feature = "extra")]
     Env::print(|| format!("{:?} {:?}", timestamp, values));
 
     Ok(ValidatedPayload { values, timestamp })
