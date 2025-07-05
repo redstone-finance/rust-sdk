@@ -5,7 +5,7 @@ use crate::{
     TimestampMillis,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Payload {
     pub(crate) data_packages: Vec<DataPackage>,
 }
@@ -21,27 +21,18 @@ impl Payload {
 
         let first_timestamp = validator.validate_timestamp(0, first_package.timestamp)?;
 
-        for x in &self.data_packages {
-            if x.timestamp != first_timestamp {
-                return Err(Error::TimestampDifferentThanOthers(
-                    first_timestamp,
-                    x.timestamp,
-                ));
-            }
+        if let Some(outstanding_ts) = self
+            .data_packages
+            .iter()
+            .map(|package| package.timestamp)
+            .skip(1)
+            .find(|ts| *ts != first_timestamp)
+        {
+            return Err(Error::TimestampDifferentThanOthers(
+                first_timestamp,
+                outstanding_ts,
+            ));
         }
-
-        // if let Some(outstanding_ts) = self
-        //     .data_packages
-        //     .iter()
-        //     .map(|package| package.timestamp)
-        //     .skip(1)
-        //     .find(|ts| *ts != first_timestamp)
-        // {
-        //     return Err(Error::TimestampDifferentThanOthers(
-        //         first_timestamp,
-        //         outstanding_ts,
-        //     ));
-        // }
 
         Ok(first_timestamp)
     }

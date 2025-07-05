@@ -85,8 +85,8 @@ impl Config {
             max_timestamp_ahead_ms: max_timestamp_ahead_ms.unwrap_or(MAX_TIMESTAMP_AHEAD_MS.into()),
         };
 
-        // config.verify_signer_list()?;
-        // config.verify_feed_id_list()?;
+        config.verify_signer_list()?;
+        config.verify_feed_id_list()?;
 
         Ok(config)
     }
