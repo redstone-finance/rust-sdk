@@ -9,6 +9,7 @@ version = "2.0.2"
 default = ["default-crypto", "std"]
 
 std = [
+    "extra",
     "getrandom/std",
     "hex?/std",
     "k256?/std",
@@ -17,10 +18,10 @@ std = [
 ]
 
 # default crypto implementations
-default-crypto = ["k256", "sha3"]
+default-crypto = ["extra", "k256", "sha3"]
 
 # An extension for Radix network
-radix = ["scrypto"]
+radix = ["extra", "scrypto"]
 
 # An extension setting usage on casper network.
 casper = ["casper-types", "default-crypto"]
@@ -28,6 +29,9 @@ casper-test = ["casper", "casper-contract/test-support"]
 
 # An extension for debug-printing of messages.
 print_debug = []
+
+# Additional functionality, better error msg, disable this to minimalize size of code.
+extra = []
 
 # A variant of decrypting the message-signers using secp256k1 library. Cheaper in runtime.
 crypto_secp256k1 = [
@@ -40,10 +44,10 @@ crypto_secp256k1 = [
 crypto_k256 = ["k256/alloc", "k256/ecdsa", "k256/sha256"]
 
 # A variant of decrypting the message-signers using Solana library.
-solana = ["anchor-lang"]
+solana = ["anchor-lang", "extra"]
 
 # A set of helpers for testing & offline usage.
-helpers = ["hex/alloc", "hex/serde"]
+helpers = ["extra", "hex/alloc", "hex/serde"]
 
 [dependencies]
 anchor-lang = { version = "0.30.1", optional = true, default-features = false }

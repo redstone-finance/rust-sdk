@@ -4,9 +4,10 @@ use core::{
     num::TryFromIntError,
 };
 
-use crate::{
-    network::as_str::AsHexStr, types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis,
-};
+#[cfg(feature = "extra")]
+use crate::network::as_str::AsHexStr;
+
+use crate::{types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ContractErrorContent {
@@ -190,6 +191,7 @@ impl Error {
     }
 }
 
+#[cfg(feature = "extra")]
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -274,5 +276,12 @@ impl Display for Error {
             }
             Error::UsizeOverflow => write!(f, "Usize overflow"),
         }
+    }
+}
+
+#[cfg(not(feature = "extra"))]
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Error code: {}.", self.code())
     }
 }
