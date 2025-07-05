@@ -9,7 +9,8 @@ use crate::network::as_str::AsHexStr;
 
 use crate::{types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis};
 
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "extra", derive(Debug))]
 pub struct ContractErrorContent {
     pub code: u8,
     pub msg: String,
@@ -19,7 +20,8 @@ pub struct ContractErrorContent {
 ///
 /// These errors include issues with contract logic, data types,
 /// cryptographic operations, and conditions specific to the requirements.
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "extra", derive(Debug))]
 pub enum Error {
     /// Represents errors that arise from the contract itself.
     ///
@@ -281,6 +283,13 @@ impl Display for Error {
 
 #[cfg(not(feature = "extra"))]
 impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Error code: {}.", self.code())
+    }
+}
+
+#[cfg(not(feature = "extra"))]
+impl Debug for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "Error code: {}.", self.code())
     }
