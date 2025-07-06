@@ -1,6 +1,4 @@
 use alloc::vec::Vec;
-
-#[cfg(feature = "extra")]
 use core::fmt::Debug;
 
 use alloy_primitives::U256;
@@ -16,7 +14,7 @@ const ECDSA_N_DIV_2: U256 = U256::from_limbs([
 
 const SIGNATURE_SIZE_BS: usize = 65;
 
-#[cfg_attr(feature = "extra", derive(Clone, PartialEq, Eq, Debug))]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum CryptoError {
     RecoveryByte(u8),
     Signature(Vec<u8>),

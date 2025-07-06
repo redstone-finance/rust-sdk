@@ -1,18 +1,16 @@
 use alloc::vec::Vec;
 
-#[cfg(feature = "extra")]
 use core::fmt::{Debug, Formatter};
 
 use crate::{protocol::data_point::DataPoint, SignerAddress, TimestampMillis};
 
-#[cfg_attr(feature = "extra", derive(Clone, PartialEq, Eq))]
+#[derive(Clone, PartialEq, Eq)]
 pub struct DataPackage {
     pub(crate) signer_address: SignerAddress,
     pub(crate) timestamp: TimestampMillis,
     pub(crate) data_points: Vec<DataPoint>,
 }
 
-#[cfg(feature = "extra")]
 impl Debug for DataPackage {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(

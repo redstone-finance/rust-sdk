@@ -10,7 +10,6 @@ use crate::types::{Sanitized, VALUE_SIZE};
 #[cfg_attr(feature = "radix", derive(ScryptoSbor))]
 pub struct Value(pub [u8; VALUE_SIZE]);
 
-#[cfg(feature = "extra")]
 macro_rules! impl_from_number {
     ($(
         $number_type:ident
@@ -24,7 +23,7 @@ macro_rules! impl_from_number {
          )*
     };
 }
-#[cfg(feature = "extra")]
+
 impl_from_number!(u8, u16, u32, u64, u128);
 
 impl Value {
@@ -36,7 +35,6 @@ impl Value {
         Self(value.to_be_bytes())
     }
 
-    #[cfg(feature = "extra")]
     pub fn le_bytes(&self) -> [u8; 32] {
         let mut le = self.0;
         le.reverse();
@@ -44,7 +42,6 @@ impl Value {
         le
     }
 
-    #[cfg(feature = "extra")]
     pub fn as_be_bytes(&self) -> &[u8] {
         &self.0
     }

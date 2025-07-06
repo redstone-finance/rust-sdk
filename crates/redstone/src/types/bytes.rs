@@ -1,7 +1,7 @@
 use alloc::vec::Vec;
 /// Type wrapping bytes represantion.
 
-#[cfg_attr(feature = "extra", derive(Clone, PartialEq, Eq, Debug, Default))]
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct Bytes(pub Vec<u8>);
 
 impl From<Vec<u8>> for Bytes {

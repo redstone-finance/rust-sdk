@@ -1,4 +1,3 @@
-#[cfg(feature = "extra")]
 pub mod as_str;
 pub mod error;
 

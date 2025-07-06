@@ -1,18 +1,13 @@
+use crate::network::as_str::{AsAsciiStr, AsHexStr};
 use crate::{types::Value, FeedId};
+use core::fmt::{Debug, Formatter};
 
-#[cfg(feature = "extra")]
-use {
-    crate::network::as_str::{AsAsciiStr, AsHexStr},
-    core::fmt::{Debug, Formatter},
-};
-
-#[cfg_attr(feature = "extra", derive(Clone, PartialEq, Eq))]
+#[derive(Clone, PartialEq, Eq)]
 pub struct DataPoint {
     pub(crate) feed_id: FeedId,
     pub(crate) value: Value,
 }
 
-#[cfg(feature = "extra")]
 impl Debug for DataPoint {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(
