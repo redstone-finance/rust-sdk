@@ -8,7 +8,7 @@ pub type ProcessorResult = Result<ValidatedPayload, Error>;
 ///
 /// This structure is used to encapsulate the outcome of a RedStone payload processing operation,
 /// particularly focusing on time-sensitive data and its associated values, according to the `Config`.
-#[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "extra", derive(Debug, Eq, PartialEq))]
 pub struct ValidatedPayload {
     /// The timestamp encountered during processing.
     ///

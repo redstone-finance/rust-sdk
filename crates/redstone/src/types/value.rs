@@ -10,6 +10,7 @@ use crate::types::{Sanitized, VALUE_SIZE};
 #[cfg_attr(feature = "radix", derive(ScryptoSbor))]
 pub struct Value(pub [u8; VALUE_SIZE]);
 
+#[cfg(feature = "extra")]
 macro_rules! impl_from_number {
     ($(
         $number_type:ident
@@ -23,6 +24,7 @@ macro_rules! impl_from_number {
          )*
     };
 }
+#[cfg(feature = "extra")]
 impl_from_number!(u8, u16, u32, u64, u128);
 
 impl Value {

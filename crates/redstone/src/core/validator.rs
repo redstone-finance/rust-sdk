@@ -83,17 +83,17 @@ pub trait Validator {
 }
 
 impl Validator for Config {
-    #[inline]
+    #[cfg_attr(feature = "extra", inline)]
     fn feed_index(&self, feed_id: FeedId) -> Option<usize> {
         self.feed_ids().iter().position(|&elt| elt == feed_id)
     }
 
-    #[inline]
+    #[cfg_attr(feature = "extra", inline)]
     fn signer_index(&self, signer: &SignerAddress) -> Option<usize> {
         self.signers().iter().position(|elt| elt == signer)
     }
 
-    #[inline]
+    #[cfg_attr(feature = "extra", inline)]
     fn validate_signer_count_threshold(
         &self,
         index: usize,
@@ -111,7 +111,7 @@ impl Validator for Config {
         Ok(values)
     }
 
-    #[inline]
+    #[cfg_attr(feature = "extra", inline)]
     fn validate_timestamp(
         &self,
         index: usize,

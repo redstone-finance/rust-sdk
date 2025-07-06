@@ -2,18 +2,20 @@ use alloc::vec::Vec;
 use derive_getters::Getters;
 
 use crate::{
-    contract::verification::verify_signers_config,
     network::error::Error,
     protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
-    utils::slice::check_no_duplicates,
     FeedId, SignerAddress, TimestampMillis,
 };
+
+#[cfg(feature = "extra")]
+use crate::{contract::verification::verify_signers_config, utils::slice::check_no_duplicates};
 
 /// Configuration for a RedStone payload processor.
 ///
 /// Specifies the parameters necessary for the verification and aggregation of values
 /// from various data points passed by the RedStone payload.
-#[derive(Debug, Getters)]
+#[derive(Getters)]
+#[cfg_attr(feature = "extra", derive(Debug))]
 pub struct Config {
     /// The minimum number of signers required validating the data.
     ///
@@ -86,19 +88,24 @@ impl Config {
             max_timestamp_ahead_ms: max_timestamp_ahead_ms.unwrap_or(MAX_TIMESTAMP_AHEAD_MS.into()),
         };
 
-        config.verify_signer_list()?;
-        config.verify_feed_id_list()?;
+        #[cfg(feature = "extra")]
+        {
+            config.verify_signer_list()?;
+            config.verify_feed_id_list()?;
+        }
 
         Ok(config)
     }
 
+    #[cfg(feature = "extra")]
     #[inline]
     fn verify_feed_id_list(&self) -> Result<(), Error> {
         self.verify_feed_id_list_empty()?;
         check_no_duplicates(&self.feed_ids).map_err(Error::ConfigReoccurringFeedId)
     }
 
-    #[inline(always)]
+    #[cfg(feature = "extra")]
+    #[inline]
     fn verify_feed_id_list_empty(&self) -> Result<(), Error> {
         if self.feed_ids.is_empty() {
             return Err(Error::ConfigEmptyFeedIds);
@@ -107,6 +114,7 @@ impl Config {
         Ok(())
     }
 
+    #[cfg(feature = "extra")]
     #[inline]
     fn verify_signer_list(&self) -> Result<(), Error> {
         verify_signers_config(&self.signers, self.signer_count_threshold)
