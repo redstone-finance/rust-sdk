@@ -1,5 +1,6 @@
 use alloc::vec::Vec;
 use core::ops::{Add, Rem, Shr};
+
 pub(crate) trait Median {
     type Item;
 
@@ -17,7 +18,14 @@ trait Averageable:
 
 impl Averageable for i32 {}
 
-impl Averageable for primitive_types::U256 {}
+impl Avg for alloy_primitives::U256 {
+    fn avg(self, other: Self) -> Self {
+        let one = Self::ONE;
+        let two = one + one;
+
+        self.shr(one) + other.shr(one) + (self % two + other % two).shr(one)
+    }
+}
 
 impl<T> Avg for T
 where
@@ -86,8 +94,8 @@ mod tests {
     use alloc::vec::Vec;
     use core::fmt::Debug;
 
+    use alloy_primitives::U256;
     use itertools::Itertools;
-    use primitive_types::U256;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
@@ -96,7 +104,7 @@ mod tests {
     #[allow(clippy::legacy_numeric_constants)]
     #[test]
     fn test_avg() {
-        let u256 = U256::max_value(); // 115792089237316195423570985008687907853269984665640564039457584007913129639935
+        let u256 = U256::MAX; // 115792089237316195423570985008687907853269984665640564039457584007913129639935
         let u256_max_sub_1 = u256 - U256::from(1u32);
         let u256max_div_2 = u256 / U256::from(2u32);
 

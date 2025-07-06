@@ -1,11 +1,11 @@
 use alloc::vec::Vec;
 use core::fmt::Debug;
 
-use primitive_types::U256;
+use alloy_primitives::U256;
 
 use crate::{Bytes, SignerAddress};
 
-const ECDSA_N_DIV_2: U256 = U256([
+const ECDSA_N_DIV_2: U256 = U256::from_limbs([
     16134479119472337056,
     6725966010171805725,
     18446744073709551615,
@@ -68,7 +68,7 @@ pub trait Crypto {
 }
 
 fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
-    if U256::from_big_endian(&sig[32..64]) > ECDSA_N_DIV_2 {
+    if U256::from_be_slice(&sig[32..64]) > ECDSA_N_DIV_2 {
         return Err(CryptoError::Signature(sig.to_vec()));
     }
 

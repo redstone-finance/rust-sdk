@@ -480,7 +480,7 @@ mod tests {
                 &DATA_POINT_BYTES_TAIL[..DATA_POINT_BYTES_TAIL.len() - 2 * i],
                 32 - i,
                 1,
-                Value::from_u256(primitive_types::U256::from(VALUE).shr(8 * i as u32)),
+                Value::from_u256(alloy_primitives::U256::from(VALUE).shr(8 * i as u32)),
             )?;
         }
         Ok(())

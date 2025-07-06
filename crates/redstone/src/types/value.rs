@@ -17,7 +17,7 @@ macro_rules! impl_from_number {
         $(
             impl From<$number_type> for Value {
                 fn from(value: $number_type) -> Self {
-                    Value::from_u256(primitive_types::U256::from(value))
+                    Value::from_u256(alloy_primitives::U256::from(value))
                 }
             }
          )*
@@ -26,12 +26,12 @@ macro_rules! impl_from_number {
 impl_from_number!(u8, u16, u32, u64, u128);
 
 impl Value {
-    pub fn to_u256(self) -> primitive_types::U256 {
-        primitive_types::U256::from_big_endian(&self.0)
+    pub fn to_u256(self) -> alloy_primitives::U256 {
+        alloy_primitives::U256::from_be_bytes(self.0)
     }
 
-    pub fn from_u256(value: primitive_types::U256) -> Self {
-        value.to_big_endian().to_vec().into()
+    pub fn from_u256(value: alloy_primitives::U256) -> Self {
+        Self(value.to_be_bytes())
     }
 
     pub fn le_bytes(&self) -> [u8; 32] {
