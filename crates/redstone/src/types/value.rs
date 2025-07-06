@@ -36,6 +36,7 @@ impl Value {
         Self(value.to_be_bytes())
     }
 
+    #[cfg(feature = "extra")]
     pub fn le_bytes(&self) -> [u8; 32] {
         let mut le = self.0;
         le.reverse();
@@ -43,6 +44,7 @@ impl Value {
         le
     }
 
+    #[cfg(feature = "extra")]
     pub fn as_be_bytes(&self) -> &[u8] {
         &self.0
     }

@@ -6,7 +6,7 @@ use {
     core::fmt::{Debug, Formatter},
 };
 
-#[derive(Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "extra", derive(Clone, PartialEq, Eq))]
 pub struct DataPoint {
     pub(crate) feed_id: FeedId,
     pub(crate) value: Value,

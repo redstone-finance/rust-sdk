@@ -77,7 +77,7 @@ where
     }
 }
 
-#[inline]
+#[cfg_attr(feature = "extra", inline)]
 fn maybe_pick_median<T>(a: T, b: T, c: T) -> Option<T>
 where
     T: PartialOrd,
