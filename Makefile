@@ -32,7 +32,6 @@ docs:
 		echo "Documenting redstone with features: $$features"; \
 		(rm -rf ./target/doc && $(DOC) --features=$$features && mkdir -p ./target/rust-docs/redstone && cp -r ./target/doc ./target/rust-docs/redstone/$$features); \
 	done
-
 	@set -e; \
 	for features in $(WASM32_FEATURE_SETS); do \
 		echo "Documenting redstone with features: $$features"; \
@@ -54,7 +53,6 @@ clippy: prepare
 		echo "Running clippy with features: $$features"; \
 		($(CLIPPY) --all-targets --features=$$features -- -D warnings); \
 	done
-
 	@echo 'Check all features enabled'
 	$(CLIPPY) --all-targets --all-features -- -D warnings
 	@echo 'Check all features disabled'
