@@ -9,6 +9,7 @@ RUST_SDK_DIR=crates/redstone
 
 prepare:
 	@rustup target add wasm32-unknown-unknown
+	@rustup component add clippy rustfmt
 	cargo install wasm-bindgen-cli wasm-pack --locked
 
 test: clippy
