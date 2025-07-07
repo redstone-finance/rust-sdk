@@ -104,11 +104,6 @@ pub mod recovery_key_tests {
         test_recover_address_1b(crypto);
         test_recover_address_1c(crypto);
         test_signature_malleability(crypto);
-        test_recover_public_key_v27::<_>(crypto);
-        test_recover_public_key_v28::<_>(crypto);
-        test_recover_address_1b::<_, [u8; 32]>(crypto);
-        test_recover_address_1c::<_, [u8; 32]>(crypto);
-        test_signature_malleability::<_, [u8; 32]>(crypto);
     }
 
     fn test_recover_public_key_v27<T>(crypto: &mut T)

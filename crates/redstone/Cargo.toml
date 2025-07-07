@@ -51,7 +51,6 @@ helpers = ["hex/alloc", "hex/serde"]
 [dependencies]
 alloy-primitives = { version = "=0.8.20", default-features = false }
 anchor-lang = { version = "0.30.1", optional = true, default-features = false }
-base64ct = "=1.7.3"
 casper-contract = { version = "^4.0.0", default-features = false, features = [
 ], optional = true }
 casper-types = { version = "^4.0.2", default-features = false, features = [

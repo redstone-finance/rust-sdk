@@ -2,7 +2,7 @@
 ///
 /// # Arguments
 ///
-/// * `slice` - A `&[T]` slice where `T` implements `PartialEq`, `Eq`, `Copy`` traits.
+/// * `slice` - A `&[T]` slice where `T` implements `PartialEq`, `Eq`, `Copy` traits.
 ///
 /// # Returns
 ///

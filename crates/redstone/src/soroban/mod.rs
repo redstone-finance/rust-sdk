@@ -83,7 +83,7 @@ impl Crypto for SorobanCrypto<'_> {
 mod tests {
     use soroban_sdk::Env;
 
-    use super::{Keccak256Output, SorobanCrypto};
+    use super::SorobanCrypto;
     use crate::crypto::recovery_key_tests::{
         test_recover_address_1b, test_recover_address_1c, test_signature_malleability,
     };
@@ -96,9 +96,8 @@ mod tests {
         // from raw bytes.  So recover_public_key() is untestable.
         // test_recover_public_key_v27();
         // test_recover_public_key_v28();
-
-        test_recover_address_1b::<SorobanCrypto, Keccak256Output>(&mut crypto);
-        test_recover_address_1c::<SorobanCrypto, Keccak256Output>(&mut crypto);
-        test_signature_malleability::<SorobanCrypto, Keccak256Output>(&mut crypto);
+        test_recover_address_1b(&mut crypto);
+        test_recover_address_1c(&mut crypto);
+        test_signature_malleability(&mut crypto);
     }
 }
