@@ -101,12 +101,23 @@ impl Crypto for SorobanCrypto {
 #[cfg(test)]
 #[cfg(feature = "helpers")]
 mod tests {
-    use super::SorobanCrypto;
-    use crate::crypto::recovery_key_tests::run_all_testcases;
+    use super::{Keccak256Output, SorobanCrypto};
+    use crate::crypto::recovery_key_tests::{
+        test_recover_address_1b, test_recover_address_1c, test_signature_malleability,
+    };
+    use soroban_sdk::Env;
 
     #[test]
     fn test_default_crypto_impl() {
-        // TODO
-        // run_all_testcases::<SorobanCrypto>();
+        let env = Env::default();
+        SorobanCrypto::with_env(&env, || {
+            // Soroban SDK doesn't provide any method to construct Hash
+            // from raw bytes.  So recover_public_key() is untestable.
+            // test_recover_public_key_v27();
+            // test_recover_public_key_v28();
+            test_recover_address_1b::<SorobanCrypto, Keccak256Output>();
+            test_recover_address_1c::<SorobanCrypto, Keccak256Output>();
+            test_signature_malleability::<SorobanCrypto, Keccak256Output>();
+        });
     }
 }
