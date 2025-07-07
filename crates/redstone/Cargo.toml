@@ -56,7 +56,7 @@ hex = { version = "^0.4.3", default-features = false, features = [], optional = 
 primitive-types = { version = "^0.13.1", default-features = false }
 anchor-lang = { version = "0.30.1", optional = true, default-features = false }
 derive-getters = "0.5.0"
-soroban-sdk = { version = "22.0.8", features = ["alloc"], optional = true }
+soroban-sdk = { version = "22.0.8", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "^0.2.15", default-features = false, features = ["js"] }

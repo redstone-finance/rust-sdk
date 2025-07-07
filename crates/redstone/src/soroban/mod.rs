@@ -94,7 +94,10 @@ impl Crypto for SorobanCrypto {
             env.crypto()
                 .secp256k1_recover(&message_hash.hash, &signature, recovery_byte.into());
 
-        Ok(Bytes::from(public_key.as_ref().to_alloc_vec()))
+        let mut bytes = vec![0u8; public_key.len() as usize];
+        public_key.as_ref().copy_into_slice(&mut bytes);
+
+        Ok(Bytes::from(bytes))
     }
 }
 
