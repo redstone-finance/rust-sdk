@@ -104,6 +104,11 @@ pub mod recovery_key_tests {
         test_recover_address_1b(crypto);
         test_recover_address_1c(crypto);
         test_signature_malleability(crypto);
+        test_recover_public_key_v27::<_>(crypto);
+        test_recover_public_key_v28::<_>(crypto);
+        test_recover_address_1b::<_, [u8; 32]>(crypto);
+        test_recover_address_1c::<_, [u8; 32]>(crypto);
+        test_signature_malleability::<_, [u8; 32]>(crypto);
     }
 
     fn test_recover_public_key_v27<T>(crypto: &mut T)
@@ -126,9 +131,10 @@ pub mod recovery_key_tests {
         assert_eq!(Ok(hex_to_bytes(PUBLIC_KEY_V28.into()).into()), public_key);
     }
 
-    fn test_recover_address_1b<T>(crypto: &mut T)
+    pub fn test_recover_address_1b<T, K>(crypto: &mut T)
     where
-        T: Crypto<KeccakOutput = [u8; 32]>,
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
     {
         let address = crypto.recover_address(
             hex_to_bytes(MESSAGE.into()),
@@ -138,9 +144,10 @@ pub mod recovery_key_tests {
         assert_eq!(Ok(hex_to_bytes(ADDRESS_V27.into()).into()), address);
     }
 
-    fn test_recover_address_1c<T>(crypto: &mut T)
+    pub fn test_recover_address_1c<T, K>(crypto: &mut T)
     where
-        T: Crypto<KeccakOutput = [u8; 32]>,
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
     {
         let address = crypto.recover_address(
             hex_to_bytes(MESSAGE.into()),
@@ -150,9 +157,10 @@ pub mod recovery_key_tests {
         assert_eq!(Ok(hex_to_bytes(ADDRESS_V28.into()).into()), address);
     }
 
-    fn test_signature_malleability<T>(crypto: &mut T)
+    pub fn test_signature_malleability<T, K>(crypto: &mut T)
     where
-        T: Crypto<KeccakOutput = [u8; 32]>,
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
     {
         let msg =
         hex_to_bytes("4254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000058f32c910a001924dc0bd5000000020000001".to_string());

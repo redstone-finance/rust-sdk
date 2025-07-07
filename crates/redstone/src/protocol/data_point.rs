@@ -1,6 +1,10 @@
-use crate::network::as_str::{AsAsciiStr, AsHexStr};
-use crate::{types::Value, FeedId};
 use core::fmt::{Debug, Formatter};
+
+use crate::{
+    network::as_str::{AsAsciiStr, AsHexStr},
+    types::Value,
+    FeedId,
+};
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct DataPoint {

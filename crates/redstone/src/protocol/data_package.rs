@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-
 use core::fmt::{Debug, Formatter};
 
 use crate::{protocol::data_point::DataPoint, SignerAddress, TimestampMillis};

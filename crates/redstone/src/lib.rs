@@ -29,6 +29,9 @@ pub mod casper;
 #[cfg(feature = "radix")]
 pub mod radix;
 
+#[cfg(feature = "soroban")]
+pub mod soroban;
+
 use ::core::marker::PhantomData;
 #[cfg(feature = "default-crypto")]
 pub mod default_ext;

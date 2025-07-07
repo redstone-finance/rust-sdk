@@ -35,6 +35,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use alloc::vec::Vec;
+
     use super::*;
 
     #[test]
