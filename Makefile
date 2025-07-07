@@ -14,23 +14,23 @@ prepare:
 test: clippy
 	@for features in $(WASM32_FEATURE_SETS); do \
 		cd $(RUST_SDK_DIR); \
-        echo "Running tests with features: $$features"; \
-        (wasm-pack test --node --no-default-features --features="helpers" --features=$$features); \
+		echo "Running tests with features: $$features"; \
+		(wasm-pack test --node --no-default-features --features="helpers" --features=$$features); \
 		cd -; \
-    done
+	done
 	@for features in $(FEATURE_SETS); do \
-        echo "Running tests with features: $$features"; \
-        ($(TEST) --features=$$features); \
-    done
+		echo "Running tests with features: $$features"; \
+		($(TEST) --features=$$features); \
+	done
 
 bench:
 	($(BENCH) --all-features);
 
 docs:
 	@for features in $(FEATURE_SETS); do \
-        echo "Documenting redstone with features: $$features"; \
-        (rm -rf ./target/doc && $(DOC) --features=$$features && mkdir -p ./target/rust-docs/redstone && cp -r ./target/doc ./target/rust-docs/redstone/$$features); \
-    done
+		echo "Documenting redstone with features: $$features"; \
+		(rm -rf ./target/doc && $(DOC) --features=$$features && mkdir -p ./target/rust-docs/redstone && cp -r ./target/doc ./target/rust-docs/redstone/$$features); \
+	done
 
 	@for features in $(WASM32_FEATURE_SETS); do \
 		echo "Documenting redstone with features: $$features"; \
@@ -41,15 +41,15 @@ coverage:
 	cargo install grcov --version=0.5.15
 	CARGO_INCREMENTAL=0 \
 		RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort" \
-        RUSTDOCFLAGS="-Cpanic=abort" cargo build --features="crypto_k256"
+		RUSTDOCFLAGS="-Cpanic=abort" cargo build --features="crypto_k256"
 	CARGO_INCREMENTAL=0 \
 		RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort" \
-        RUSTDOCFLAGS="-Cpanic=abort" $(TEST) --features="crypto_k256"
+		RUSTDOCFLAGS="-Cpanic=abort" $(TEST) --features="crypto_k256"
 
 clippy: prepare
 	@for features in $(FEATURE_SETS); do \
-        ($(CLIPPY) --all-targets --features=$$features -- -D warnings); \
-    done
+		($(CLIPPY) --all-targets --features=$$features -- -D warnings); \
+	done
 
 	# check all features enabled
 	($(CLIPPY) --all-targets --all-features -- -D warnings);
