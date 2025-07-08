@@ -1,5 +1,5 @@
 use alloc::vec::Vec;
-use core::ops::{Add, Rem, Shr};
+use core::ops::{Add, BitAnd, Shr};
 
 pub(crate) trait Median {
     type Item;
@@ -12,7 +12,7 @@ trait Avg {
 }
 
 trait Averageable:
-    Add<Output = Self> + Shr<Output = Self> + From<u8> + Rem<Output = Self> + Copy
+    Add<Output = Self> + Shr<Output = Self> + From<u8> + BitAnd<Output = Self> + Copy
 {
 }
 
@@ -21,9 +21,8 @@ impl Averageable for i32 {}
 impl Avg for alloy_primitives::U256 {
     fn avg(self, other: Self) -> Self {
         let one = Self::ONE;
-        let two = one + one;
 
-        self.shr(one) + other.shr(one) + (self % two + other % two).shr(one)
+        self.shr(one) + other.shr(one) + (self.bitand(one) + other.bitand(one)).shr(one)
     }
 }
 
@@ -33,9 +32,8 @@ where
 {
     fn avg(self, other: Self) -> Self {
         let one = T::from(1);
-        let two = T::from(2);
 
-        self.shr(one) + other.shr(one) + (self % two + other % two).shr(one)
+        self.shr(one) + other.shr(one) + (self.bitand(one) + other.bitand(one)).shr(one)
     }
 }
 
