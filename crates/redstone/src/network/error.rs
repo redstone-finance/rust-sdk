@@ -5,12 +5,10 @@ use core::{
 };
 
 use crate::{
-    network::as_str::{AsAsciiStr, AsHexStr},
-    types::Value,
-    CryptoError, FeedId, SignerAddress, TimestampMillis,
+    network::as_str::AsHexStr, types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis,
 };
 
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ContractErrorContent {
     pub code: u8,
     pub msg: String,
@@ -20,7 +18,7 @@ pub struct ContractErrorContent {
 ///
 /// These errors include issues with contract logic, data types,
 /// cryptographic operations, and conditions specific to the requirements.
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Error {
     /// Represents errors that arise from the contract itself.
     ///
@@ -214,7 +212,7 @@ impl Display for Error {
                 "Insufficient signer count {} for #{} ({})",
                 value,
                 data_package_index,
-                feed_id.as_ascii_str()
+                feed_id.as_hex_str()
             ),
             Error::TimestampTooOld(data_package_index, value) => {
                 write!(

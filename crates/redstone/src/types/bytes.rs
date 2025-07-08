@@ -1,5 +1,6 @@
 use alloc::vec::Vec;
 /// Type wrapping bytes represantion.
+
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct Bytes(pub Vec<u8>);
 

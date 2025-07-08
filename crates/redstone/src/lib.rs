@@ -45,24 +45,26 @@ use crate::core::config::Config;
 /// Configuration for the redstone protocol.
 /// Pluggable with custom environments and possible specialized crypto operations.
 pub trait RedStoneConfig {
-    /// Crypto operations needed for address recovery.
-    type Crypto: Crypto;
     /// Environment in which we execute. Provides logging etc
     type Environment: Environment;
 
     /// Returns config for payload decoding and validation.
     fn config(&self) -> &Config;
+    /// Crypto operations needed for address recovery.
+    fn crypto_mut(&mut self) -> &mut impl Crypto;
 }
 
-pub struct RedStoneConfigImpl<C, Env> {
+pub struct RedStoneConfigImpl<C, E> {
     inner: Config,
-    _phantom: PhantomData<(C, Env)>,
+    crypto: C,
+    _phantom: PhantomData<E>,
 }
 
-impl<C, Env> From<Config> for RedStoneConfigImpl<C, Env> {
-    fn from(value: Config) -> Self {
+impl<C, E> From<(Config, C)> for RedStoneConfigImpl<C, E> {
+    fn from(value: (Config, C)) -> Self {
         Self {
-            inner: value,
+            inner: value.0,
+            crypto: value.1,
             _phantom: PhantomData,
         }
     }
@@ -73,11 +75,14 @@ where
     C: Crypto,
     E: Environment,
 {
-    type Crypto = C;
     type Environment = E;
 
     fn config(&self) -> &Config {
         &self.inner
+    }
+
+    fn crypto_mut(&mut self) -> &mut impl Crypto {
+        &mut self.crypto
     }
 }
 

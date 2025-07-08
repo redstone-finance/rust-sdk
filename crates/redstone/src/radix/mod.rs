@@ -27,11 +27,12 @@ impl Environment for RadixEnv {
 impl Crypto for RadixCrypto {
     type KeccakOutput = [u8; 32];
 
-    fn keccak256(input: impl AsRef<[u8]>) -> Self::KeccakOutput {
+    fn keccak256(&mut self, input: impl AsRef<[u8]>) -> Self::KeccakOutput {
         keccak256_hash(input.as_ref()).into_bytes()
     }
 
     fn recover_public_key(
+        &mut self,
         recovery_byte: u8,
         signature_bytes: impl AsRef<[u8]>,
         message_hash: Self::KeccakOutput,

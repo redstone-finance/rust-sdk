@@ -21,7 +21,7 @@ use crate::{
 ///
 /// * Returns a `ProcessorResult` in case of successful payload processing. Will panic in case of bad input.
 pub fn process_payload(
-    config: &impl RedStoneConfig,
+    config: &mut impl RedStoneConfig,
     payload_bytes: impl Into<Bytes>,
 ) -> ProcessorResult {
     config.process_payload(payload_bytes)
@@ -37,13 +37,13 @@ trait RedStonePayloadProcessor {
     /// # Returns
     ///
     /// * Returns a `ProcessorResult` in case of successful payload processing. Will panic in case of bad input.
-    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult;
+    fn process_payload(&mut self, payload_bytes: impl Into<Bytes>) -> ProcessorResult;
 }
 
 impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
-    fn process_payload(&self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
+    fn process_payload(&mut self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
         let mut bytes = payload_bytes.into();
-        let payload = PayloadDecoder::<T::Environment, T::Crypto>::make_payload(&mut bytes.0)?;
+        let payload = PayloadDecoder::new(self.crypto_mut()).make_payload(&mut bytes.0)?;
 
         T::Environment::print(|| format!("{:?}", payload));
 

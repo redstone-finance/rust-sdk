@@ -14,7 +14,7 @@ use crate::{
 ///
 /// Specifies the parameters necessary for the verification and aggregation of values
 /// from various data points passed by the RedStone payload.
-#[derive(Debug, Getters)]
+#[derive(Getters, Debug)]
 pub struct Config {
     /// The minimum number of signers required validating the data.
     ///
@@ -99,7 +99,7 @@ impl Config {
         check_no_duplicates(&self.feed_ids).map_err(Error::ConfigReoccurringFeedId)
     }
 
-    #[inline(always)]
+    #[inline]
     fn verify_feed_id_list_empty(&self) -> Result<(), Error> {
         if self.feed_ids.is_empty() {
             return Err(Error::ConfigEmptyFeedIds);

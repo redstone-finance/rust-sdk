@@ -13,11 +13,19 @@ use crate::{
 };
 
 /// Implementation of `RedstoneConfig` specialized for operations on the soroban (stellar).
-pub type SorobanRedStoneConfig = RedStoneConfigImpl<SorobanCrypto, SorobanEnv>;
+pub type SorobanRedStoneConfig<'a> = RedStoneConfigImpl<SorobanCrypto<'a>, SorobanEnv>;
 
 pub type SorobanEnv = StdEnv;
 
-pub struct SorobanCrypto;
+pub struct SorobanCrypto<'a> {
+    env: &'a Env,
+}
+
+impl<'a> SorobanCrypto<'a> {
+    pub fn new(env: &'a Env) -> Self {
+        Self { env }
+    }
+}
 
 pub struct Keccak256Output {
     hash: Hash<32>,
@@ -37,62 +45,31 @@ impl AsRef<[u8]> for Keccak256Output {
     }
 }
 
-static mut GLOBAL_ENV: Option<Env> = None;
-
-impl SorobanCrypto {
-    pub unsafe fn set_env(env: &Env) {
-        GLOBAL_ENV = Some(env.clone());
-    }
-
-    pub unsafe fn clear_env() {
-        GLOBAL_ENV = None;
-    }
-
-    pub fn with_env<F, R>(env: &Env, f: F) -> R
-    where
-        F: FnOnce() -> R,
-    {
-        unsafe {
-            Self::set_env(env);
-            let result = f();
-            Self::clear_env();
-            result
-        }
-    }
-
-    fn get_env() -> &'static Env {
-        unsafe {
-            GLOBAL_ENV
-                .as_ref()
-                .expect("Env not set! Use SorobanCrypto::with_env()")
-        }
-    }
-}
-
-impl Crypto for SorobanCrypto {
+impl Crypto for SorobanCrypto<'_> {
     type KeccakOutput = Keccak256Output;
 
-    fn keccak256(input: impl AsRef<[u8]>) -> Self::KeccakOutput {
-        let env = Self::get_env();
-        let soroban_bytes = SorobanBytes::from_slice(env, input.as_ref());
-        Keccak256Output::new(env.crypto().keccak256(&soroban_bytes))
+    fn keccak256(&mut self, input: impl AsRef<[u8]>) -> Self::KeccakOutput {
+        let soroban_bytes = SorobanBytes::from_slice(self.env, input.as_ref());
+        Keccak256Output::new(self.env.crypto().keccak256(&soroban_bytes))
     }
 
     fn recover_public_key(
+        &mut self,
         recovery_byte: u8,
         signature_bytes: impl AsRef<[u8]>,
         message_hash: Self::KeccakOutput,
     ) -> Result<Bytes, CryptoError> {
-        let env = Self::get_env();
         let sig_bytes = signature_bytes.as_ref();
 
         let Ok(sig_array) = sig_bytes.try_into() else {
             return Err(CryptoError::InvalidSignatureLen(sig_bytes.len()));
         };
-        let signature = SorobanBytesN::<64>::from_array(env, &sig_array);
-        let public_key =
-            env.crypto()
-                .secp256k1_recover(&message_hash.hash, &signature, recovery_byte.into());
+        let signature = SorobanBytesN::<64>::from_array(self.env, &sig_array);
+        let public_key = self.env.crypto().secp256k1_recover(
+            &message_hash.hash,
+            &signature,
+            recovery_byte.into(),
+        );
 
         let mut bytes = vec![0u8; public_key.len() as usize];
         public_key.as_ref().copy_into_slice(&mut bytes);
@@ -104,23 +81,23 @@ impl Crypto for SorobanCrypto {
 #[cfg(test)]
 #[cfg(feature = "helpers")]
 mod tests {
-    use super::{Keccak256Output, SorobanCrypto};
+    use soroban_sdk::Env;
+
+    use super::SorobanCrypto;
     use crate::crypto::recovery_key_tests::{
         test_recover_address_1b, test_recover_address_1c, test_signature_malleability,
     };
-    use soroban_sdk::Env;
 
     #[test]
     fn test_default_crypto_impl() {
         let env = Env::default();
-        SorobanCrypto::with_env(&env, || {
-            // Soroban SDK doesn't provide any method to construct Hash
-            // from raw bytes.  So recover_public_key() is untestable.
-            // test_recover_public_key_v27();
-            // test_recover_public_key_v28();
-            test_recover_address_1b::<SorobanCrypto, Keccak256Output>();
-            test_recover_address_1c::<SorobanCrypto, Keccak256Output>();
-            test_signature_malleability::<SorobanCrypto, Keccak256Output>();
-        });
+        let mut crypto = SorobanCrypto::new(&env);
+        // Soroban SDK doesn't provide any method to construct Hash
+        // from raw bytes.  So recover_public_key() is untestable.
+        // test_recover_public_key_v27();
+        // test_recover_public_key_v28();
+        test_recover_address_1b(&mut crypto);
+        test_recover_address_1c(&mut crypto);
+        test_signature_malleability(&mut crypto);
     }
 }
