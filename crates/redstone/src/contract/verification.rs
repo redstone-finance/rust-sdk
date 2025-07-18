@@ -33,7 +33,7 @@ impl UpdateTimestampVerifier {
         time_now: TimestampMillis,
         last_write_time: Option<TimestampMillis>,
         min_time_between_updates: TimestampMillis,
-        last_package_time: TimestampMillis,
+        last_package_time: Option<TimestampMillis>,
         new_package_time: TimestampMillis,
     ) -> Result<(), Error> {
         match self {
@@ -83,17 +83,15 @@ pub fn verify_write_timestamp(
 /// Verifies if:
 /// * The package timestamp is strictly increasing.
 pub fn verify_package_timestamp(
-    last_package_time: TimestampMillis,
+    last_package_time: Option<TimestampMillis>,
     new_package_time: TimestampMillis,
 ) -> Result<(), Error> {
-    if new_package_time.is_same_or_before(last_package_time) {
-        return Err(Error::DataTimestampMustBeGreaterThanBefore(
-            new_package_time,
-            last_package_time,
-        ));
+    match last_package_time {
+        Some(last_package_time) if new_package_time.is_same_or_before(last_package_time) => Err(
+            Error::DataTimestampMustBeGreaterThanBefore(new_package_time, last_package_time),
+        ),
+        _ => Ok(()),
     }
-
-    Ok(())
 }
 
 /// Verifies if:
@@ -102,7 +100,7 @@ pub fn verify_package_timestamp(
 pub fn verify_trusted_update(
     time_now: TimestampMillis,
     last_write_time: Option<TimestampMillis>,
-    last_package_time: TimestampMillis,
+    last_package_time: Option<TimestampMillis>,
     new_package_time: TimestampMillis,
 ) -> Result<(), Error> {
     verify_package_timestamp(last_package_time, new_package_time)?;
@@ -121,7 +119,7 @@ pub fn verify_untrusted_update(
     time_now: TimestampMillis,
     last_write_time: Option<TimestampMillis>,
     min_time_between_updates: TimestampMillis,
-    last_package_time: TimestampMillis,
+    last_package_time: Option<TimestampMillis>,
     new_package_time: TimestampMillis,
 ) -> Result<(), Error> {
     verify_package_timestamp(last_package_time, new_package_time)?;
@@ -175,20 +173,19 @@ mod tests {
 
     #[test]
     fn first_write_is_ok() -> Result<(), Error> {
-        verify_trusted_update(1000.into(), None, 0.into(), 1.into())?;
+        verify_trusted_update(1000.into(), None, None, 1.into())?;
 
-        verify_untrusted_update(1000.into(), None, 1.into(), 0.into(), 1.into())
+        verify_untrusted_update(1000.into(), None, 1.into(), None, 1.into())
     }
 
     #[test]
     fn non_trusted_write_after_wait_time_is_ok() -> Result<(), Error> {
-        verify_untrusted_update(1000.into(), Some(900.into()), 99.into(), 0.into(), 1.into())
+        verify_untrusted_update(1000.into(), Some(900.into()), 99.into(), None, 1.into())
     }
 
     #[test]
     fn non_trusted_write_before_wait_time_is_err() {
-        let res =
-            verify_untrusted_update(999.into(), Some(900.into()), 99.into(), 0.into(), 1.into());
+        let res = verify_untrusted_update(999.into(), Some(900.into()), 99.into(), None, 1.into());
 
         assert_eq!(
             res,
@@ -203,12 +200,12 @@ mod tests {
 
     #[test]
     fn trusted_write_before_wait_time_is_ok() -> Result<(), Error> {
-        verify_trusted_update(901.into(), Some(900.into()), 0.into(), 1.into())
+        verify_trusted_update(901.into(), Some(900.into()), None, 1.into())
     }
 
     #[test]
     fn trusted_write_on_current_time_is_err() {
-        let res = verify_trusted_update(900.into(), Some(900.into()), 0.into(), 1.into());
+        let res = verify_trusted_update(900.into(), Some(900.into()), None, 1.into());
 
         assert_eq!(
             res,
@@ -223,13 +220,19 @@ mod tests {
 
     #[test]
     fn verify_package_timestamp_increase_is_ok() -> Result<(), Error> {
-        verify_trusted_update(902.into(), Some(900.into()), 0.into(), 1.into())?;
-        verify_untrusted_update(902.into(), Some(900.into()), 1.into(), 0.into(), 1.into())
+        verify_trusted_update(902.into(), Some(900.into()), Some(0.into()), 1.into())?;
+        verify_untrusted_update(
+            902.into(),
+            Some(900.into()),
+            1.into(),
+            Some(0.into()),
+            1.into(),
+        )
     }
 
     #[test]
     fn verify_package_timestamp_non_increase_is_err() {
-        let res = verify_trusted_update(901.into(), Some(900.into()), 1.into(), 1.into());
+        let res = verify_trusted_update(901.into(), Some(900.into()), Some(1.into()), 1.into());
         assert_eq!(
             res,
             Err(Error::DataTimestampMustBeGreaterThanBefore(
@@ -238,8 +241,13 @@ mod tests {
             ))
         );
 
-        let res =
-            verify_untrusted_update(901.into(), Some(900.into()), 1.into(), 1.into(), 1.into());
+        let res = verify_untrusted_update(
+            901.into(),
+            Some(900.into()),
+            1.into(),
+            Some(1.into()),
+            1.into(),
+        );
         assert_eq!(
             res,
             Err(Error::DataTimestampMustBeGreaterThanBefore(
