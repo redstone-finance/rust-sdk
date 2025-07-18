@@ -22,6 +22,21 @@ impl TrimZeros for Vec<u8> {
     }
 }
 
+impl TrimZeros for &[u8] {
+    fn trim_zeros(self) -> Self {
+        let mut idx = self.len();
+
+        for (i, byte) in self.iter().enumerate().rev() {
+            if *byte != 0 {
+                break;
+            }
+            idx = i;
+        }
+
+        self.split_at(idx).0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use alloc::vec::Vec;
@@ -36,7 +51,7 @@ mod tests {
     }
 
     #[test]
-    fn test_trim_zeros() {
+    fn test_trim_zeros_vec() {
         let trimmed = redstone_marker_bytes().trim_zeros();
         assert_eq!(trimmed.as_slice(), &REDSTONE_MARKER[..7]);
 
@@ -45,8 +60,23 @@ mod tests {
     }
 
     #[test]
-    fn test_trim_zeros_empty() {
+    fn test_trim_zeros_empty_vec() {
         let trimmed = Vec::<u8>::default().trim_zeros();
         assert_eq!(trimmed, Vec::<u8>::default());
+    }
+
+    #[test]
+    fn test_trim_zeros_slice() {
+        let trimmed = REDSTONE_MARKER.trim_zeros();
+        assert_eq!(trimmed, &REDSTONE_MARKER[..7]);
+
+        let trimmed = trimmed.trim_zeros();
+        assert_eq!(trimmed, &REDSTONE_MARKER[..7]);
+    }
+
+    #[test]
+    fn test_trim_zeros_empty_slice() {
+        let trimmed = [].trim_zeros();
+        assert_eq!(trimmed, &[] as &[u8]);
     }
 }

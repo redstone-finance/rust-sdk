@@ -15,7 +15,7 @@ impl AsHexStr for &[u8] {
 
 impl AsAsciiStr for FeedId {
     fn as_ascii_str(&self) -> String {
-        self.as_ref().to_vec().trim_zeros().as_ascii_str()
+        self.as_ref().trim_zeros().as_ascii_str()
     }
 }
 
@@ -43,13 +43,13 @@ impl AsAsciiStr for Vec<u8> {
 
 impl AsHexStr for FeedId {
     fn as_hex_str(&self) -> String {
-        self.as_ref().to_vec().trim_zeros().as_slice().as_hex_str()
+        self.as_ref().trim_zeros().as_hex_str()
     }
 }
 
 impl AsHexStr for SignerAddress {
     fn as_hex_str(&self) -> String {
-        self.as_ref().to_vec().trim_zeros().as_slice().as_hex_str()
+        self.as_ref().trim_zeros().as_hex_str()
     }
 }
 
