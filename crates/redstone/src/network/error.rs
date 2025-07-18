@@ -1,8 +1,7 @@
 use alloc::{string::String, vec::Vec};
-use core::{
-    fmt::{Debug, Display, Formatter},
-    num::TryFromIntError,
-};
+use core::num::TryFromIntError;
+
+use thiserror::Error;
 
 use crate::{
     network::as_str::AsHexStr, types::Value, CryptoError, FeedId, SignerAddress, TimestampMillis,
@@ -18,82 +17,95 @@ pub struct ContractErrorContent {
 ///
 /// These errors include issues with contract logic, data types,
 /// cryptographic operations, and conditions specific to the requirements.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Error)]
 pub enum Error {
     /// Represents errors that arise from the contract itself.
     ///
     /// This variant is used for encapsulating errors that are specific to the contract's logic
     /// or execution conditions that aren't covered by more specific error types.
+    #[error("Contract error: {}", .0.msg)]
     ContractError(ContractErrorContent),
 
     /// Indicates an overflow error with `U256` numbers.
     ///
     /// Used when operations on `U256` numbers exceed their maximum value, potentially leading
     /// to incorrect calculations or state.
+    #[error("Number overflow: {}", .0.to_u256())]
     NumberOverflow(Value),
 
     /// Used when an expected non-empty array or vector is found to be empty.
     ///
     /// This could occur in scenarios where the contract logic requires a non-empty collection
     /// of items for the correct operation, for example, during aggregating the values.
+    #[error("Array is empty")]
     ArrayIsEmpty,
 
     /// Represents errors related to cryptographic operations.
     ///
     /// This includes failures in signature verification, hashing, or other cryptographic
     /// processes.
+    #[error("Cryptographic Error: {0}")]
     CryptographicError(CryptoError),
 
     /// Signifies that an unsupported size was encountered.
     ///
     /// This could be used when a data structure or input does not meet the expected size
     /// requirements for processing.
+    #[error("Size not supported: {0}")]
     SizeNotSupported(usize),
 
     /// Indicates that the marker bytes for RedStone are incorrect.
     ///
     /// This error is specific to scenarios where marker or identifier bytes do not match
     /// expected values, potentially indicating corrupted or tampered data.
+    #[error("Wrong RedStone marker: {}", .0.as_hex_str())]
     WrongRedStoneMarker(Vec<u8>),
 
     /// Used when there is leftover data in a payload that should have been empty.
     ///
     /// This could indicate an error in data parsing or that additional, unexpected data
     /// was included in a message or transaction.
+    #[error("Non empty payload len remainder: {0}")]
     NonEmptyPayloadRemainder(usize),
 
     /// Indicates that the recovered signer address is not recognized.
     ///
     /// Includes SignerAddress that was recovered.
+    #[error("Signer not recognized: {0:?}")]
     SignerNotRecognized(SignerAddress),
 
     /// Indicates that the number of signers does not meet the required threshold.
     ///
     /// This variant includes the current number of signers, the required threshold, and
     /// potentially a feed_id related to the operation that failed due to insufficient signers.
+    #[error("Insufficient signer count {} for #{} ({})", .1, .0, .2.as_hex_str())]
     InsufficientSignerCount(usize, usize, FeedId),
 
     /// Used when a timestamp is older than allowed by the processor logic.
     ///
     /// Includes the position or identifier of the timestamp and the threshold value,
     /// indicating that the provided timestamp is too far in the past.
+    #[error("Timestamp {1:?} is too old for #{0}")]
     TimestampTooOld(usize, TimestampMillis),
 
     /// Indicates that a timestamp is further in the future than allowed.
     ///
     /// Similar to `TimestampTooOld`, but for future timestamps exceeding the contract's
     /// acceptance window.
+    #[error("Timestamp {1:?} is too future for #{0}")]
     TimestampTooFuture(usize, TimestampMillis),
 
     /// Indicates that a FeedId is reoccurring in data points.
     ///
     /// Includes FeedId that is reoccurring.
+    #[error("Reoccurring FeedId: {0:?} in data points")]
     ReoccurringFeedId(FeedId),
 
     /// ConfigInsufficientSignerCount occurs
     /// when the number of signers is not at least equal the required signer threshold.
     ///
     /// Includes current config signer list length and minimum required signer count.
+    #[error("Wrong configuration signer count, got {0} signers, expected at minimum {1}")]
     ConfigInsufficientSignerCount(u8, u8),
 
     /// ConfigExceededSignerCount occurs
@@ -101,24 +113,29 @@ pub enum Error {
     /// Look in to core::config crate to acknowledge constant value.
     ///
     /// Includes current config signer list length and maximum allowed signer count per config.
+    #[error("Wrong configuration signer count, got {0} signers, allowed maximum is {1}")]
     ConfigExceededSignerCount(usize, usize),
 
     /// Indicates that a SignerAddress is reoccurring on the config signer list.
     ///
     /// Includes SignerAddress that is reoccurring.
+    #[error("Wrong configuration, signer address {} is reoccurring on the signer list", .0.as_hex_str())]
     ConfigReoccurringSigner(SignerAddress),
 
     /// Indicates that the list doesn't contain FeedIds.
+    #[error("Empty configuration feed ids list")]
     ConfigEmptyFeedIds,
 
     /// Indicates that a FeedId is reoccurring on the config feed_ids list.
     ///
     /// Includes FeedId that is reoccurring.
+    #[error("Wrong configuration, feed id {} is reoccurring on the feed_ids list", .0.as_hex_str())]
     ConfigReoccurringFeedId(FeedId),
 
     /// Indicates that payload timestamps are not equal.
     ///
     /// Contains the first timestamp and the one that is not equal to the first one.
+    #[error("Timestamp {1:?} is not equal to the first on {0:?} in the payload.")]
     TimestampDifferentThanOthers(TimestampMillis, TimestampMillis),
 
     /// Indicates that the provided data timestamp is not greater than a previously written package timestamp.
@@ -128,6 +145,7 @@ pub enum Error {
     /// timestamp does not meet this criterion, ensuring the chronological integrity of price data.
     ///
     /// Includes the value of a current package timestamp and the timestamp of the previous package.
+    #[error("Package timestamp: {0:?} must be greater than package timestamp before: {1:?}")]
     DataTimestampMustBeGreaterThanBefore(TimestampMillis, TimestampMillis),
 
     /// Indicates that the current update timestamp is not greater than the last update timestamp.
@@ -138,12 +156,15 @@ pub enum Error {
     /// integrity and consistency of the updates.
     ///
     /// Includes the value of the current update timestamp and the last update timestamp.
+    #[error("Current update timestamp: {0:?} must be greater than latest update timestamp: {1:?}")]
     CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(TimestampMillis, TimestampMillis),
 
     /// Indicates error while converting from one type of the integer to the other.
+    #[error("Number conversion failed")]
     NumberConversionFail,
 
     /// Indicates error of usize overflow.
+    #[error("Usize overflow")]
     UsizeOverflow,
 }
 
@@ -186,93 +207,6 @@ impl Error {
             Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(_, _) => 1102,
             Error::NumberConversionFail => 1200,
             Error::UsizeOverflow => 1300,
-        }
-    }
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Error::ContractError(boxed) => write!(f, "Contract error: {}", boxed.msg),
-            Error::NumberOverflow(number) => write!(f, "Number overflow: {}", number.to_u256()),
-            Error::ArrayIsEmpty => write!(f, "Array is empty"),
-            Error::CryptographicError(error) => write!(f, "Cryptographic Error: {:?}", error),
-            Error::SizeNotSupported(size) => write!(f, "Size not supported: {}", size),
-            Error::WrongRedStoneMarker(bytes) => {
-                write!(f, "Wrong RedStone marker: {}", bytes.as_hex_str())
-            }
-            Error::NonEmptyPayloadRemainder(len) => {
-                write!(f, "Non empty payload len remainder: {}", len)
-            }
-            Error::SignerNotRecognized(signer) => {
-                write!(f, "Signer not recognized: {:?}", signer)
-            }
-            Error::InsufficientSignerCount(data_package_index, value, feed_id) => write!(
-                f,
-                "Insufficient signer count {} for #{} ({})",
-                value,
-                data_package_index,
-                feed_id.as_hex_str()
-            ),
-            Error::TimestampTooOld(data_package_index, value) => {
-                write!(
-                    f,
-                    "Timestamp {:?} is too old for #{}",
-                    value, data_package_index
-                )
-            }
-            Error::TimestampTooFuture(data_package_index, value) => write!(
-                f,
-                "Timestamp {:?} is too future for #{}",
-                value, data_package_index
-            ),
-            Error::ReoccurringFeedId(feed) => {
-                write!(f, "Reoccurring FeedId: {feed:?} in data points")
-            }
-            Error::ConfigInsufficientSignerCount(got, expected) => {
-                write!(f, "Wrong configuration signer count, got {got} signers, expected at minimum {expected}")
-            }
-            Error::ConfigExceededSignerCount(got, allowed) => {
-                write!(f, "Wrong configuration signer count, got {got} signers, allowed maximum is {allowed}")
-            }
-            Error::ConfigReoccurringSigner(signer_address) => {
-                write!(
-                    f,
-                    "Wrong configuration, signer address {} is reoccurring on the signer list",
-                    signer_address.as_hex_str()
-                )
-            }
-            Error::ConfigEmptyFeedIds => {
-                write!(f, "Empty configuration feed ids list")
-            }
-            Error::ConfigReoccurringFeedId(feed_id) => {
-                write!(
-                    f,
-                    "Wrong configuration, feed id {} is reoccurring on the feed_ids list",
-                    feed_id.as_hex_str()
-                )
-            }
-            Error::TimestampDifferentThanOthers(first, outstanding) => write!(
-                f,
-                "Timestamp {:?} is not equal to the first on {:?} in the payload.",
-                outstanding, first
-            ),
-            Error::DataTimestampMustBeGreaterThanBefore(current, before) => {
-                write!(
-                            f,
-                            "Package timestamp: {current:?} must be greater than package timestamp before: {before:?}"
-                        )
-            }
-            Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(current, last) => {
-                write!(
-                            f,
-                            "Current update timestamp: {current:?} must be greater than latest update timestamp: {last:?}"
-                        )
-            }
-            Error::NumberConversionFail => {
-                write!(f, "Number conversion failed")
-            }
-            Error::UsizeOverflow => write!(f, "Usize overflow"),
         }
     }
 }

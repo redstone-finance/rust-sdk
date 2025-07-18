@@ -2,8 +2,9 @@ use alloc::vec::Vec;
 use core::fmt::Debug;
 
 use alloy_primitives::U256;
+use thiserror::Error;
 
-use crate::{Bytes, SignerAddress};
+use crate::{network::as_str::AsHexStr, Bytes, SignerAddress};
 
 const ECDSA_N_DIV_2: U256 = U256::from_limbs([
     16134479119472337056,
@@ -14,11 +15,15 @@ const ECDSA_N_DIV_2: U256 = U256::from_limbs([
 
 const SIGNATURE_SIZE_BS: usize = 65;
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Error)]
 pub enum CryptoError {
+    #[error("Invalid recovery byte: {0}")]
     RecoveryByte(u8),
+    #[error("Invalid signature: {}", .0.as_hex_str())]
     Signature(Vec<u8>),
+    #[error("Could not recover from PreHash")]
     RecoverPreHash,
+    #[error("Invalid signature length: {0}")]
     InvalidSignatureLen(usize),
 }
 impl CryptoError {
