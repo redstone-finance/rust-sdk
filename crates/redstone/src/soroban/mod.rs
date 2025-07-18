@@ -3,6 +3,8 @@
 //! Implementation of the config suited for the stellar network,
 //! with the crypto operations using soroban specific operations
 
+pub mod helpers;
+
 use soroban_sdk::{crypto::Hash, Bytes as SorobanBytes, BytesN as SorobanBytesN, Env};
 
 use crate::{
