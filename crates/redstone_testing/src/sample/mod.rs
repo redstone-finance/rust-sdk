@@ -132,8 +132,8 @@ pub fn sample_btc_eth_3sig_newer() -> Sample {
     Sample {
         content: include_str!("ETH_BTC_PRIMARY_3sig_newer.hex"),
         values: hashmap![
-            "ETH" =>  156537608660_u128,
-            "BTC" => 8396083019375_u128
+            "ETH" =>  156277937205_u128,
+            "BTC" => 8396977516955_u128
         ],
         timestamp: 1744829650000,
         system_timestamp: 1744829650000,

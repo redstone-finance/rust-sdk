@@ -247,8 +247,6 @@ impl Scenario {
         signer: ContractUpdateSigner,
         feeds_overwrite: Option<Vec<&str>>,
     ) -> Self {
-        let feeds: Vec<_> = sample.values.keys().map(std::ops::Deref::deref).collect();
-
         let scenario = match init_time {
             InitTime::No => self,
             InitTime::SetToSampleTime => {
@@ -256,18 +254,23 @@ impl Scenario {
             }
         };
 
-        let feeds = match feeds_overwrite {
-            Some(feeds) => feeds,
-            None => feeds,
+        let (values, feeds) = match feeds_overwrite {
+            Some(feeds) => (
+                feeds
+                    .iter()
+                    .filter_map(|f| sample.values.get(*f).cloned())
+                    .collect(),
+                feeds,
+            ),
+            None => (
+                sample.values.values().cloned().collect(),
+                sample.values.keys().map(std::ops::Deref::deref).collect(),
+            ),
         };
 
         scenario
             .then_write_prices(feeds.clone(), sample.content, signer)
-            .then_check_prices(
-                feeds,
-                sample.values.values().cloned().collect(),
-                sample.timestamp,
-            )
+            .then_check_prices(feeds, values, sample.timestamp)
     }
 
     pub fn scenario_steps_from_sample_with_initialization(
