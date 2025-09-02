@@ -18,9 +18,7 @@ pub fn hex_from<T: AsRef<[u8]>>(bytes: T) -> String {
 }
 
 pub fn make_bytes(vec: Vec<&str>, fun: fn(&str) -> String) -> Vec<Vec<u8>> {
-    vec.iter()
-        .map(|addr| hex_to_bytes(fun(addr)))
-        .collect()
+    vec.iter().map(|addr| hex_to_bytes(fun(addr))).collect()
 }
 
 pub fn make_hex_value_from_string<T: From<Vec<u8>>>(s: &str) -> T {
