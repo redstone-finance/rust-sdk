@@ -42,8 +42,8 @@ trait RedStonePayloadProcessor {
 
 impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
     fn process_payload(&mut self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
-        let mut bytes = payload_bytes.into();
-        let payload = PayloadDecoder::new(self.crypto_mut()).make_payload(&mut bytes.0)?;
+        let bytes = payload_bytes.into();
+        let payload = PayloadDecoder::new(self.crypto_mut()).make_payload(bytes.0)?;
 
         T::Environment::print(|| format!("{:?}", payload));
 

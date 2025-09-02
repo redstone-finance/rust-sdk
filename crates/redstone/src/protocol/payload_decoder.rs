@@ -15,7 +15,7 @@ use crate::{
         marker::trim_redstone_marker,
         payload::Payload,
     },
-    utils::trim::{Trim, TryTrim},
+    utils::reverse_reader::ReverseReader,
     TimestampMillis,
 };
 
@@ -28,57 +28,60 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
         Self { crypto }
     }
 
-    pub fn make_payload(&mut self, payload_bytes: &mut Vec<u8>) -> Result<Payload, Error> {
-        trim_redstone_marker(payload_bytes)?;
-        let payload = self.trim_payload(payload_bytes)?;
+    pub fn make_payload(&mut self, payload_bytes: Vec<u8>) -> Result<Payload, Error> {
+        let mut reader = ReverseReader::new(payload_bytes);
 
-        if !payload_bytes.is_empty() {
-            return Err(Error::NonEmptyPayloadRemainder(payload_bytes.len()));
+        trim_redstone_marker(&mut reader)?;
+        let payload = self.trim_payload(&mut reader)?;
+
+        if !reader.remaining_len() != 0 {
+            return Err(Error::NonEmptyPayloadRemainder(reader.remaining_len()));
         }
 
         Ok(payload)
     }
 
-    fn trim_payload(&mut self, payload: &mut Vec<u8>) -> Result<Payload, Error> {
-        let data_package_count = self.trim_metadata(payload)?;
-        let data_packages = self.trim_data_packages(payload, data_package_count)?;
+    fn trim_payload(&mut self, reader: &mut ReverseReader) -> Result<Payload, Error> {
+        let data_package_count = self.trim_metadata(reader)?;
+        let data_packages = self.trim_data_packages(reader, data_package_count)?;
 
         Ok(Payload { data_packages })
     }
 
-    fn trim_metadata(&self, payload: &mut Vec<u8>) -> Result<usize, Error> {
-        let unsigned_metadata_size = payload
-            .try_trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS)?
-            .try_into()?;
-        let _: Vec<u8> = payload.trim_end(unsigned_metadata_size);
+    fn trim_metadata(&self, reader: &mut ReverseReader) -> Result<usize, Error> {
+        let unsigned_metadata_size = reader.read_u64(UNSIGNED_METADATA_BYTE_SIZE_BS)?;
 
-        let data_package_count = payload.try_trim_end(DATA_PACKAGES_COUNT_BS)?.try_into()?;
+        reader.read_slice(unsigned_metadata_size as usize)?;
 
-        Ok(data_package_count)
+        let data_package_count = reader.read_u64(DATA_PACKAGES_COUNT_BS)?;
+
+        Ok(data_package_count.try_into()?)
     }
 
     fn trim_data_packages(
         &mut self,
-        payload: &mut Vec<u8>,
+        reader: &mut ReverseReader,
         count: usize,
     ) -> Result<Vec<DataPackage>, Error> {
         let mut data_packages = Vec::with_capacity(count);
 
         for _ in 0..count {
-            let data_package = self.trim_data_package(payload)?;
+            let data_package = self.trim_data_package(reader)?;
             data_packages.push(data_package);
         }
 
         Ok(data_packages)
     }
 
-    fn trim_data_package(&mut self, payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
-        let signature: Vec<u8> = payload.trim_end(SIGNATURE_BS);
-        let mut tmp = payload.clone();
+    fn trim_data_package(&mut self, reader: &mut ReverseReader) -> Result<DataPackage, Error> {
+        // we have to read vec not slice because of mutable ops below
+        let signature = reader.read_vec(SIGNATURE_BS)?;
 
-        let data_point_count = payload.try_trim_end(DATA_POINTS_COUNT_BS)?;
-        let value_size = payload.try_trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS)?;
-        let timestamp = payload.try_trim_end(TIMESTAMP_BS)?;
+        let cursor = reader.remaining_len();
+
+        let data_point_count = reader.read_u64(DATA_POINTS_COUNT_BS)?;
+        let value_size = reader.read_u64(DATA_POINT_VALUE_BYTE_SIZE_BS)?;
+        let timestamp = reader.read_u64(TIMESTAMP_BS)?;
 
         let size: u64 = data_point_count
             * (value_size + TryInto::<u64>::try_into(DATA_FEED_ID_BS)?)
@@ -86,14 +89,16 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
             + TryInto::<u64>::try_into(TIMESTAMP_BS)?
             + TryInto::<u64>::try_into(DATA_POINTS_COUNT_BS)?;
 
-        let signable_bytes: Vec<_> = tmp.trim_end(size.try_into()?);
-        let signer_address = self.crypto.recover_address(signable_bytes, signature)?;
+        let current_cursor = reader.remaining_len();
+        reader.set_cursor(cursor)?;
 
-        let data_points = Self::trim_data_points(
-            payload,
-            data_point_count.try_into()?,
-            value_size.try_into()?,
-        )?;
+        let signable_bytes = reader.read_slice(size.try_into()?)?;
+
+        let signer_address = self.crypto.recover_address(signable_bytes, signature)?;
+        reader.set_cursor(current_cursor)?;
+
+        let data_points =
+            Self::trim_data_points(reader, data_point_count.try_into()?, value_size.try_into()?)?;
 
         Ok(DataPackage {
             data_points,
@@ -103,7 +108,7 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
     }
 
     fn trim_data_points(
-        payload: &mut Vec<u8>,
+        reader: &mut ReverseReader,
         count: usize,
         value_size: usize,
     ) -> Result<Vec<DataPoint>, Error> {
@@ -112,21 +117,21 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
         let mut data_points = Vec::with_capacity(count);
 
         for _ in 0..count {
-            let data_point = Self::trim_data_point(payload, value_size);
+            let data_point = Self::trim_data_point(reader, value_size)?;
             data_points.push(data_point);
         }
 
         Ok(data_points)
     }
 
-    fn trim_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
-        let value: Vec<_> = payload.trim_end(value_size);
-        let feed_id = payload.trim_end(DATA_FEED_ID_BS);
+    fn trim_data_point(reader: &mut ReverseReader, value_size: usize) -> Result<DataPoint, Error> {
+        let value: Vec<_> = reader.read_vec(value_size)?;
+        let feed_id = reader.read_feed_id(DATA_FEED_ID_BS)?;
 
-        DataPoint {
+        Ok(DataPoint {
             value: value.into(),
             feed_id,
-        }
+        })
     }
 
     #[inline(always)]
@@ -143,6 +148,7 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
 #[cfg(feature = "default-crypto")]
 mod tests {
     use alloc::{borrow::ToOwned, string::ToString, vec::Vec};
+    
     use core::ops::Shr;
 
     use crate::{
@@ -159,6 +165,7 @@ mod tests {
             PayloadDecoder,
         },
         types::VALUE_SIZE,
+        utils::reverse_reader::ReverseReader,
         Value,
     };
 
@@ -180,10 +187,12 @@ mod tests {
             PAYLOAD_METADATA_WITH_UNSIGNED_BYTE,
             PAYLOAD_METADATA_WITH_UNSIGNED_BYTES,
         ] {
-            let mut bytes = hex_to_bytes(prefix.to_owned() + bytes_str);
-            let result = TestProcessor::new(&mut DefaultCrypto).trim_metadata(&mut bytes);
+            let bytes = hex_to_bytes(prefix.to_owned() + bytes_str);
+            let mut reader = ReverseReader::new(bytes);
 
-            assert_eq!(bytes, hex_to_bytes(prefix.into()));
+            let result = TestProcessor::new(&mut DefaultCrypto).trim_metadata(&mut reader);
+
+            assert_eq!(reader.remaining_data(), hex_to_bytes(prefix.into()));
             assert_eq!(result, Ok(15));
         }
     }
@@ -192,20 +201,21 @@ mod tests {
     fn test_trim_payload() {
         let payload_hex = sample_payload_bytes();
 
-        let mut bytes = payload_hex[..payload_hex.len() - REDSTONE_MARKER_BS].into();
+        let bytes = payload_hex[..payload_hex.len() - REDSTONE_MARKER_BS].into();
+        let mut reader = ReverseReader::new(bytes);
         let payload = TestProcessor::new(&mut DefaultCrypto)
-            .trim_payload(&mut bytes)
+            .trim_payload(&mut reader)
             .unwrap();
 
-        assert_eq!(bytes, Vec::<u8>::new());
+        assert_eq!(reader.remaining_data(), Vec::<u8>::new());
         assert_eq!(payload.data_packages.len(), 15);
     }
 
     #[test]
     fn test_make_payload() {
-        let mut payload_hex = sample_payload_bytes();
+        let payload_hex = sample_payload_bytes();
         let payload = TestProcessor::new(&mut DefaultCrypto)
-            .make_payload(&mut payload_hex)
+            .make_payload(payload_hex)
             .unwrap();
 
         assert_eq!(payload.data_packages.len(), 15);
@@ -214,8 +224,8 @@ mod tests {
     #[test]
     fn test_make_payload_with_prefix() {
         let payload_hex = sample_payload_hex();
-        let mut bytes = hex_to_bytes("12".to_owned() + &payload_hex);
-        let res = TestProcessor::new(&mut DefaultCrypto).make_payload(&mut bytes);
+        let bytes = hex_to_bytes("12".to_owned() + &payload_hex);
+        let res = TestProcessor::new(&mut DefaultCrypto).make_payload(bytes);
 
         assert!(matches!(res, Err(Error::NonEmptyPayloadRemainder(1))));
     }
@@ -261,12 +271,13 @@ mod tests {
 
     #[test]
     fn test_trim_data_packages_single() {
-        let mut bytes = hex_to_bytes(DATA_PACKAGE_BYTES_1.into());
+        let bytes = hex_to_bytes(DATA_PACKAGE_BYTES_1.into());
+        let mut reader = ReverseReader::new(bytes);
         let data_packages = TestProcessor::new(&mut DefaultCrypto)
-            .trim_data_packages(&mut bytes, 1)
+            .trim_data_packages(&mut reader, 1)
             .unwrap();
         assert_eq!(data_packages.len(), 1);
-        assert_eq!(bytes, Vec::<u8>::new());
+        assert_eq!(reader.remaining_data(), Vec::<u8>::new());
 
         verify_data_package(data_packages[0].clone(), VALUE_1, SIGNER_ADDRESS_1);
     }
@@ -274,15 +285,17 @@ mod tests {
     fn test_trim_data_packages_of(count: usize, prefix: &str) {
         let input: Vec<u8> =
             hex_to_bytes((prefix.to_owned() + DATA_PACKAGE_BYTES_1) + DATA_PACKAGE_BYTES_2);
-        let mut bytes = input.clone();
+        let bytes = input.clone();
+
+        let mut reader = ReverseReader::new(bytes);
 
         let data_packages = TestProcessor::new(&mut DefaultCrypto)
-            .trim_data_packages(&mut bytes, count)
+            .trim_data_packages(&mut reader, count)
             .unwrap();
 
         assert_eq!(data_packages.len(), count);
         assert_eq!(
-            bytes.as_slice(),
+            reader.remaining_data().as_slice(),
             &input[..input.len() - count * DATA_PACKAGE_SIZE]
         );
 
@@ -342,12 +355,13 @@ mod tests {
     }
 
     fn test_trim_data_package_of(bytes_str: &str, expected_value: u128, signer_address: &str) {
-        let mut bytes: Vec<u8> = hex_to_bytes(bytes_str.into());
+        let bytes: Vec<u8> = hex_to_bytes(bytes_str.into());
+        let mut reader = ReverseReader::new(bytes);
         let result = TestProcessor::new(&mut DefaultCrypto)
-            .trim_data_package(&mut bytes)
+            .trim_data_package(&mut reader)
             .unwrap();
         assert_eq!(
-            bytes,
+            reader.remaining_data(),
             hex_to_bytes(bytes_str[..bytes_str.len() - 2 * (DATA_PACKAGE_SIZE)].into())
         );
 
@@ -369,8 +383,9 @@ mod tests {
 
     #[test]
     fn test_trim_data_points() {
-        let mut bytes = hex_to_bytes(DATA_POINT_BYTES_TAIL.into());
-        let result = TestProcessor::trim_data_points(&mut bytes, 1, 32).unwrap();
+        let bytes = hex_to_bytes(DATA_POINT_BYTES_TAIL.into());
+        let mut reader = ReverseReader::new(bytes);
+        let result = TestProcessor::trim_data_points(&mut reader, 1, 32).unwrap();
 
         assert_eq!(result.len(), 1);
 
@@ -379,7 +394,7 @@ mod tests {
             32,
             1,
             VALUE.into(),
-            bytes,
+            reader.remaining_data(),
             result[0].clone(),
         )
     }
@@ -387,15 +402,16 @@ mod tests {
     #[test]
     fn test_trim_medium_data_points() -> Result<(), Error> {
         let test_data_points_trimmed: String = DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim().into();
-        let mut bytes = hex_to_bytes(test_data_points_trimmed.clone());
-        let res = TestProcessor::trim_data_points(&mut bytes, DATA_POINTS_50_COUNT, 32)?;
+        let bytes = hex_to_bytes(test_data_points_trimmed.clone());
+        let mut reader = ReverseReader::new(bytes);
+        let res = TestProcessor::trim_data_points(&mut reader, DATA_POINTS_50_COUNT, 32)?;
         assert_eq!(res.len(), DATA_POINTS_50_COUNT);
         verify_rest_and_result(
             DATA_POINTS_BYTES_ARRAY_50_PACKED_TAIL.trim(),
             32,
             DATA_POINTS_50_COUNT,
             VALUE.into(),
-            bytes,
+            reader.remaining_data(),
             res[0].clone(),
         );
 
@@ -406,15 +422,16 @@ mod tests {
     fn test_trim_large_data_points() -> Result<(), Error> {
         let test_data_points_trimmed: String =
             DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim().into();
-        let mut bytes = hex_to_bytes(test_data_points_trimmed.clone());
-        let res = TestProcessor::trim_data_points(&mut bytes, DATA_POINTS_500_COUNT, 32)?;
+        let bytes = hex_to_bytes(test_data_points_trimmed.clone());
+        let mut reader = ReverseReader::new(bytes);
+        let res = TestProcessor::trim_data_points(&mut reader, DATA_POINTS_500_COUNT, 32)?;
         assert_eq!(res.len(), DATA_POINTS_500_COUNT);
         verify_rest_and_result(
             DATA_POINTS_BYTES_ARRAY_500_PACKED_TAIL.trim(),
             32,
             DATA_POINTS_500_COUNT,
             VALUE.into(),
-            bytes,
+            reader.remaining_data(),
             res[0].clone(),
         );
 
@@ -423,15 +440,18 @@ mod tests {
 
     #[test]
     fn test_trim_zero_data_points() {
-        let res =
-            TestProcessor::trim_data_points(&mut hex_to_bytes(DATA_POINT_BYTES_TAIL.into()), 0, 32);
+        let res = TestProcessor::trim_data_points(
+            &mut ReverseReader::new(hex_to_bytes(DATA_POINT_BYTES_TAIL.into())),
+            0,
+            32,
+        );
         assert_eq!(res, Err(Error::SizeNotSupported(0)));
     }
 
     #[test]
     fn test_trim_above_max_available_data_points() {
         let res = TestProcessor::trim_data_points(
-            &mut hex_to_bytes(DATA_POINT_BYTES_TAIL.trim().into()),
+            &mut ReverseReader::new(hex_to_bytes(DATA_POINT_BYTES_TAIL.trim().into())),
             u16::MAX as usize + 1,
             32,
         );
@@ -492,9 +512,18 @@ mod tests {
         count: usize,
         expected_value: Value,
     ) -> Result<(), Error> {
-        let mut bytes = hex_to_bytes(value.into());
-        let result = TestProcessor::trim_data_points(&mut bytes, count, size)?;
-        verify_rest_and_result(value, size, count, expected_value, bytes, result[0].clone());
+        let bytes = hex_to_bytes(value.into());
+        let mut reader = ReverseReader::new(bytes);
+        let result = TestProcessor::trim_data_points(&mut reader, count, size)?;
+
+        verify_rest_and_result(
+            value,
+            size,
+            count,
+            expected_value,
+            reader.remaining_data(),
+            result[0].clone(),
+        );
         Ok(())
     }
 

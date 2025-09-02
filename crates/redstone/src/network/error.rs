@@ -19,6 +19,12 @@ pub struct ContractErrorContent {
 /// cryptographic operations, and conditions specific to the requirements.
 #[derive(Debug, Clone, Eq, PartialEq, Error)]
 pub enum Error {
+    /// Indicates that payload buffer ended before decoding end.
+    ///
+    /// This could occur in situotion where payload is malformed.
+    #[error("Unexpected buffer end")]
+    UnexpectedBufferEnd,
+
     /// Represents errors that arise from the contract itself.
     ///
     /// This variant is used for encapsulating errors that are specific to the contract's logic
@@ -183,6 +189,7 @@ impl From<TryFromIntError> for Error {
 impl Error {
     pub fn code(&self) -> u16 {
         match self {
+            Error::UnexpectedBufferEnd => 0,
             Error::ContractError(content) => content.code as u16,
             Error::NumberOverflow(_) => 509,
             Error::ArrayIsEmpty => 510,
