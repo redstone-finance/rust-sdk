@@ -41,7 +41,6 @@ impl Crypto for DefaultCrypto {
 }
 
 #[cfg(test)]
-#[cfg(feature = "helpers")]
 mod test {
     use crate::{crypto::recovery_key_tests::run_all_testcases, default_ext::DefaultCrypto};
 

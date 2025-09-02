@@ -6,370 +6,482 @@ use crate::{
     protocol::data_package::DataPackage,
     types::Value,
     utils::median::Median,
+    FeedId,
 };
 
-type Matrix = Vec<Vec<Option<Value>>>;
-
-/// Aggregates values from a collection of data packages according to the provided configuration.
-///
-/// This function takes a configuration and a vector of data packages, constructs a matrix of values
-/// and their corresponding signers, and then aggregates these values based on the aggregation logic
-/// defined in the provided configuration. The aggregation strategy could vary, for example, by taking
-/// an average of the values, selecting the median, or applying a custom algorithm defined within the
-/// `aggregate_matrix` function.
-///
-/// The primary purpose of this function is to consolidate data from multiple sources into a coherent
-/// and singular value set that adheres to the criteria specified in the `Config`.
-///
-/// # Arguments
-///
-/// * `config` - A `Config` instance containing settings and parameters used to guide the aggregation process.
-/// * `data_packages` - A vector of `DataPackage` instances, each representing a set of values and associated
-///   metadata collected from various sources or signers.
-///
-/// # Returns
-///
-/// Returns a `Vec<U256>`, which is a vector of aggregated values resulting from applying the aggregation
-/// logic to the input data packages as per the specified configuration. Each `U256` value in the vector
-/// represents an aggregated result derived from the corresponding data packages.
-///
-/// # Note
-///
-/// This function is internal to the crate (`pub(crate)`) and not exposed as part of the public API. It is
-/// designed to be used by other components within the same crate that require value aggregation functionality.
-pub(crate) fn aggregate_values(
-    data_packages: Vec<DataPackage>,
-    config: &Config,
-) -> Result<Vec<Value>, Error> {
-    aggregate_matrix(make_value_signer_matrix(config, data_packages)?, config)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FeedValue {
+    pub feed: FeedId,
+    pub value: Value,
 }
 
-fn aggregate_matrix(matrix: Matrix, config: &Config) -> Result<Vec<Value>, Error> {
-    matrix
-        .iter()
-        .enumerate()
-        .map(|(index, values)| {
-            let median = config
-                .validate_signer_count_threshold(index, values)?
-                .iter()
-                .map(|v| v.to_u256())
-                .collect::<Vec<_>>()
-                .median()
-                .ok_or(Error::ArrayIsEmpty)?;
-
-            Ok(Value::from_u256(median))
-        })
-        .collect()
-}
-
-/// Makes the value signer matrix.
-/// This function may fail if DataPackage contains DataPoints with reoccurring FeedId
-/// or if FeedId has a wrong ASCII representation,
-/// or the recovered signer is not recognized.
-/// Check FeedId crate for more details.
-fn make_value_signer_matrix(
+pub fn aggregate_values(
     config: &Config,
     data_packages: Vec<DataPackage>,
-) -> Result<Matrix, Error> {
-    let mut matrix = vec![vec![None; config.signers().len()]; config.feed_ids().len()];
+) -> Result<Vec<FeedValue>, Error> {
+    let feed_count = config.feed_ids().len();
+    let signer_count = config.signers().len();
+    let size = feed_count * signer_count;
 
-    for data_package in data_packages.iter() {
-        let signer_index = config
-            .signer_index(&data_package.signer_address)
-            .ok_or(Error::SignerNotRecognized(data_package.signer_address))?;
+    let mut values = vec![None; size];
 
-        'data_points_iter: for data_point in data_package.data_points.iter() {
-            let Some(feed_index) = config.feed_index(data_point.feed_id) else {
-                continue 'data_points_iter;
+    for data_package in data_packages {
+        if data_package.signer_address.is_invalid() {
+            continue;
+        }
+
+        let signer_idx = match config.signer_index(&data_package.signer_address) {
+            Some(idx) => idx,
+            _ => continue,
+        };
+
+        for data_point in data_package.data_points {
+            let feed_idx = match config.feed_index(data_point.feed_id) {
+                Some(idx) => idx,
+                _ => continue,
             };
-            if matrix[feed_index][signer_index].is_some() {
+
+            if values[feed_idx * signer_count + signer_idx].is_some() {
                 return Err(Error::ReoccurringFeedId(data_point.feed_id));
             }
-            matrix[feed_index][signer_index] = data_point.value.into();
+
+            values[feed_idx * signer_count + signer_idx] = Some(data_point.value);
         }
     }
 
-    Ok(matrix)
-}
+    let mut result = vec![];
 
-#[cfg(feature = "helpers")]
-#[cfg(test)]
-mod aggregate_matrix_tests {
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::wasm_bindgen_test as test;
+    for feed in 0..feed_count {
+        let feed_values: Vec<_> = values
+            .iter()
+            .skip(feed * signer_count)
+            .take(signer_count)
+            .flatten()
+            .map(|v| v.to_u256())
+            .collect();
 
-    use crate::{
-        core::{aggregator::aggregate_matrix, config::Config},
-        helpers::iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
-        network::error::Error,
-    };
-
-    #[test]
-    fn test_aggregate_matrix() {
-        let matrix = vec![
-            vec![11u8, 13].iter_into_opt(),
-            vec![21u8, 23].iter_into_opt(),
-        ];
-
-        for signer_count_threshold in 0..Config::test_with_signer_count_threshold_or_default(None)
-            .signers()
-            .len()
-            + 1
-        {
-            let config = Config::test_with_signer_count_threshold_or_default(Some(
-                signer_count_threshold as u8,
-            ));
-
-            let result = aggregate_matrix(matrix.clone(), &config);
-
-            assert_eq!(result, Ok(vec![12u8, 22].iter_into()));
+        if feed_values.len() < config.signer_count_threshold() as usize {
+            continue;
         }
+
+        let median = match feed_values.median() {
+            Some(median) => median,
+            _ => continue,
+        };
+
+        if median == 0 {
+            continue;
+        }
+
+        result.push(FeedValue {
+            feed: config.feed_ids()[feed],
+            value: Value::from_u256(median),
+        });
     }
 
-    #[test]
-    fn test_aggregate_matrix_smaller_threshold_missing_one_value() {
-        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
-
-        let matrix = vec![
-            vec![11u8, 13].iter_into_opt(),
-            vec![21u8.into(), None].opt_iter_into_opt(),
-        ];
-
-        let result = aggregate_matrix(matrix, &config);
-
-        assert_eq!(result, Ok(vec![12u8, 21].iter_into()));
-    }
-
-    #[test]
-    fn test_aggregate_matrix_smaller_threshold_missing_whole_feed() {
-        let config = Config::test_with_signer_count_threshold_or_default(Some(0));
-
-        let matrix = vec![vec![11u8, 13].iter_into_opt(), vec![None; 2]];
-
-        let res = aggregate_matrix(matrix, &config);
-
-        assert_eq!(res, Err(Error::ArrayIsEmpty))
-    }
-
-    #[test]
-    fn test_aggregate_matrix_missing_one_value() {
-        let matrix = vec![
-            vec![21u8.into(), None].opt_iter_into_opt(),
-            vec![11u8, 12].iter_into_opt(),
-        ];
-
-        let config = Config::test_with_signer_count_threshold_or_default(None);
-        let res = aggregate_matrix(matrix, &config);
-
-        assert_eq!(
-            res,
-            Err(Error::InsufficientSignerCount(0, 1, config.feed_ids()[0]))
-        )
-    }
-
-    #[test]
-    fn test_aggregate_matrix_missing_whole_feed() {
-        let matrix = vec![vec![11u8, 13].iter_into_opt(), vec![None; 2]];
-        let config = Config::test_with_signer_count_threshold_or_default(None);
-        let res = aggregate_matrix(matrix, &config);
-
-        assert_eq!(
-            res,
-            Err(Error::InsufficientSignerCount(1, 0, config.feed_ids()[1]))
-        )
-    }
+    Ok(result)
 }
 
-#[cfg(feature = "helpers")]
 #[cfg(test)]
-mod make_value_signer_matrix {
-    use alloc::vec::Vec;
-
-    use itertools::Itertools;
+mod tests {
+    use redstone_utils::hex::make_hex_value_from_string;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
     use crate::{
         core::{
-            aggregator::{make_value_signer_matrix, Matrix},
+            aggregator::aggregate_values,
             config::Config,
             test_helpers::{
-                AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2, TEST_SIGNER_ADDRESS_3,
+                AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2,
+                TEST_SIGNER_ADDRESS_3, TEST_SIGNER_ADDRESS_4,
             },
         },
-        helpers::{hex::hex_to_bytes, iter_into::IterInto},
         network::error::Error,
         protocol::data_package::DataPackage,
         Value,
     };
 
     #[test]
-    fn test_make_value_signer_matrix_empty() -> Result<(), Error> {
-        let config = Config::test_with_signer_count_threshold_or_default(None);
+    fn test_aggregate_values_basic_single_feed() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
+        let data_packages = vec![
+            DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
+        ];
 
-        test_make_value_signer_matrix_of(
-            vec![],
-            vec![vec![None; config.signers().len()]; config.feed_ids().len()],
-        )
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, Value::from(2050u128));
     }
 
     #[test]
-    fn test_make_value_signer_matrix_exact() -> Result<(), Error> {
+    fn test_aggregate_values_multiple_feeds() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
         let data_packages = vec![
-            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 2000), (BTC, 50000)],
+                TEST_SIGNER_ADDRESS_1,
+                None,
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 2100), (BTC, 51000)],
+                TEST_SIGNER_ADDRESS_2,
+                None,
+            ),
         ];
 
-        test_make_value_signer_matrix_of(
-            data_packages,
-            vec![vec![11, 12].iter_into(), vec![21, 22].iter_into()],
-        )
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 2);
+
+        let eth_value = result[0];
+        let btc_value = result[1];
+
+        assert_eq!(eth_value.feed, make_hex_value_from_string(ETH));
+        assert_eq!(btc_value.feed, make_hex_value_from_string(BTC));
+        assert_eq!(eth_value.value, Value::from(2050u128));
+        assert_eq!(btc_value.value, Value::from(50500u128));
     }
 
     #[test]
-    fn test_make_value_signer_matrix_greater() -> Result<(), Error> {
-        let data_packages = vec![
-            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
-        ];
+    fn test_aggregate_values_insufficient_signers() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(2));
+        let data_packages = vec![DataPackage::test_single_data_point(
+            ETH,
+            2000,
+            TEST_SIGNER_ADDRESS_1,
+            None,
+        )];
 
-        test_make_value_signer_matrix_of(
-            data_packages,
-            vec![vec![11, 12].iter_into(), vec![21, 22].iter_into()],
-        )
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 0);
     }
 
     #[test]
-    fn test_make_value_signer_matrix_smaller() -> Result<(), Error> {
+    fn test_aggregate_values_exactly_threshold_signers() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(2));
         let data_packages = vec![
-            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        test_make_value_signer_matrix_of(
-            data_packages,
-            vec![vec![11, 12].iter_into(), vec![None; 2]],
-        )
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, Value::from(2050u128));
     }
 
     #[test]
-    fn test_make_value_signer_matrix_diagonal() -> Result<(), Error> {
+    fn test_aggregate_values_reoccurring_feed_id_error() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
         let data_packages = vec![
-            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_1, None),
         ];
 
-        test_make_value_signer_matrix_of(
-            data_packages,
-            vec![vec![11.into(), None], vec![None, 22.into()]],
-        )
+        let result = aggregate_values(&config, data_packages);
+
+        assert!(matches!(result, Err(Error::ReoccurringFeedId(_))));
     }
 
     #[test]
-    fn test_make_value_signer_matrix_repetitions() -> Result<(), Error> {
+    fn test_aggregate_values_invalid_signer_address() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
+        let mut data_package =
+            DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_1, None);
+        data_package.signer_address = vec![].into();
+        let data_packages = vec![data_package];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_aggregate_values_unknown_signer() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
+        let data_packages = vec![DataPackage::test_single_data_point(
+            ETH, 2000, "aaabbb", None,
+        )];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_aggregate_values_unknown_feed_id() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
+        let data_packages = vec![DataPackage::test_single_data_point(
+            "UNKNOWN",
+            2000,
+            TEST_SIGNER_ADDRESS_1,
+            None,
+        )];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_aggregate_values_zero_median_filtered_out() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
         let data_packages = vec![
-            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(BTC, 202, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(ETH, 101, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 0, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 0, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        let result = test_make_value_signer_matrix_of(data_packages, vec![vec![]]);
+        let result = aggregate_values(&config, data_packages).unwrap();
 
-        assert_eq!(
-            result,
-            Err(Error::ReoccurringFeedId(BTC.as_bytes().to_vec().into()))
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_aggregate_values_median_calculation_odd_count() {
+        let config = Config::test(
+            Some(1),
+            vec![
+                TEST_SIGNER_ADDRESS_1,
+                TEST_SIGNER_ADDRESS_2,
+                TEST_SIGNER_ADDRESS_3,
+            ],
+            vec![ETH],
+            None,
+            None,
+            None,
+        );
+        let data_packages = vec![
+            DataPackage::test_single_data_point(ETH, 1000, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 3000, TEST_SIGNER_ADDRESS_3, None),
+        ];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, Value::from(2000u128));
+    }
+
+    #[test]
+    fn test_aggregate_values_median_calculation_even_count() {
+        let config = Config::test(
+            Some(1),
+            vec![
+                TEST_SIGNER_ADDRESS_1,
+                TEST_SIGNER_ADDRESS_2,
+                TEST_SIGNER_ADDRESS_3,
+                TEST_SIGNER_ADDRESS_4,
+            ],
+            vec![ETH],
+            None,
+            None,
+            None,
+        );
+        let data_packages = vec![
+            DataPackage::test_single_data_point(ETH, 1000, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 3000, TEST_SIGNER_ADDRESS_3, None),
+            DataPackage::test_single_data_point(ETH, 4000, TEST_SIGNER_ADDRESS_4, None),
+        ];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, Value::from(2500u128));
+    }
+
+    #[test]
+    fn test_aggregate_values_partial_signer_coverage() {
+        let config = Config::test(
+            Some(2),
+            vec![
+                TEST_SIGNER_ADDRESS_1,
+                TEST_SIGNER_ADDRESS_2,
+                TEST_SIGNER_ADDRESS_3,
+            ],
+            vec![ETH, BTC],
+            None,
+            None,
+            None,
+        );
+        let data_packages = vec![
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 2000), (BTC, 50000)],
+                TEST_SIGNER_ADDRESS_1,
+                None,
+            ),
+            DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
+        ];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 1);
+
+        let eth_value = result[0];
+        assert_eq!(eth_value.feed, make_hex_value_from_string(ETH));
+        assert_eq!(eth_value.value, Value::from(2050u128));
+    }
+
+    #[test]
+    fn test_aggregate_values_mixed_valid_invalid_data() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
+        let mut invalid_package =
+            DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_1, None);
+        invalid_package.signer_address = vec![].into();
+
+        let data_packages = vec![
+            invalid_package,
+            DataPackage::test_single_data_point("UNKNOWN", 1500, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(BTC, 51000, TEST_SIGNER_ADDRESS_1, None),
+        ];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn test_aggregate_values_empty_data_packages() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
+        let data_packages = vec![];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_aggregate_values_single_signer_multiple_feeds() {
+        let config = Config::test_with_signer_count_threshold_or_default(Some(1));
+        let data_packages = vec![DataPackage::test_multi_data_point(
+            vec![(ETH, 2000), (BTC, 50000)],
+            TEST_SIGNER_ADDRESS_1,
+            None,
+        )];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn test_aggregate_values_all_feed_types() {
+        let config = Config::test(
+            Some(1),
+            vec![TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2],
+            vec![ETH, BTC, AVAX],
+            None,
+            None,
+            None,
+        );
+        let data_packages = vec![
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 2000), (BTC, 50000), (AVAX, 40)],
+                TEST_SIGNER_ADDRESS_1,
+                None,
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 2100), (BTC, 51000), (AVAX, 42)],
+                TEST_SIGNER_ADDRESS_2,
+                None,
+            ),
+        ];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 3);
+
+        let eth_result = result[0];
+        let btc_result = result[1];
+        let avax_result = result[2];
+
+        assert_eq!(eth_result.feed, make_hex_value_from_string(ETH));
+        assert_eq!(btc_result.feed, make_hex_value_from_string(BTC));
+        assert_eq!(avax_result.feed, make_hex_value_from_string(AVAX));
+        assert_eq!(eth_result.value, Value::from(2050u128));
+        assert_eq!(btc_result.value, Value::from(50500u128));
+        assert_eq!(avax_result.value, Value::from(41u128));
+    }
+
+    #[test]
+    fn test_aggregate_values_complex_scenario() {
+        let config = Config::test(
+            Some(3),
+            vec![
+                TEST_SIGNER_ADDRESS_1,
+                TEST_SIGNER_ADDRESS_2,
+                TEST_SIGNER_ADDRESS_3,
+                TEST_SIGNER_ADDRESS_4,
+            ],
+            vec![ETH, BTC, AVAX],
+            None,
+            None,
+            None,
         );
 
-        Ok(())
+        let data_packages = vec![
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 2000), (BTC, 50000), (AVAX, 20)],
+                TEST_SIGNER_ADDRESS_1,
+                None,
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 2100), (BTC, 51000)],
+                TEST_SIGNER_ADDRESS_2,
+                None,
+            ),
+            DataPackage::test_multi_data_point(
+                vec![(ETH, 1950), (AVAX, 22)],
+                TEST_SIGNER_ADDRESS_3,
+                None,
+            ),
+            DataPackage::test_single_data_point(BTC, 50500, TEST_SIGNER_ADDRESS_4, None),
+        ];
+
+        let result = aggregate_values(&config, data_packages).unwrap();
+
+        assert_eq!(result.len(), 2);
+
+        let eth_value = result[0];
+        let btc_value = result[1];
+
+        assert_eq!(eth_value.feed, make_hex_value_from_string(ETH));
+        assert_eq!(btc_value.feed, make_hex_value_from_string(BTC));
+
+        assert_eq!(eth_value.value, Value::from(2000u128));
+        assert_eq!(btc_value.value, Value::from(50500u128));
     }
 
     #[test]
-    fn test_make_value_signer_matrix_wrong_signer() -> Result<(), Error> {
+    fn test_aggregate_values_extreme_threshold() {
+        let config = Config::test(
+            Some(4),
+            vec![
+                TEST_SIGNER_ADDRESS_1,
+                TEST_SIGNER_ADDRESS_2,
+                TEST_SIGNER_ADDRESS_3,
+                TEST_SIGNER_ADDRESS_4,
+            ],
+            vec![ETH],
+            None,
+            None,
+            None,
+        );
         let data_packages = vec![
-            DataPackage::test_single_data_point(BTC, 21, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(BTC, 22, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(ETH, 202, TEST_SIGNER_ADDRESS_3, None),
+            DataPackage::test_single_data_point(ETH, 1900, TEST_SIGNER_ADDRESS_1, None),
+            DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_2, None),
+            DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_3, None),
+            DataPackage::test_single_data_point(ETH, 2200, TEST_SIGNER_ADDRESS_4, None),
         ];
 
-        let perms: Vec<Vec<_>> = data_packages
-            .iter()
-            .permutations(data_packages.len())
-            .collect();
-        for perm in perms {
-            let p: Vec<_> = perm.iter().map(|&v| v.clone()).collect();
+        let result = aggregate_values(&config, data_packages).unwrap();
 
-            let result = test_make_value_signer_matrix_of(p, vec![vec![]]);
-
-            assert_eq!(
-                result,
-                Err(Error::SignerNotRecognized(
-                    hex_to_bytes(TEST_SIGNER_ADDRESS_3.into()).into()
-                ))
-            );
-        }
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_make_value_signer_matrix_all_wrong() -> Result<(), Error> {
-        let config = Config::test_with_signer_count_threshold_or_default(None);
-
-        let data_packages = vec![
-            DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
-        ];
-
-        test_make_value_signer_matrix_of(
-            data_packages,
-            vec![vec![None; config.signers().len()]; config.feed_ids().len()],
-        )
-    }
-
-    #[test]
-    fn test_make_value_signer_matrix_mix() -> Result<(), Error> {
-        let data_packages = vec![
-            DataPackage::test_single_data_point(ETH, 11, TEST_SIGNER_ADDRESS_1, None),
-            DataPackage::test_single_data_point(ETH, 12, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(AVAX, 32, TEST_SIGNER_ADDRESS_2, None),
-            DataPackage::test_single_data_point(AVAX, 31, TEST_SIGNER_ADDRESS_1, None),
-        ];
-
-        test_make_value_signer_matrix_of(
-            data_packages,
-            vec![vec![11, 12].iter_into(), vec![None; 2]],
-        )
-    }
-
-    fn test_make_value_signer_matrix_of(
-        data_packages: Vec<DataPackage>,
-        expected_values: Vec<Vec<Option<u128>>>,
-    ) -> Result<(), Error> {
-        let config = &Config::test_with_signer_count_threshold_or_default(None);
-        let result = make_value_signer_matrix(config, data_packages)?;
-
-        let expected_matrix: Matrix = expected_values
-            .iter()
-            .map(|row| {
-                row.iter()
-                    .map(|&value| value.map(Value::from))
-                    .collect::<Vec<_>>()
-            })
-            .collect();
-
-        assert_eq!(result, expected_matrix);
-
-        Ok(())
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, Value::from(2050u128));
     }
 }

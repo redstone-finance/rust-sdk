@@ -1,6 +1,6 @@
-CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged --features="helpers"
+CLIPPY=cargo clippy --release --fix --allow-dirty --allow-staged
 DOC=cargo doc --no-deps --document-private-items
-TEST=RUST_BACKTRACE=full cargo test --features="helpers"
+TEST=RUST_BACKTRACE=full cargo test
 BENCH=RUST_BACKTRACE=full cargo bench
 FEATURE_SETS="crypto_k256" "crypto_k256,casper" "crypto_secp256k1" "crypto_secp256k1,casper" "crypto_secp256k1,casper-test" "crypto_secp256k1,radix" "solana" "radix" "soroban" "default-crypto"
 WASM32_FEATURE_SETS="solana" "radix"
@@ -16,7 +16,7 @@ test: clippy
 	@set -e; \
 	for features in $(WASM32_FEATURE_SETS); do \
 		echo "Running tests with features: $$features"; \
-		(cd $(RUST_SDK_DIR) && wasm-pack test --node --no-default-features --features="helpers" --features=$$features); \
+		(cd $(RUST_SDK_DIR) && wasm-pack test --node --no-default-features --features=$$features); \
 	done
 	@set -e; \
 	for features in $(FEATURE_SETS); do \

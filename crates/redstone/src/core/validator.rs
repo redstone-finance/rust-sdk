@@ -100,7 +100,8 @@ impl Validator for Config {
         values: &[Option<Value>],
     ) -> Result<Vec<Value>, Error> {
         let values = values.filter_some();
-        if values.len() < *self.signer_count_threshold() as usize {
+
+        if values.len() < self.signer_count_threshold() as usize {
             return Err(Error::InsufficientSignerCount(
                 index,
                 values.len(),
@@ -132,12 +133,15 @@ impl Validator for Config {
     }
 }
 
-#[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
     use alloc::vec::Vec;
 
     use itertools::Itertools;
+    use redstone_utils::{
+        hex::{hex_to_bytes, make_hex_value_from_string},
+        iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
+    };
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
@@ -150,10 +154,6 @@ mod tests {
             },
             validator::Validator,
         },
-        helpers::{
-            hex::{hex_to_bytes, make_feed_id},
-            iter_into::{IterInto, IterIntoOpt, OptIterIntoOpt},
-        },
         network::error::Error,
         protocol::constants::{MAX_TIMESTAMP_AHEAD_MS, MAX_TIMESTAMP_DELAY_MS},
         Value,
@@ -163,16 +163,16 @@ mod tests {
     fn test_feed_index() {
         let config = Config::test_with_signer_count_threshold_or_default(None);
 
-        let eth_index = config.feed_index(make_feed_id(ETH));
+        let eth_index = config.feed_index(make_hex_value_from_string(ETH));
         assert_eq!(eth_index, 0.into());
 
-        let eth_index = config.feed_index(make_feed_id("778680")); //eth
+        let eth_index = config.feed_index(make_hex_value_from_string("778680")); //eth
         assert_eq!(eth_index, None);
 
-        let btc_index = config.feed_index(make_feed_id(BTC));
+        let btc_index = config.feed_index(make_hex_value_from_string(BTC));
         assert_eq!(btc_index, 1.into());
 
-        let avax_index = config.feed_index(make_feed_id(AVAX));
+        let avax_index = config.feed_index(make_hex_value_from_string(AVAX));
         assert_eq!(avax_index, None);
     }
 

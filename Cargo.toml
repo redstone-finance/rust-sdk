@@ -1,7 +1,11 @@
 [workspace]
 resolver = "2"
 
-members = ["crates/redstone", "crates/redstone_testing"]
+members = [
+  "crates/redstone",
+  "crates/redstone-utils",
+  "crates/redstone_testing",
+]
 
 # https://github.com/solana-labs/solana/blob/27eff8408b7223bb3c4ab70523f8a8dca3ca6645/Cargo.toml#L543
 [patch.crates-io.curve25519-dalek]

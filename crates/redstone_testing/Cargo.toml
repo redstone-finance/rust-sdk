@@ -1,16 +1,14 @@
 [package]
+edition = "2021"
 name = "redstone_testing"
 version = "0.2.1"
-edition = "2021"
 
 [features]
-radix = [
-    "redstone/radix"
-]
-solana = [
-    "redstone/solana"
-]
+radix = ["redstone/radix"]
+solana = ["redstone/solana"]
 
 [dependencies]
-redstone = { git = "https://github.com/redstone-finance/rust-sdk", tag ="2.0.1", default-features = false, features = ["helpers"] }
 hex = "0.4.3"
+redstone = { git = "https://github.com/redstone-finance/rust-sdk", tag = "2.0.1", default-features = false, features = [
+    "helpers",
+] }

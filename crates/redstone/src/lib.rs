@@ -85,6 +85,3 @@ where
         &mut self.crypto
     }
 }
-
-#[cfg(feature = "helpers")]
-pub mod helpers;

@@ -8,6 +8,6 @@ pub mod validator;
 pub use processor::process_payload;
 pub use processor_result::ProcessorResult;
 
-#[cfg(feature = "helpers")]
+
 #[cfg(test)]
 mod test_helpers;

@@ -20,6 +20,7 @@ pub struct Config {
     ///
     /// Specifies how many unique signers (from different addresses) are required
     /// for the data to be considered valid and trustworthy.
+    #[getter(skip)]
     signer_count_threshold: u8,
 
     /// List of identifiers for signers authorized to sign the data.
@@ -112,19 +113,21 @@ impl Config {
     fn verify_signer_list(&self) -> Result<(), Error> {
         verify_signers_config(&self.signers, self.signer_count_threshold)
     }
+
+    pub fn signer_count_threshold(&self) -> u8 {
+        self.signer_count_threshold
+    }
 }
 
 #[cfg(test)]
-#[cfg(feature = "helpers")]
 mod tests {
-    use super::*;
-    use crate::{
-        core::test_helpers::MAX_TIMESTAMP_DELAY_MS,
-        helpers::{
-            hex::{hex_to_bytes, make_feed_id},
-            iter_into::IterInto,
-        },
+    use redstone_utils::{
+        hex::{hex_to_bytes, make_hex_value_from_string},
+        iter_into::IterInto,
     };
+
+    use super::*;
+    use crate::core::test_helpers::MAX_TIMESTAMP_DELAY_MS;
 
     #[test]
     fn test_config_correct_feed_ids() -> Result<(), Error> {
@@ -184,7 +187,7 @@ mod tests {
 
         assert_eq!(
             resutlt,
-            Err(Error::ConfigReoccurringFeedId(make_feed_id(
+            Err(Error::ConfigReoccurringFeedId(make_hex_value_from_string(
                 repeated_feed_id
             )))
         );
