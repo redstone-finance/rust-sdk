@@ -5,8 +5,7 @@ use alloc::{
 
 use hex::{decode, encode};
 
-use crate::{Bytes, FeedId, SignerAddress};
-const SAMPLE_PAYLOAD_HEX: &str = include_str!("../../../.././sample-data/payload.hex");
+const SAMPLE_PAYLOAD_HEX: &str = include_str!("../../.././sample-data/payload.hex");
 
 pub fn hex_to_bytes(hex_str: String) -> Vec<u8> {
     let trimmed_hex = hex_str.trim_start_matches("0x");
@@ -18,17 +17,15 @@ pub fn hex_from<T: AsRef<[u8]>>(bytes: T) -> String {
     encode(bytes)
 }
 
-pub fn make_bytes(vec: Vec<&str>, fun: fn(&str) -> String) -> Vec<Bytes> {
-    vec.iter()
-        .map(|addr| hex_to_bytes(fun(addr)).into())
-        .collect()
+pub fn make_bytes(vec: Vec<&str>, fun: fn(&str) -> String) -> Vec<Vec<u8>> {
+    vec.iter().map(|addr| hex_to_bytes(fun(addr))).collect()
 }
 
-pub fn make_feed_id(s: &str) -> FeedId {
+pub fn make_hex_value_from_string<T: From<Vec<u8>>>(s: &str) -> T {
     hex_to_bytes(encode(s)).into()
 }
 
-pub fn make_signer_address(s: &str) -> SignerAddress {
+pub fn make_from_hex<T: From<Vec<u8>>>(s: &str) -> T {
     hex_to_bytes(s.into()).into()
 }
 

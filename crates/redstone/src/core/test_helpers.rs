@@ -1,13 +1,13 @@
 use alloc::vec::Vec;
+use redstone_utils::{
+    hex::{hex_to_bytes, make_from_hex, make_hex_value_from_string},
+    iter_into::IterInto,
+};
 
 use crate::{
     core::config::Config,
-    helpers::{
-        hex::{hex_to_bytes, make_feed_id},
-        iter_into::IterInto,
-    },
     protocol::{data_package::DataPackage, data_point::DataPoint},
-    TimestampMillis,
+    FeedId, SignerAddress, TimestampMillis,
 };
 
 pub(crate) const TEST_BLOCK_TIMESTAMP: u64 = 2000000000000;
@@ -22,6 +22,18 @@ pub(crate) const TEST_SIGNER_ADDRESS_4: &str = "264dee744b727613cb76e0cb2f97cd6e
 pub(crate) const ETH: &str = "ETH";
 pub(crate) const BTC: &str = "BTC";
 pub(crate) const AVAX: &str = "AVAX";
+
+impl From<&str> for SignerAddress {
+    fn from(value: &str) -> Self {
+        make_from_hex(value)
+    }
+}
+
+impl From<&str> for FeedId {
+    fn from(value: &str) -> Self {
+        make_hex_value_from_string(value)
+    }
+}
 
 impl Config {
     /// Creates config with default signer_count_threshold equal 2 if not specified otherwise.
@@ -107,10 +119,10 @@ impl DataPackage {
         timestamp: Option<u64>,
     ) -> Self {
         DataPackage {
-            signer_address: hex_to_bytes(signer_address.into()).into(),
+            signer_address: Some(hex_to_bytes(signer_address.into()).into()),
             timestamp: timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP).into(),
             data_points: vec![DataPoint {
-                feed_id: make_feed_id(feed_id),
+                feed_id: make_hex_value_from_string(feed_id),
                 value: value.into(),
             }],
         }
@@ -122,12 +134,12 @@ impl DataPackage {
         timestamp: Option<u64>,
     ) -> Self {
         DataPackage {
-            signer_address: hex_to_bytes(signer_address.into()).into(),
+            signer_address: Some(hex_to_bytes(signer_address.into()).into()),
             timestamp: timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP).into(),
             data_points: data_points
                 .into_iter()
                 .map(|(feed_id, value)| DataPoint {
-                    feed_id: make_feed_id(feed_id),
+                    feed_id: make_hex_value_from_string(feed_id),
                     value: value.into(),
                 })
                 .collect(),

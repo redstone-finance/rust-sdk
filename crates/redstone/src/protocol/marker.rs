@@ -16,14 +16,13 @@ pub fn trim_redstone_marker(payload: &mut Vec<u8>) -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
+    use redstone_utils::hex::hex_to_bytes;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
     use crate::{
-        helpers::hex::hex_to_bytes,
         network::error::Error,
         protocol::{constants::REDSTONE_MARKER_BS, marker::trim_redstone_marker},
     };

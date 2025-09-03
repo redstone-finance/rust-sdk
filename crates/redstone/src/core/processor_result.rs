@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 
-use crate::{network::error::Error, types::Value, TimestampMillis};
+use crate::{core::aggregator::FeedValue, network::error::Error, TimestampMillis};
 
 pub type ProcessorResult = Result<ValidatedPayload, Error>;
 
@@ -18,12 +18,11 @@ pub struct ValidatedPayload {
 
     /// A collection of values processed during the operation.
     ///
-    /// Each element in this vector represents a processed value corresponding
-    /// to the passed data_feed item in the `Config`.
-    pub values: Vec<Value>,
+    /// Some feeds may be missing, if they did not meet some validation criteria.
+    pub values: Vec<FeedValue>,
 }
 
-impl From<ValidatedPayload> for (TimestampMillis, Vec<Value>) {
+impl From<ValidatedPayload> for (TimestampMillis, Vec<FeedValue>) {
     fn from(validated_payload: ValidatedPayload) -> Self {
         (validated_payload.timestamp, validated_payload.values)
     }

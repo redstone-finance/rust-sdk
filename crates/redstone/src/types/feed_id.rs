@@ -12,6 +12,12 @@ use crate::types::{Sanitized, VALUE_SIZE};
 #[cfg_attr(feature = "radix", derive(ScryptoSbor))]
 pub struct FeedId([u8; VALUE_SIZE]);
 
+impl FeedId {
+    pub fn to_array(&self) -> [u8; VALUE_SIZE] {
+        self.0
+    }
+}
+
 impl From<FeedId> for [u8; VALUE_SIZE] {
     fn from(value: FeedId) -> Self {
         value.0

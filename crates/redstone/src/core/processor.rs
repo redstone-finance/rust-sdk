@@ -1,6 +1,6 @@
 use crate::{
     core::{
-        aggregator::aggregate_values,
+        aggregator::process_values,
         config::Config,
         processor_result::{ProcessorResult, ValidatedPayload},
     },
@@ -54,19 +54,21 @@ impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
 fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) -> ProcessorResult {
     let timestamp = payload.get_validated_timestamp(config)?;
 
-    let values = aggregate_values(payload.data_packages, config)?;
+    let values = process_values(config, payload.data_packages)?;
 
     Env::print(|| format!("{:?} {:?}", timestamp, values));
 
     Ok(ValidatedPayload { values, timestamp })
 }
 
-#[cfg(feature = "helpers")]
 #[cfg(test)]
 mod tests {
+    use redstone_utils::hex::make_hex_value_from_string;
+    use redstone_utils::iter_into::IterInto;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
+    use crate::core::aggregator::FeedValue;
     use crate::{
         core::{
             config::Config,
@@ -76,7 +78,6 @@ mod tests {
                 BTC, ETH, TEST_BLOCK_TIMESTAMP, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2,
             },
         },
-        helpers::iter_into::IterInto,
         network::{error::Error, StdEnv},
         protocol::{data_package::DataPackage, payload::Payload},
     };
@@ -119,7 +120,57 @@ mod tests {
             result,
             Ok(ValidatedPayload {
                 timestamp: (TEST_BLOCK_TIMESTAMP + 400).into(),
-                values: vec![12u8, 31].iter_into()
+                values: vec![
+                    FeedValue {
+                        value: 12u32.into(),
+                        feed: make_hex_value_from_string(ETH)
+                    },
+                    FeedValue {
+                        value: 31u32.into(),
+                        feed: make_hex_value_from_string(BTC)
+                    }
+                ]
+                .iter_into()
+            })
+        );
+    }
+    #[test]
+    fn test_make_processor_one_bad_feed() {
+        let data_packages = vec![
+            DataPackage::test_single_data_point(
+                ETH,
+                11,
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
+            ),
+            DataPackage::test_single_data_point(
+                BTC,
+                32,
+                TEST_SIGNER_ADDRESS_2,
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
+            ),
+            DataPackage::test_single_data_point(
+                BTC,
+                31,
+                TEST_SIGNER_ADDRESS_1,
+                (TEST_BLOCK_TIMESTAMP + 400).into(),
+            ),
+        ];
+
+        let result = make_processor_result::<StdEnv>(
+            &Config::test_with_signer_count_threshold_or_default(None),
+            Payload { data_packages },
+        );
+
+        assert_eq!(
+            result,
+            Ok(ValidatedPayload {
+                timestamp: (TEST_BLOCK_TIMESTAMP + 400).into(),
+                values: vec![FeedValue {
+                    value: 31u32.into(),
+                    feed: make_hex_value_from_string(BTC)
+                }]
+                .iter_into()
             })
         );
     }
@@ -148,7 +199,17 @@ mod tests {
             result,
             Ok(ValidatedPayload {
                 timestamp: (TEST_BLOCK_TIMESTAMP + 5).into(),
-                values: vec![11u8, 31].iter_into()
+                values: vec![
+                    FeedValue {
+                        value: 11u32.into(),
+                        feed: make_hex_value_from_string(ETH)
+                    },
+                    FeedValue {
+                        value: 31u32.into(),
+                        feed: make_hex_value_from_string(BTC)
+                    }
+                ]
+                .iter_into()
             })
         );
     }
@@ -191,7 +252,6 @@ mod tests {
 
     #[test]
     fn test_make_processor_result_for_multi_datapoint_with_datapoint_repetition() {
-        // given
         let data_packages = vec![
             DataPackage::test_multi_data_point(
                 vec![(ETH, 10), (BTC, 31), (BTC, 33)], // REPETITION IN DATAPOINTS HERE.
@@ -205,7 +265,6 @@ mod tests {
             ),
         ];
 
-        // when, then
         let result = make_processor_result::<StdEnv>(
             &Config::test_with_signer_count_threshold_or_default(None),
             Payload { data_packages },

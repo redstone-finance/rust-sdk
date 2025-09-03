@@ -81,7 +81,6 @@ impl Crypto for SorobanCrypto<'_> {
 }
 
 #[cfg(test)]
-#[cfg(feature = "helpers")]
 mod tests {
     use soroban_sdk::Env;
 

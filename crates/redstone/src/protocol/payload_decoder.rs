@@ -87,7 +87,8 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
             + TryInto::<u64>::try_into(DATA_POINTS_COUNT_BS)?;
 
         let signable_bytes: Vec<_> = tmp.trim_end(size.try_into()?);
-        let signer_address = self.crypto.recover_address(signable_bytes, signature)?;
+
+        let signer_address = self.crypto.recover_address(signable_bytes, signature).ok();
 
         let data_points = Self::trim_data_points(
             payload,
@@ -139,15 +140,14 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
 }
 
 #[cfg(test)]
-#[cfg(feature = "helpers")]
 #[cfg(feature = "default-crypto")]
 mod tests {
     use alloc::{borrow::ToOwned, string::ToString, vec::Vec};
     use core::ops::Shr;
+    use redstone_utils::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex};
 
     use crate::{
         default_ext::DefaultCrypto,
-        helpers::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex},
         network::error::Error,
         protocol::{
             constants::{
@@ -294,7 +294,7 @@ mod tests {
         }
     }
 
-    #[should_panic(expected = "CryptographicError(InvalidSignatureLen(0))")]
+    #[should_panic(expected = "SizeNotSupported(0)")]
     #[test]
     fn test_trim_data_packages_bigger_number() {
         test_trim_data_packages_of(3, "");
@@ -361,7 +361,7 @@ mod tests {
                 value: Value::from(expected_value),
             }],
             timestamp: 1707144580000.into(),
-            signer_address: hex_to_bytes(signer_address.into()).into(),
+            signer_address: Some(hex_to_bytes(signer_address.into()).into()),
         };
 
         assert_eq!(result, data_package);

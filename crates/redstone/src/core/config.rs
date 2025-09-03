@@ -1,7 +1,5 @@
 use alloc::vec::Vec;
 
-use derive_getters::Getters;
-
 use crate::{
     contract::verification::verify_signers_config,
     network::error::Error,
@@ -14,7 +12,7 @@ use crate::{
 ///
 /// Specifies the parameters necessary for the verification and aggregation of values
 /// from various data points passed by the RedStone payload.
-#[derive(Getters, Debug)]
+#[derive(Debug)]
 pub struct Config {
     /// The minimum number of signers required validating the data.
     ///
@@ -112,19 +110,41 @@ impl Config {
     fn verify_signer_list(&self) -> Result<(), Error> {
         verify_signers_config(&self.signers, self.signer_count_threshold)
     }
+
+    pub fn signer_count_threshold(&self) -> u8 {
+        self.signer_count_threshold
+    }
+
+    pub fn signers(&self) -> &[SignerAddress] {
+        &self.signers
+    }
+
+    pub fn feed_ids(&self) -> &[FeedId] {
+        &self.feed_ids
+    }
+
+    pub fn block_timestamp(&self) -> TimestampMillis {
+        self.block_timestamp
+    }
+
+    pub fn max_timestamp_delay_ms(&self) -> TimestampMillis {
+        self.max_timestamp_delay_ms
+    }
+
+    pub fn max_timestamp_ahead_ms(&self) -> TimestampMillis {
+        self.max_timestamp_ahead_ms
+    }
 }
 
 #[cfg(test)]
-#[cfg(feature = "helpers")]
 mod tests {
-    use super::*;
-    use crate::{
-        core::test_helpers::MAX_TIMESTAMP_DELAY_MS,
-        helpers::{
-            hex::{hex_to_bytes, make_feed_id},
-            iter_into::IterInto,
-        },
+    use redstone_utils::{
+        hex::{hex_to_bytes, make_hex_value_from_string},
+        iter_into::IterInto,
     };
+
+    use super::*;
+    use crate::core::test_helpers::MAX_TIMESTAMP_DELAY_MS;
 
     #[test]
     fn test_config_correct_feed_ids() -> Result<(), Error> {
@@ -184,7 +204,7 @@ mod tests {
 
         assert_eq!(
             resutlt,
-            Err(Error::ConfigReoccurringFeedId(make_feed_id(
+            Err(Error::ConfigReoccurringFeedId(make_hex_value_from_string(
                 repeated_feed_id
             )))
         );

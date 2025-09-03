@@ -72,7 +72,6 @@ impl Crypto for SolanaCrypto {
 }
 
 #[cfg(test)]
-#[cfg(feature = "helpers")]
 mod tests {
     use crate::{crypto::recovery_key_tests::run_all_testcases, solana::SolanaCrypto};
 
