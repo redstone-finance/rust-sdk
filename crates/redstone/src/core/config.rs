@@ -1,7 +1,5 @@
 use alloc::vec::Vec;
 
-use derive_getters::Getters;
-
 use crate::{
     contract::verification::verify_signers_config,
     network::error::Error,
@@ -14,13 +12,12 @@ use crate::{
 ///
 /// Specifies the parameters necessary for the verification and aggregation of values
 /// from various data points passed by the RedStone payload.
-#[derive(Getters, Debug)]
+#[derive(Debug)]
 pub struct Config {
     /// The minimum number of signers required validating the data.
     ///
     /// Specifies how many unique signers (from different addresses) are required
     /// for the data to be considered valid and trustworthy.
-    #[getter(skip)]
     signer_count_threshold: u8,
 
     /// List of identifiers for signers authorized to sign the data.
@@ -116,6 +113,26 @@ impl Config {
 
     pub fn signer_count_threshold(&self) -> u8 {
         self.signer_count_threshold
+    }
+
+    pub fn signers(&self) -> &[SignerAddress] {
+        &self.signers
+    }
+
+    pub fn feed_ids(&self) -> &[FeedId] {
+        &self.feed_ids
+    }
+
+    pub fn block_timestamp(&self) -> TimestampMillis {
+        self.block_timestamp
+    }
+
+    pub fn max_timestamp_delay_ms(&self) -> TimestampMillis {
+        self.max_timestamp_delay_ms
+    }
+
+    pub fn max_timestamp_ahead_ms(&self) -> TimestampMillis {
+        self.max_timestamp_ahead_ms
     }
 }
 

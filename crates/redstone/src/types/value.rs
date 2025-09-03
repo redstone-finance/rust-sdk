@@ -45,6 +45,10 @@ impl Value {
     pub fn as_be_bytes(&self) -> &[u8] {
         &self.0
     }
+
+    pub fn is_zero(&self) -> bool {
+        self.0 == [0; 32]
+    }
 }
 
 impl From<Vec<u8>> for Value {

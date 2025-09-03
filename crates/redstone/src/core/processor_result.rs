@@ -18,8 +18,7 @@ pub struct ValidatedPayload {
 
     /// A collection of values processed during the operation.
     ///
-    /// Each element in this vector represents a processed value corresponding
-    /// to the passed data_feed item in the `Config`.
+    /// Some feeds may be missing, if they did not meet some validation criteria.
     pub values: Vec<FeedValue>,
 }
 

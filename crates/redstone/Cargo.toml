@@ -3,7 +3,7 @@ authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"
 edition = "2021"
 name = "redstone"
-version = "2.1.0-pre3"
+version = "3.0.0-pre1"
 
 [features]
 default = ["default-crypto", "std"]
@@ -46,7 +46,6 @@ casper-contract = { version = "^4.0.0", default-features = false, features = [
 ], optional = true }
 casper-types = { version = "^4.0.2", default-features = false, features = [
 ], optional = true }
-derive-getters = "0.5.0"
 k256 = { version = "^0.13.4", default-features = false, features = [
     "ecdsa",
 ], optional = true }

@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "redstone_testing"
+name = "redstone-testing"
 version = "0.2.1"
 
 [features]

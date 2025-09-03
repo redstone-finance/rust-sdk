@@ -15,7 +15,7 @@ pub struct FeedValue {
     pub value: Value,
 }
 
-pub fn aggregate_values(
+pub fn process_values(
     config: &Config,
     data_packages: Vec<DataPackage>,
 ) -> Result<Vec<FeedValue>, Error> {
@@ -26,16 +26,21 @@ pub fn aggregate_values(
     let mut values = vec![None; size];
 
     for data_package in data_packages {
-        if data_package.signer_address.is_invalid() {
-            continue;
-        }
+        let signer_address = match data_package.signer_address.as_ref() {
+            Some(address) => address,
+            _ => continue,
+        };
 
-        let signer_idx = match config.signer_index(&data_package.signer_address) {
+        let signer_idx = match config.signer_index(signer_address) {
             Some(idx) => idx,
             _ => continue,
         };
 
         for data_point in data_package.data_points {
+            if data_point.value.is_zero() {
+                continue;
+            }
+
             let feed_idx = match config.feed_index(data_point.feed_id) {
                 Some(idx) => idx,
                 _ => continue,
@@ -48,6 +53,13 @@ pub fn aggregate_values(
             values[feed_idx * signer_count + signer_idx] = Some(data_point.value);
         }
     }
+
+    aggregate_values(values, config)
+}
+
+fn aggregate_values(values: Vec<Option<Value>>, config: &Config) -> Result<Vec<FeedValue>, Error> {
+    let feed_count = config.feed_ids().len();
+    let signer_count = config.signers().len();
 
     let mut result = vec![];
 
@@ -69,10 +81,6 @@ pub fn aggregate_values(
             _ => continue,
         };
 
-        if median == 0 {
-            continue;
-        }
-
         result.push(FeedValue {
             feed: config.feed_ids()[feed],
             value: Value::from_u256(median),
@@ -90,7 +98,7 @@ mod tests {
 
     use crate::{
         core::{
-            aggregator::aggregate_values,
+            aggregator::process_values,
             config::Config,
             test_helpers::{
                 AVAX, BTC, ETH, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2,
@@ -110,7 +118,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, Value::from(2050u128));
@@ -132,7 +140,7 @@ mod tests {
             ),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 2);
 
@@ -155,7 +163,7 @@ mod tests {
             None,
         )];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -168,7 +176,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, Value::from(2050u128));
@@ -182,7 +190,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_1, None),
         ];
 
-        let result = aggregate_values(&config, data_packages);
+        let result = process_values(&config, data_packages);
 
         assert!(matches!(result, Err(Error::ReoccurringFeedId(_))));
     }
@@ -192,10 +200,10 @@ mod tests {
         let config = Config::test_with_signer_count_threshold_or_default(Some(1));
         let mut data_package =
             DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_1, None);
-        data_package.signer_address = vec![].into();
+        data_package.signer_address = None;
         let data_packages = vec![data_package];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -207,7 +215,7 @@ mod tests {
             ETH, 2000, "aaabbb", None,
         )];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -222,7 +230,7 @@ mod tests {
             None,
         )];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -235,7 +243,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 0, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -260,7 +268,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 3000, TEST_SIGNER_ADDRESS_3, None),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, Value::from(2000u128));
@@ -288,7 +296,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 4000, TEST_SIGNER_ADDRESS_4, None),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, Value::from(2500u128));
@@ -317,7 +325,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
 
@@ -331,7 +339,7 @@ mod tests {
         let config = Config::test_with_signer_count_threshold_or_default(Some(1));
         let mut invalid_package =
             DataPackage::test_single_data_point(ETH, 2000, TEST_SIGNER_ADDRESS_1, None);
-        invalid_package.signer_address = vec![].into();
+        invalid_package.signer_address = None;
 
         let data_packages = vec![
             invalid_package,
@@ -340,7 +348,7 @@ mod tests {
             DataPackage::test_single_data_point(BTC, 51000, TEST_SIGNER_ADDRESS_1, None),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 2);
     }
@@ -350,7 +358,7 @@ mod tests {
         let config = Config::test_with_signer_count_threshold_or_default(Some(1));
         let data_packages = vec![];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -364,7 +372,7 @@ mod tests {
             None,
         )];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 2);
     }
@@ -392,7 +400,7 @@ mod tests {
             ),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 3);
 
@@ -443,7 +451,7 @@ mod tests {
             DataPackage::test_single_data_point(BTC, 50500, TEST_SIGNER_ADDRESS_4, None),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 2);
 
@@ -479,7 +487,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2200, TEST_SIGNER_ADDRESS_4, None),
         ];
 
-        let result = aggregate_values(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, Value::from(2050u128));

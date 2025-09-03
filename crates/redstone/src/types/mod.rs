@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 
 pub use bytes::Bytes;
 pub use feed_id::FeedId;
-pub use signer_address::{SignerAddress, INVALID_SIGNER};
+pub use signer_address::SignerAddress;
 pub use timestamp_millis::TimestampMillis;
 pub use value::Value;
 

@@ -119,7 +119,7 @@ impl DataPackage {
         timestamp: Option<u64>,
     ) -> Self {
         DataPackage {
-            signer_address: hex_to_bytes(signer_address.into()).into(),
+            signer_address: Some(hex_to_bytes(signer_address.into()).into()),
             timestamp: timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP).into(),
             data_points: vec![DataPoint {
                 feed_id: make_hex_value_from_string(feed_id),
@@ -134,7 +134,7 @@ impl DataPackage {
         timestamp: Option<u64>,
     ) -> Self {
         DataPackage {
-            signer_address: hex_to_bytes(signer_address.into()).into(),
+            signer_address: Some(hex_to_bytes(signer_address.into()).into()),
             timestamp: timestamp.unwrap_or(TEST_BLOCK_TIMESTAMP).into(),
             data_points: data_points
                 .into_iter()

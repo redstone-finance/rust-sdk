@@ -5,8 +5,6 @@ use scrypto::prelude::*;
 
 use crate::types::{Sanitized, VALUE_SIZE};
 
-pub const INVALID_SIGNER: SignerAddress = SignerAddress::new_invalid();
-
 /// Type describing address of signer. Typically pubkey of length 20 bytes;
 /// As of right now we dont expect larger keys than 32 bytes.
 /// The address is normalized to contain only lowercase letters (A-F) -> (a-f).
@@ -28,14 +26,6 @@ impl SignerAddress {
                 .try_into()
                 .expect("We know the length eq 32"),
         )
-    }
-
-    pub const fn new_invalid() -> Self {
-        Self([0; 32])
-    }
-
-    pub fn is_invalid(&self) -> bool {
-        self.0 == [0; 32]
     }
 }
 

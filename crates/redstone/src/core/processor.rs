@@ -1,6 +1,6 @@
 use crate::{
     core::{
-        aggregator::aggregate_values,
+        aggregator::process_values,
         config::Config,
         processor_result::{ProcessorResult, ValidatedPayload},
     },
@@ -54,7 +54,7 @@ impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
 fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) -> ProcessorResult {
     let timestamp = payload.get_validated_timestamp(config)?;
 
-    let values = aggregate_values(config, payload.data_packages)?;
+    let values = process_values(config, payload.data_packages)?;
 
     Env::print(|| format!("{:?} {:?}", timestamp, values));
 

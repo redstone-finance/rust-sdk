@@ -15,7 +15,6 @@ use crate::{
         marker::trim_redstone_marker,
         payload::Payload,
     },
-    types::INVALID_SIGNER,
     utils::trim::{Trim, TryTrim},
     TimestampMillis,
 };
@@ -89,10 +88,7 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
 
         let signable_bytes: Vec<_> = tmp.trim_end(size.try_into()?);
 
-        let signer_address = match self.crypto.recover_address(signable_bytes, signature) {
-            Ok(address) => address,
-            Err(_) => INVALID_SIGNER,
-        };
+        let signer_address = self.crypto.recover_address(signable_bytes, signature).ok();
 
         let data_points = Self::trim_data_points(
             payload,
@@ -365,7 +361,7 @@ mod tests {
                 value: Value::from(expected_value),
             }],
             timestamp: 1707144580000.into(),
-            signer_address: hex_to_bytes(signer_address.into()).into(),
+            signer_address: Some(hex_to_bytes(signer_address.into()).into()),
         };
 
         assert_eq!(result, data_package);

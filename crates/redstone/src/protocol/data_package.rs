@@ -5,7 +5,7 @@ use crate::{protocol::data_point::DataPoint, SignerAddress, TimestampMillis};
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct DataPackage {
-    pub(crate) signer_address: SignerAddress,
+    pub(crate) signer_address: Option<SignerAddress>,
     pub(crate) timestamp: TimestampMillis,
     pub(crate) data_points: Vec<DataPoint>,
 }
