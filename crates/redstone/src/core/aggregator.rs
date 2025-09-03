@@ -107,7 +107,6 @@ mod tests {
         },
         network::error::Error,
         protocol::data_package::DataPackage,
-        Value,
     };
 
     #[test]
@@ -121,7 +120,7 @@ mod tests {
         let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].value, Value::from(2050u128));
+        assert_eq!(result[0].value, (2050u128).into());
     }
 
     #[test]
@@ -149,8 +148,8 @@ mod tests {
 
         assert_eq!(eth_value.feed, make_hex_value_from_string(ETH));
         assert_eq!(btc_value.feed, make_hex_value_from_string(BTC));
-        assert_eq!(eth_value.value, Value::from(2050u128));
-        assert_eq!(btc_value.value, Value::from(50500u128));
+        assert_eq!(eth_value.value, (2050u128).into());
+        assert_eq!(btc_value.value, (50500u128).into());
     }
 
     #[test]
@@ -179,7 +178,7 @@ mod tests {
         let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].value, Value::from(2050u128));
+        assert_eq!(result[0].value, (2050u128).into());
     }
 
     #[test]
@@ -271,7 +270,7 @@ mod tests {
         let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].value, Value::from(2000u128));
+        assert_eq!(result[0].value, (2000u128).into());
     }
 
     #[test]
@@ -299,7 +298,7 @@ mod tests {
         let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].value, Value::from(2500u128));
+        assert_eq!(result[0].value, (2500u128).into());
     }
 
     #[test]
@@ -331,7 +330,7 @@ mod tests {
 
         let eth_value = result[0];
         assert_eq!(eth_value.feed, make_hex_value_from_string(ETH));
-        assert_eq!(eth_value.value, Value::from(2050u128));
+        assert_eq!(eth_value.value, (2050u128).into());
     }
 
     #[test]
@@ -411,9 +410,9 @@ mod tests {
         assert_eq!(eth_result.feed, make_hex_value_from_string(ETH));
         assert_eq!(btc_result.feed, make_hex_value_from_string(BTC));
         assert_eq!(avax_result.feed, make_hex_value_from_string(AVAX));
-        assert_eq!(eth_result.value, Value::from(2050u128));
-        assert_eq!(btc_result.value, Value::from(50500u128));
-        assert_eq!(avax_result.value, Value::from(41u128));
+        assert_eq!(eth_result.value, (2050u128).into());
+        assert_eq!(btc_result.value, (50500u128).into());
+        assert_eq!(avax_result.value, (41u128).into());
     }
 
     #[test]
@@ -461,8 +460,8 @@ mod tests {
         assert_eq!(eth_value.feed, make_hex_value_from_string(ETH));
         assert_eq!(btc_value.feed, make_hex_value_from_string(BTC));
 
-        assert_eq!(eth_value.value, Value::from(2000u128));
-        assert_eq!(btc_value.value, Value::from(50500u128));
+        assert_eq!(eth_value.value, (2000u128).into());
+        assert_eq!(btc_value.value, (50500u128).into());
     }
 
     #[test]
@@ -490,6 +489,6 @@ mod tests {
         let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].value, Value::from(2050u128));
+        assert_eq!(result[0].value, (2050u128).into());
     }
 }
