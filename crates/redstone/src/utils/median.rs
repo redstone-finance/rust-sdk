@@ -105,6 +105,8 @@ mod tests {
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
+    use crate::Value;
+
     use super::{Avg, Median};
 
     #[allow(clippy::legacy_numeric_constants)]
@@ -137,6 +139,79 @@ mod tests {
     #[test]
     fn test_median_single_element() {
         assert_eq!(vec![1].median(), Some(1));
+    }
+    #[test]
+    fn test_median_two_values() {
+        test_all_permutations(vec![Value::from(1u32), 3u32.into()], 2u32.into());
+        test_all_permutations(vec![Value::from(1u32), 2u32.into()], 1u32.into());
+        test_all_permutations(vec![Value::from(1u32), 1u32.into()], 1u32.into());
+    }
+
+    #[test]
+    fn test_median_three_values() {
+        test_all_permutations(
+            vec![Value::from(1u32), 2u32.into(), 3u32.into()],
+            2u32.into(),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), 1u32.into(), 2u32.into()],
+            1u32.into(),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), 2u32.into(), 2u32.into()],
+            2u32.into(),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), 1u32.into(), 1u32.into()],
+            1u32.into(),
+        );
+        test_all_permutations(vec![1, 2, 3], 2);
+        test_all_permutations(vec![1, 1, 2], 1);
+        test_all_permutations(vec![1, 2, 2], 2);
+        test_all_permutations(vec![1, 1, 1], 1);
+    }
+
+    #[test]
+    fn test_median_even_number_of_values() {
+        test_all_permutations(
+            vec![Value::from(1u32), 2u32.into(), 3u32.into(), 4_u32.into()],
+            2u32.into(),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), 2u32.into(), 4u32.into(), 4_u32.into()],
+            3u32.into(),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), 1u32.into(), 3u32.into(), 3_u32.into()],
+            2u32.into(),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), 1u32.into(), 3u32.into(), 4_u32.into()],
+            2u32.into(),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), 1u32.into(), 1u32.into(), 3_u32.into()],
+            1u32.into(),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), 3u32.into(), 3u32.into(), 3_u32.into()],
+            3u32.into(),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), 1u32.into(), 1u32.into(), 1_u32.into()],
+            1u32.into(),
+        );
+        test_all_permutations(
+            vec![
+                Value::from(1u32),
+                2u32.into(),
+                3u32.into(),
+                4_u32.into(),
+                5_u32.into(),
+                6_u32.into(),
+            ],
+            3u32.into(),
+        );
     }
 
     #[test]
