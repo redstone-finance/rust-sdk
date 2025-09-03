@@ -1,7 +1,7 @@
 use alloc::vec::Vec;
 
 use crate::{
-    core::{config::Config, validator::Validator},
+    core::{config::Config, matrix::Matrix, validator::Validator},
     network::error::Error,
     protocol::data_package::DataPackage,
     types::Value,
@@ -21,9 +21,8 @@ pub fn process_values(
 ) -> Result<Vec<FeedValue>, Error> {
     let feed_count = config.feed_ids().len();
     let signer_count = config.signers().len();
-    let size = feed_count * signer_count;
 
-    let mut values = vec![None; size];
+    let mut matrix = Matrix::<Option<Value>>::new(feed_count, signer_count);
 
     for data_package in data_packages {
         let signer_address = match data_package.signer_address.as_ref() {
@@ -46,31 +45,27 @@ pub fn process_values(
                 _ => continue,
             };
 
-            if values[feed_idx * signer_count + signer_idx].is_some() {
+            let value = matrix.mut_unchecked_at(feed_idx, signer_idx);
+
+            if value.is_some() {
                 return Err(Error::ReoccurringFeedId(data_point.feed_id));
             }
 
-            values[feed_idx * signer_count + signer_idx] = Some(data_point.value);
+            *value = Some(data_point.value);
         }
     }
 
-    aggregate_values(values, config)
+    aggregate_values(matrix, config)
 }
 
-fn aggregate_values(values: Vec<Option<Value>>, config: &Config) -> Result<Vec<FeedValue>, Error> {
-    let feed_count = config.feed_ids().len();
-    let signer_count = config.signers().len();
-
+fn aggregate_values(
+    values: Matrix<Option<Value>>,
+    config: &Config,
+) -> Result<Vec<FeedValue>, Error> {
     let mut result = vec![];
 
-    for feed in 0..feed_count {
-        let feed_values: Vec<_> = values
-            .iter()
-            .skip(feed * signer_count)
-            .take(signer_count)
-            .flatten()
-            .map(|v| v.to_u256())
-            .collect();
+    for (feed, row) in values.row_iter().enumerate() {
+        let feed_values: Vec<_> = row.flatten().copied().collect();
 
         if feed_values.len() < config.signer_count_threshold() as usize {
             continue;
@@ -83,7 +78,7 @@ fn aggregate_values(values: Vec<Option<Value>>, config: &Config) -> Result<Vec<F
 
         result.push(FeedValue {
             feed: config.feed_ids()[feed],
-            value: Value::from_u256(median),
+            value: median,
         });
     }
 

@@ -1,6 +1,8 @@
 use alloc::vec::Vec;
 use core::ops::{Add, BitAnd, Shr};
 
+use crate::Value;
+
 pub(crate) trait Median {
     type Item;
 
@@ -23,6 +25,12 @@ impl Avg for alloy_primitives::U256 {
         let one = Self::ONE;
 
         self.shr(one) + other.shr(one) + (self.bitand(one) + other.bitand(one)).shr(one)
+    }
+}
+
+impl Avg for Value {
+    fn avg(self, other: Self) -> Self {
+        Value::from_u256(self.to_u256().avg(other.to_u256()))
     }
 }
 
@@ -59,7 +67,7 @@ where
             }),
             _ => {
                 let mut values = self;
-                values.sort();
+                values.sort_unstable();
 
                 let mid = len / 2;
 

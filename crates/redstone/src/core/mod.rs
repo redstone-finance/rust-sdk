@@ -1,5 +1,6 @@
 mod aggregator;
 pub mod config;
+mod matrix;
 pub mod processor;
 pub mod processor_result;
 pub mod validator;
