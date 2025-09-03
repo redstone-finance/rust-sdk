@@ -23,7 +23,7 @@ impl<T: Copy> Matrix<T> {
         &mut self.data[row * self.columns + column]
     }
 
-    pub fn row_iter(&self) -> impl Iterator<Item = impl Iterator<Item = &T>> {
+    pub fn rows_iter(&self) -> impl Iterator<Item = impl Iterator<Item = &T>> {
         (0..self.rows).map(|row| {
             let start = row * self.columns;
             let end = start + self.columns;

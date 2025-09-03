@@ -64,7 +64,7 @@ fn aggregate_values(
 ) -> Result<Vec<FeedValue>, Error> {
     let mut result = vec![];
 
-    for (feed, row) in values.row_iter().enumerate() {
+    for (feed, row) in values.rows_iter().enumerate() {
         let feed_values: Vec<_> = row.flatten().copied().collect();
 
         if feed_values.len() < config.signer_count_threshold() as usize {
