@@ -19,5 +19,3 @@ jobs:
         run: make check-lint
       - name: Test rust
         run: make test
-      - name: Bench rust
-        run: make bench

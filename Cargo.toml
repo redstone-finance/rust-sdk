@@ -5,6 +5,7 @@ members = [
   "crates/redstone",
   "crates/redstone-testing",
   "crates/redstone-utils",
+  "crates/samples",
 ]
 
 # https://github.com/solana-labs/solana/blob/27eff8408b7223bb3c4ab70523f8a8dca3ca6645/Cargo.toml#L543
