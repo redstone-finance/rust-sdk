@@ -104,10 +104,9 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
 
         let signer_address = self.crypto.recover_address(signable_bytes, signature).ok();
 
-        let truncate_to = payload.len().saturating_sub(
+        let _: Vec<_> = payload.trim_end(
             SIGNATURE_BS + DATA_POINTS_COUNT_BS + DATA_POINT_VALUE_BYTE_SIZE_BS + TIMESTAMP_BS,
         );
-        payload.truncate(truncate_to);
 
         let data_points = Self::trim_data_points(
             payload,
