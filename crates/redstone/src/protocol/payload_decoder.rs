@@ -89,20 +89,22 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
         let data_points_size =
             data_point_count * (value_size + TryInto::<u64>::try_into(DATA_FEED_ID_BS)?);
 
-        let mut data_points: Vec<_> = payload.trim_end(data_points_size.try_into()?);
+        let data_points: Vec<_> = payload.trim_end(data_points_size.try_into()?);
 
-        let signable_bytes = [
-            data_points.clone(),
+        let mut signable_bytes = [
+            data_points,
             timestamp_bs,
             value_size_bs,
             data_point_count_bs,
         ]
         .concat();
 
-        let signer_address = self.crypto.recover_address(signable_bytes, signature).ok();
+        let signer_address = self.crypto.recover_address(&signable_bytes, signature).ok();
+
+        signable_bytes.truncate(data_points_size.try_into()?);
 
         let data_points = Self::trim_data_points(
-            &mut data_points,
+            &mut signable_bytes,
             data_point_count.try_into()?,
             value_size.try_into()?,
         )?;

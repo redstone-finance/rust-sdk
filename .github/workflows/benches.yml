@@ -11,7 +11,7 @@ env:
 
 jobs:
   rust-sdk-benchmarks:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     if: github.event_name == 'pull_request'
     timeout-minutes: 20
     permissions:
