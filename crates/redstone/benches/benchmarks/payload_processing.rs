@@ -30,7 +30,7 @@ fn create_config(sample: &Sample) -> RedStoneConfigImpl<DefaultCrypto, Dummy> {
     )
     .unwrap();
 
-    RedStoneConfigImpl::<_, _>::from((config, DefaultCrypto))
+    RedStoneConfigImpl::from((config, DefaultCrypto))
 }
 
 fn benchmark_validation_all_samples(c: &mut Criterion) {
