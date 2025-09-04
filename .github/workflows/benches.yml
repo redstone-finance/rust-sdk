@@ -27,5 +27,5 @@ jobs:
         with:
           cwd: "."
           branchName: ${{ github.base_ref }}
-          benchName: "benchmarks"
+          benchName: "bench_main"
           features: "bench"
