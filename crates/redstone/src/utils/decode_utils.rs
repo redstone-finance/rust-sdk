@@ -9,7 +9,7 @@ pub fn decode_u64(bytes: &[u8]) -> Result<u64, Error> {
     }
 
     let mut buffer = [0; size_of::<u64>()];
-    buffer[8 - significant_bytes.len()..].copy_from_slice(&significant_bytes);
+    buffer[size_of::<u64>() - significant_bytes.len()..].copy_from_slice(&significant_bytes);
 
     Ok(u64::from_be_bytes(buffer))
 }

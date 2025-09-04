@@ -13,12 +13,16 @@ impl<'a> BackReader<'a> {
 
     pub fn read_slice(&mut self, b_to_read: usize) -> &'a [u8] {
         let end = self.cursor;
-        let start = self.cursor.saturating_sub(b_to_read);
+        self.cursor = self.cursor.saturating_sub(b_to_read);
 
-        &self.buffer[start..end]
+        &self.buffer[self.cursor..end]
     }
 
-    pub fn move_cursor(&mut self, by: usize) {
-        self.cursor = self.cursor.min(self.cursor + by);
+    pub fn set_cursor(&mut self, to: usize) {
+        self.cursor = to;
+    }
+
+    pub fn cursor(&self) -> usize {
+        self.cursor
     }
 }
