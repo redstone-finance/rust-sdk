@@ -16,7 +16,6 @@ use crate::{
         payload::Payload,
     },
     utils::{
-        back_reader::BackReader,
         decode_utils::decode_u64,
         trim::{Trim, TryTrim},
     },
@@ -77,39 +76,33 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
     }
 
     fn trim_data_package(&mut self, payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
-        let mut reader = BackReader::new(payload);
+        let signature: Vec<u8> = payload.trim_end(SIGNATURE_BS);
 
-        let signature = reader.read_slice(SIGNATURE_BS);
+        let data_point_count_bs: Vec<_> = payload.trim_end(DATA_POINTS_COUNT_BS);
+        let value_size_bs: Vec<_> = payload.trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS);
+        let timestamp_bs: Vec<_> = payload.trim_end(TIMESTAMP_BS);
 
-        let cursor = reader.cursor();
-
-        let data_point_count_bs = reader.read_slice(DATA_POINTS_COUNT_BS);
-        let value_size_bs = reader.read_slice(DATA_POINT_VALUE_BYTE_SIZE_BS);
-        let timestamp_bs = reader.read_slice(TIMESTAMP_BS);
-
-        let data_point_count = decode_u64(data_point_count_bs)?;
-        let value_size = decode_u64(value_size_bs)?;
-        let timestamp = decode_u64(timestamp_bs)?;
+        let data_point_count = decode_u64(&data_point_count_bs)?;
+        let value_size = decode_u64(&value_size_bs)?;
+        let timestamp = decode_u64(&timestamp_bs)?;
 
         let data_points_size =
             data_point_count * (value_size + TryInto::<u64>::try_into(DATA_FEED_ID_BS)?);
 
-        let size: u64 = data_points_size
-            + TryInto::<u64>::try_into(DATA_POINT_VALUE_BYTE_SIZE_BS)?
-            + TryInto::<u64>::try_into(TIMESTAMP_BS)?
-            + TryInto::<u64>::try_into(DATA_POINTS_COUNT_BS)?;
+        let mut data_points: Vec<_> = payload.trim_end(data_points_size.try_into()?);
 
-        reader.set_cursor(cursor);
-        let signable_bytes = reader.read_slice(size.try_into()?);
+        let signable_bytes = [
+            data_points.clone(),
+            timestamp_bs,
+            value_size_bs,
+            data_point_count_bs,
+        ]
+        .concat();
 
         let signer_address = self.crypto.recover_address(signable_bytes, signature).ok();
 
-        let _: Vec<_> = payload.trim_end(
-            SIGNATURE_BS + DATA_POINTS_COUNT_BS + DATA_POINT_VALUE_BYTE_SIZE_BS + TIMESTAMP_BS,
-        );
-
         let data_points = Self::trim_data_points(
-            payload,
+            &mut data_points,
             data_point_count.try_into()?,
             value_size.try_into()?,
         )?;
