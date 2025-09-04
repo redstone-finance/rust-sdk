@@ -25,7 +25,7 @@ test: clippy
 	done
 
 bench:
-	($(BENCH) --all-features);
+	($(BENCH) --all-features -- --message-format=json);
 
 docs:
 	@set -e; \
