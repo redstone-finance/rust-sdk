@@ -25,6 +25,6 @@ jobs:
       - name: Run Criterion benchmarks
         uses: boa-dev/criterion-compare-action@v3
         with:
-          cwd: "."
+          cwd: "./crates/redstone"
           branchName: ${{ github.base_ref }}
           features: "bench"
