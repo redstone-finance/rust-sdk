@@ -29,8 +29,8 @@ fn benchmark_all_samples(c: &mut Criterion) {
         group.bench_function(name, |b| {
             b.iter(|| {
                 return;
-                let test_payload = payload.clone();
-                decode_payload(&mut crypto, test_payload).unwrap()
+                // let test_payload = payload.clone();
+                // decode_payload(&mut crypto, test_payload).unwrap()
             })
         });
     }
