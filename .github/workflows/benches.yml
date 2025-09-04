@@ -22,8 +22,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Set up Rust PATH
         run: echo "$HOME/.cargo/bin:$PATH" >> $GITHUB_PATH
-      - name: Bench rust
-        run: make bench
       - name: Run Criterion benchmarks
         uses: boa-dev/criterion-compare-action@v3
         with:
