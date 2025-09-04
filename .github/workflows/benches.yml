@@ -1,0 +1,33 @@
+name: Rust SDK Benchmarks
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+  push: 
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust-sdk-benchmarks:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 20
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Set up Rust PATH
+        run: echo "$HOME/.cargo/bin:$PATH" >> $GITHUB_PATH
+      - name: Bench rust
+        run: make bench
+      - name: Run Criterion benchmarks
+        uses: boa-dev/criterion-compare-action@v3
+        with:
+          cwd: "."
+          branchName: ${{ github.base_ref }}
+          benchName: "benchmarks"
+          features: "bench"
