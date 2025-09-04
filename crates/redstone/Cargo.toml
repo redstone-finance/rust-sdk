@@ -75,3 +75,6 @@ wasm-bindgen-test = { version = "^0.3.45" }
 [[bench]]
 harness = false
 name = "benchmarks"
+
+[lib]
+bench = false
