@@ -19,7 +19,7 @@ fn benchmark_all_samples(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("decode_payload");
 
-    group.sample_size(30);
+    group.sample_size(100);
     group.measurement_time(std::time::Duration::from_secs(3));
 
     for (name, sample) in samples {
