@@ -9,6 +9,9 @@ use crate::{
     Bytes, RedStoneConfig,
 };
 
+#[cfg(feature = "bench")]
+use crate::{network::error::Error, Crypto};
+
 /// The main processor of the RedStone payload.
 ///
 ///
@@ -25,6 +28,16 @@ pub fn process_payload(
     payload_bytes: impl Into<Bytes>,
 ) -> ProcessorResult {
     config.process_payload(payload_bytes)
+}
+
+#[cfg(feature = "bench")]
+pub fn decode_payload<C: Crypto>(
+    crypto: &mut C,
+    payload_bytes: impl Into<Bytes>,
+) -> Result<Payload, Error> {
+    let mut bytes = payload_bytes.into();
+
+    PayloadDecoder::new(crypto).make_payload(&mut bytes.0)
 }
 
 /// Internal trait, designed to extend `RedStoneConfig` implementations with ability to process payloads.

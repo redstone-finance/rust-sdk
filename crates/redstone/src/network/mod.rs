@@ -10,7 +10,7 @@ pub trait Environment {
 }
 
 /// Default and standard implementation of the `Environmet` trait.
-/// Uses panic and println macros in implementation of trait function.
+/// Uses println in std environment otherwise does nothing
 pub struct StdEnv;
 
 impl Environment for StdEnv {
@@ -18,4 +18,11 @@ impl Environment for StdEnv {
         #[cfg(feature = "std")]
         println!("{}", _print_content())
     }
+}
+
+/// Dummy implementation, does nothing.
+pub struct Dummy;
+
+impl Environment for Dummy {
+    fn print<F: FnOnce() -> String>(_print_content: F) {}
 }

@@ -67,6 +67,7 @@ criterion = { version = "0.5.1", default-features = false }
 itertools = { version = "^0.13.0" }
 rand = "0.8.5"
 redstone-utils = { path = "../redstone-utils" }
+samples = { path = "../samples" }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 getrandom = { version = "^0.2.15", default-features = false, features = ["js"] }
@@ -74,7 +75,7 @@ wasm-bindgen-test = { version = "^0.3.45" }
 
 [[bench]]
 harness = false
-name = "benchmarks"
+name = "bench_main"
 
 [lib]
 bench = false
