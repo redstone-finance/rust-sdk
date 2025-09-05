@@ -37,7 +37,7 @@ pub fn decode_payload<C: Crypto>(
 ) -> Result<Payload, Error> {
     let mut bytes = payload_bytes.into();
 
-    PayloadDecoder::new(crypto).make_payload(bytes.0)
+    PayloadDecoder::new(crypto).make_payload(&mut bytes.0)
 }
 
 /// Internal trait, designed to extend `RedStoneConfig` implementations with ability to process payloads.
@@ -55,8 +55,8 @@ trait RedStonePayloadProcessor {
 
 impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
     fn process_payload(&mut self, payload_bytes: impl Into<Bytes>) -> ProcessorResult {
-        let bytes = payload_bytes.into();
-        let payload = PayloadDecoder::new(self.crypto_mut()).make_payload(bytes.0)?;
+        let mut bytes = payload_bytes.into();
+        let payload = PayloadDecoder::new(self.crypto_mut()).make_payload(&mut bytes.0)?;
 
         T::Environment::print(|| format!("{:?}", payload));
 
