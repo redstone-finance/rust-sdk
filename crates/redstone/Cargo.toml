@@ -3,7 +3,7 @@ authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"
 edition = "2021"
 name = "redstone"
-version = "3.0.0-pre1"
+version = "3.0.0-pre2"
 
 [features]
 default = ["default-crypto", "std"]
@@ -43,7 +43,7 @@ soroban = ["soroban-sdk"]
 bench = []
 
 [dependencies]
-alloy-primitives = { version = "=0.8.1", default-features = false }
+alloy-primitives = { version = "=0.8.2", default-features = false }
 anchor-lang = { version = "0.31.1", optional = true, default-features = false }
 casper-contract = { version = "^4.0.0", default-features = false, features = [
 ], optional = true }
