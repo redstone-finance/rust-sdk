@@ -58,7 +58,7 @@ casper-contract = { version = "^4.0.0", default-features = false, features = [
 ], optional = true }
 casper-types = { version = "^4.0.2", default-features = false, features = [
 ], optional = true }
-hex-literal = { version = "1.0.0", default-features = false }
+hex-literal = { version = "0.4.1" }
 k256 = { version = "^0.13.4", default-features = false, features = [
     "ecdsa",
 ], optional = true }
