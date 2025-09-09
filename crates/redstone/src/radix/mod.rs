@@ -13,7 +13,7 @@ use scrypto::{
 use crate::{Bytes, Crypto, CryptoError, Environment, RedStoneConfigImpl};
 
 /// Implementation of `RedstoneConfig` specialized for operations on the radix.
-pub type RadixRedStoneConfig = RedStoneConfigImpl<RadixCrypto, RadixEnv>;
+pub type RadixRedStoneConfig = RedStoneConfigImpl<RadixCrypto, RadixEnv, alloy_primitives::U256>;
 
 pub struct RadixCrypto;
 pub struct RadixEnv;

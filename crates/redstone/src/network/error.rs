@@ -30,7 +30,7 @@ pub enum Error {
     ///
     /// Used when operations on `U256` numbers exceed their maximum value, potentially leading
     /// to incorrect calculations or state.
-    #[error("Number overflow: {}", .0.to_u256())]
+    #[error("Number overflow: {}", .0)]
     NumberOverflow(Value),
 
     /// Used when an expected non-empty array or vector is found to be empty.

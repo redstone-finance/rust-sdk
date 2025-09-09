@@ -1,17 +1,12 @@
 use alloc::vec::Vec;
 use core::fmt::Debug;
 
-use alloy_primitives::U256;
 use thiserror::Error;
 
 use crate::{network::as_str::AsHexStr, Bytes, SignerAddress};
 
-const ECDSA_N_DIV_2: U256 = U256::from_limbs([
-    16134479119472337056,
-    6725966010171805725,
-    18446744073709551615,
-    9223372036854775807,
-]);
+const ECDSA_N_DIV_2: [u8; 32] =
+    hex_literal::hex!("7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0");
 
 const SIGNATURE_SIZE_BS: usize = 65;
 
@@ -73,7 +68,9 @@ pub trait Crypto {
 }
 
 fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
-    if U256::from_be_slice(&sig[32..64]) > ECDSA_N_DIV_2 {
+    let s: [u8; 32] = sig[32..64].try_into().expect("Slice is of length 32");
+
+    if s > ECDSA_N_DIV_2 {
         return Err(CryptoError::Signature(sig.to_vec()));
     }
 

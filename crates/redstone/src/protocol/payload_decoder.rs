@@ -143,6 +143,7 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
 #[cfg(feature = "default-crypto")]
 mod tests {
     use alloc::{borrow::ToOwned, string::ToString, vec::Vec};
+    use alloy_primitives::U256;
     use core::ops::Shr;
     use redstone_utils::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex};
 
@@ -480,7 +481,7 @@ mod tests {
                 &DATA_POINT_BYTES_TAIL[..DATA_POINT_BYTES_TAIL.len() - 2 * i],
                 32 - i,
                 1,
-                Value::from_u256(alloy_primitives::U256::from(VALUE).shr(8 * i as u32)),
+                Value(U256::from(VALUE).shr(8 * i as u32).to_be_bytes()),
             )?;
         }
         Ok(())

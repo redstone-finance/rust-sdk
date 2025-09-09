@@ -11,7 +11,7 @@ impl From<casper_types::bytesrepr::Bytes> for Bytes {
     }
 }
 
-pub type CasperRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, StdEnv>;
+pub type CasperRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, StdEnv, alloy_primitives::U256>;
 
 #[cfg(feature = "casper-test")]
 pub mod casper_test {
@@ -22,7 +22,8 @@ pub mod casper_test {
     use crate::{default_ext::DefaultCrypto, network::Environment, RedStoneConfigImpl};
 
     /// Config for casper tests, not to be used in the production
-    pub type CasperTestRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, CasperTestEnvironment>;
+    pub type CasperTestRedStoneConfig =
+        RedStoneConfigImpl<DefaultCrypto, CasperTestEnvironment, alloy_primitives::U256>;
 
     /// Casper test environment.
     pub struct CasperTestEnvironment;

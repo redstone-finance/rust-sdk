@@ -10,7 +10,9 @@ use redstone_utils::hex::make_hex_value_from_string;
 
 use samples::*;
 
-fn create_config(sample: &Sample) -> RedStoneConfigImpl<DefaultCrypto, Dummy> {
+fn create_config(
+    sample: &Sample,
+) -> RedStoneConfigImpl<DefaultCrypto, Dummy, alloy_primitives::U256> {
     let config = Config::try_new(
         1,
         sample
