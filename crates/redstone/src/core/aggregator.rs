@@ -5,7 +5,6 @@ use crate::{
     network::error::Error,
     protocol::data_package::DataPackage,
     types::Value,
-    u256::U256,
     utils::median::Median,
     FeedId,
 };
@@ -16,7 +15,7 @@ pub struct FeedValue {
     pub value: Value,
 }
 
-pub fn process_values<U: U256>(
+pub fn process_values(
     config: &Config,
     data_packages: Vec<DataPackage>,
 ) -> Result<Vec<FeedValue>, Error> {
@@ -56,17 +55,17 @@ pub fn process_values<U: U256>(
         }
     }
 
-    aggregate_values::<U>(matrix, config)
+    aggregate_values(matrix, config)
 }
 
-fn aggregate_values<U: U256>(
+fn aggregate_values(
     values: Matrix<Option<Value>>,
     config: &Config,
 ) -> Result<Vec<FeedValue>, Error> {
     let mut result = vec![];
 
     for (feed, row) in values.rows_iter().enumerate() {
-        let feed_values: Vec<_> = row.flatten().map(|v| v.to_u256::<U>()).collect();
+        let feed_values: Vec<_> = row.flatten().copied().collect();
 
         if feed_values.len() < config.signer_count_threshold() as usize {
             continue;
@@ -79,7 +78,7 @@ fn aggregate_values<U: U256>(
 
         result.push(FeedValue {
             feed: config.feed_ids()[feed],
-            value: Value::from_u256(median),
+            value: median,
         });
     }
 
@@ -87,9 +86,7 @@ fn aggregate_values<U: U256>(
 }
 
 #[cfg(test)]
-#[cfg(feature = "alloy")]
 mod tests {
-    use alloy_primitives::U256;
     use redstone_utils::hex::make_hex_value_from_string;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
@@ -115,7 +112,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, 2050u128.into());
@@ -137,7 +134,7 @@ mod tests {
             ),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 2);
 
@@ -160,7 +157,7 @@ mod tests {
             None,
         )];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -173,7 +170,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, 2050u128.into());
@@ -187,7 +184,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_1, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages);
+        let result = process_values(&config, data_packages);
 
         assert!(matches!(result, Err(Error::ReoccurringFeedId(_))));
     }
@@ -200,7 +197,7 @@ mod tests {
         data_package.signer_address = None;
         let data_packages = vec![data_package];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -212,7 +209,7 @@ mod tests {
             ETH, 2000, "aaabbb", None,
         )];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -227,7 +224,7 @@ mod tests {
             None,
         )];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -240,7 +237,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 0, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -265,7 +262,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 3000, TEST_SIGNER_ADDRESS_3, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, 2000u128.into());
@@ -293,7 +290,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 4000, TEST_SIGNER_ADDRESS_4, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, 2500u128.into());
@@ -322,7 +319,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2100, TEST_SIGNER_ADDRESS_2, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
 
@@ -345,7 +342,7 @@ mod tests {
             DataPackage::test_single_data_point(BTC, 51000, TEST_SIGNER_ADDRESS_1, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 2);
     }
@@ -355,7 +352,7 @@ mod tests {
         let config = Config::test_with_signer_count_threshold_or_default(Some(1));
         let data_packages = vec![];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 0);
     }
@@ -369,7 +366,7 @@ mod tests {
             None,
         )];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 2);
     }
@@ -397,7 +394,7 @@ mod tests {
             ),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 3);
 
@@ -448,7 +445,7 @@ mod tests {
             DataPackage::test_single_data_point(BTC, 50500, TEST_SIGNER_ADDRESS_4, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 2);
 
@@ -484,7 +481,7 @@ mod tests {
             DataPackage::test_single_data_point(ETH, 2200, TEST_SIGNER_ADDRESS_4, None),
         ];
 
-        let result = process_values::<U256>(&config, data_packages).unwrap();
+        let result = process_values(&config, data_packages).unwrap();
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].value, 2050u128.into());

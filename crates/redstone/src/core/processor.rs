@@ -6,7 +6,6 @@ use crate::{
     },
     network::Environment,
     protocol::{payload::Payload, PayloadDecoder},
-    u256::U256,
     Bytes, RedStoneConfig,
 };
 
@@ -61,17 +60,14 @@ impl<T: RedStoneConfig> RedStonePayloadProcessor for T {
 
         T::Environment::print(|| format!("{:?}", payload));
 
-        make_processor_result::<T::Environment, T::U256>(self.config(), payload)
+        make_processor_result::<T::Environment>(self.config(), payload)
     }
 }
 
-fn make_processor_result<Env: Environment, U: U256>(
-    config: &Config,
-    payload: Payload,
-) -> ProcessorResult {
+fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) -> ProcessorResult {
     let timestamp = payload.get_validated_timestamp(config)?;
 
-    let values = process_values::<U>(config, payload.data_packages)?;
+    let values = process_values(config, payload.data_packages)?;
 
     Env::print(|| format!("{:?} {:?}", timestamp, values));
 
@@ -79,9 +75,7 @@ fn make_processor_result<Env: Environment, U: U256>(
 }
 
 #[cfg(test)]
-#[cfg(feature = "alloy")]
 mod tests {
-    use alloy_primitives::U256;
     use redstone_utils::hex::make_hex_value_from_string;
     use redstone_utils::iter_into::IterInto;
     #[cfg(target_arch = "wasm32")]
@@ -130,7 +124,7 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result::<StdEnv, U256>(
+        let result = make_processor_result::<StdEnv>(
             &Config::test_with_signer_count_threshold_or_default(None),
             Payload { data_packages },
         );
@@ -176,7 +170,7 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result::<StdEnv, U256>(
+        let result = make_processor_result::<StdEnv>(
             &Config::test_with_signer_count_threshold_or_default(None),
             Payload { data_packages },
         );
@@ -209,7 +203,7 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result::<StdEnv, U256>(
+        let result = make_processor_result::<StdEnv>(
             &Config::test_with_signer_count_threshold_or_default(None),
             Payload { data_packages },
         );
@@ -258,7 +252,7 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result::<StdEnv, U256>(
+        let result = make_processor_result::<StdEnv>(
             &Config::test_with_signer_count_threshold_or_default(None),
             Payload { data_packages },
         );
@@ -284,7 +278,7 @@ mod tests {
             ),
         ];
 
-        let result = make_processor_result::<StdEnv, U256>(
+        let result = make_processor_result::<StdEnv>(
             &Config::test_with_signer_count_threshold_or_default(None),
             Payload { data_packages },
         );

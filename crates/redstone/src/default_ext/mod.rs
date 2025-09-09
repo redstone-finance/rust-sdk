@@ -1,4 +1,3 @@
-use alloy_primitives::U256 as AlloyU256;
 use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 use sha3::{Digest, Keccak256};
 
@@ -6,7 +5,7 @@ use crate::{crypto::Crypto, network::StdEnv, Bytes, CryptoError, RedStoneConfigI
 
 /// Standard nonspecialized implementation of the RedStoneConfig.
 /// Constructible from the [crate::core::config::Config].
-pub type StdRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, StdEnv, AlloyU256>;
+pub type StdRedStoneConfig = RedStoneConfigImpl<DefaultCrypto, StdEnv>;
 
 /// Default crypto operations. Uses k256 and sha3 crates.
 pub struct DefaultCrypto;

@@ -1,6 +1,8 @@
 use alloc::vec::Vec;
 use core::ops::{Add, BitAnd, Shr};
 
+use crate::Value;
+
 pub trait Median {
     type Item;
 
@@ -26,6 +28,11 @@ where
         let one = T::from(1);
 
         self.shr(one) + other.shr(one) + (self.bitand(one) + other.bitand(one)).shr(one)
+    }
+}
+impl Avg for Value {
+    fn avg(self, other: Self) -> Self {
+        self.shr(1) + other.shr(1) + (self.bitand(1) + other.bitand(1)).shr(1)
     }
 }
 
@@ -80,31 +87,31 @@ where
 }
 
 #[cfg(test)]
-#[cfg(feature = "alloy")]
 mod tests {
     use alloc::vec::Vec;
     use core::fmt::Debug;
 
-    use alloy_primitives::U256;
     use itertools::Itertools;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
+
+    use crate::Value;
 
     use super::{Avg, Median};
 
     #[test]
     fn test_avg() {
-        let u256 = U256::MAX; // 115792089237316195423570985008687907853269984665640564039457584007913129639935
-        let u256_max_sub_1 = u256 - U256::from(1u32);
-        let u256max_div_2 = u256 / U256::from(2u32);
+        let u256 = Value::max(); // 115792089237316195423570985008687907853269984665640564039457584007913129639935
+        let u256_max_sub_1 = u256 - 1;
+        let u256max_div_2 = u256 >> 1;
 
-        assert_eq!(u256.avg(U256::from(0u8)), u256max_div_2);
-        assert_eq!(u256.avg(U256::from(1u8)), u256max_div_2 + U256::from(1u8));
+        assert_eq!(u256.avg(Value::from(0u8)), u256max_div_2);
+        assert_eq!(u256.avg(Value::from(1u8)), u256max_div_2 + Value::from(1u8));
         assert_eq!(u256.avg(u256_max_sub_1), u256_max_sub_1);
         assert_eq!(u256.avg(u256), u256);
 
-        assert_eq!((u256_max_sub_1).avg(U256::from(0u8)), u256max_div_2);
-        assert_eq!((u256_max_sub_1).avg(U256::from(1u8)), u256max_div_2);
+        assert_eq!((u256_max_sub_1).avg(Value::from(0u8)), u256max_div_2);
+        assert_eq!((u256_max_sub_1).avg(Value::from(1u8)), u256max_div_2);
         assert_eq!((u256_max_sub_1).avg(u256_max_sub_1), u256_max_sub_1);
         assert_eq!((u256_max_sub_1).avg(u256), u256_max_sub_1);
     }
@@ -124,28 +131,37 @@ mod tests {
     }
     #[test]
     fn test_median_two_values() {
-        test_all_permutations(vec![U256::from(1u32), U256::from(3u32)], U256::from(2u32));
-        test_all_permutations(vec![U256::from(1u32), U256::from(2u32)], U256::from(1u32));
-        test_all_permutations(vec![U256::from(1u32), U256::from(1u32)], U256::from(1u32));
+        test_all_permutations(
+            vec![Value::from(1u32), Value::from(3u32)],
+            Value::from(2u32),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), Value::from(2u32)],
+            Value::from(1u32),
+        );
+        test_all_permutations(
+            vec![Value::from(1u32), Value::from(1u32)],
+            Value::from(1u32),
+        );
     }
 
     #[test]
     fn test_median_three_values() {
         test_all_permutations(
-            vec![U256::from(1u32), U256::from(2u32), U256::from(3u32)],
-            U256::from(2u32),
+            vec![Value::from(1u32), Value::from(2u32), Value::from(3u32)],
+            Value::from(2u32),
         );
         test_all_permutations(
-            vec![U256::from(1u32), U256::from(1u32), U256::from(2u32)],
-            U256::from(1u32),
+            vec![Value::from(1u32), Value::from(1u32), Value::from(2u32)],
+            Value::from(1u32),
         );
         test_all_permutations(
-            vec![U256::from(1u32), U256::from(2u32), U256::from(2u32)],
-            U256::from(2u32),
+            vec![Value::from(1u32), Value::from(2u32), Value::from(2u32)],
+            Value::from(2u32),
         );
         test_all_permutations(
-            vec![U256::from(1u32), U256::from(1u32), U256::from(1u32)],
-            U256::from(1u32),
+            vec![Value::from(1u32), Value::from(1u32), Value::from(1u32)],
+            Value::from(1u32),
         );
         test_all_permutations(vec![1, 2, 3], 2);
         test_all_permutations(vec![1, 1, 2], 1);
@@ -157,77 +173,77 @@ mod tests {
     fn test_median_even_number_of_values() {
         test_all_permutations(
             vec![
-                U256::from(1u32),
-                U256::from(2u32),
-                U256::from(3u32),
-                U256::from(4_u32),
+                Value::from(1u32),
+                Value::from(2u32),
+                Value::from(3u32),
+                Value::from(4_u32),
             ],
-            U256::from(2u32),
+            Value::from(2u32),
         );
         test_all_permutations(
             vec![
-                U256::from(1u32),
-                U256::from(2u32),
-                U256::from(4u32),
-                U256::from(4_u32),
+                Value::from(1u32),
+                Value::from(2u32),
+                Value::from(4u32),
+                Value::from(4_u32),
             ],
-            U256::from(3u32),
+            Value::from(3u32),
         );
         test_all_permutations(
             vec![
-                U256::from(1u32),
-                U256::from(1u32),
-                U256::from(3u32),
-                U256::from(3_u32),
+                Value::from(1u32),
+                Value::from(1u32),
+                Value::from(3u32),
+                Value::from(3_u32),
             ],
-            U256::from(2u32),
+            Value::from(2u32),
         );
         test_all_permutations(
             vec![
-                U256::from(1u32),
-                U256::from(1u32),
-                U256::from(3u32),
-                U256::from(4_u32),
+                Value::from(1u32),
+                Value::from(1u32),
+                Value::from(3u32),
+                Value::from(4_u32),
             ],
-            U256::from(2u32),
+            Value::from(2u32),
         );
         test_all_permutations(
             vec![
-                U256::from(1u32),
-                U256::from(1u32),
-                U256::from(1u32),
-                U256::from(3_u32),
+                Value::from(1u32),
+                Value::from(1u32),
+                Value::from(1u32),
+                Value::from(3_u32),
             ],
-            U256::from(1u32),
+            Value::from(1u32),
         );
         test_all_permutations(
             vec![
-                U256::from(1u32),
-                U256::from(3u32),
-                U256::from(3u32),
-                U256::from(3_u32),
+                Value::from(1u32),
+                Value::from(3u32),
+                Value::from(3u32),
+                Value::from(3_u32),
             ],
-            U256::from(3u32),
+            Value::from(3u32),
         );
         test_all_permutations(
             vec![
-                U256::from(1u32),
-                U256::from(1u32),
-                U256::from(1u32),
-                U256::from(1_u32),
+                Value::from(1u32),
+                Value::from(1u32),
+                Value::from(1u32),
+                Value::from(1_u32),
             ],
-            U256::from(1u32),
+            Value::from(1u32),
         );
         test_all_permutations(
             vec![
-                U256::from(1u32),
-                U256::from(2u32),
-                U256::from(3u32),
-                U256::from(4_u32),
-                U256::from(5_u32),
-                U256::from(6_u32),
+                Value::from(1u32),
+                Value::from(2u32),
+                Value::from(3u32),
+                Value::from(4_u32),
+                Value::from(5_u32),
+                Value::from(6_u32),
             ],
-            U256::from(3u32),
+            Value::from(3u32),
         );
     }
 

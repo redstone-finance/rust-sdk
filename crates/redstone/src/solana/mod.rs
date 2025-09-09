@@ -32,7 +32,7 @@ impl From<Error> for AnchorLangError {
 }
 
 /// Implementation of `RedstoneConfig` specialized for operations on the solana.
-pub type SolanaRedStoneConfig = RedStoneConfigImpl<SolanaCrypto, SolanaEnv, primitive_types::U256>;
+pub type SolanaRedStoneConfig = RedStoneConfigImpl<SolanaCrypto, SolanaEnv>;
 
 pub type SolanaEnv = StdEnv;
 pub struct SolanaCrypto;

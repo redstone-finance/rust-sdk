@@ -18,7 +18,6 @@ mod crypto;
 pub mod network;
 mod protocol;
 mod types;
-pub mod u256;
 mod utils;
 
 #[cfg(feature = "solana")]
@@ -43,14 +42,13 @@ use network::Environment;
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 pub use utils::median::Avg;
 
-use crate::{core::config::Config, u256::U256};
+use crate::core::config::Config;
 
 /// Configuration for the redstone protocol.
 /// Pluggable with custom environments and possible specialized crypto operations.
 pub trait RedStoneConfig {
     /// Environment in which we execute. Provides logging etc
     type Environment: Environment;
-    type U256: U256;
 
     /// Returns config for payload decoding and validation.
     fn config(&self) -> &Config;
@@ -58,13 +56,13 @@ pub trait RedStoneConfig {
     fn crypto_mut(&mut self) -> &mut impl Crypto;
 }
 
-pub struct RedStoneConfigImpl<C, E, U> {
+pub struct RedStoneConfigImpl<C, E> {
     inner: Config,
     crypto: C,
-    _phantom: PhantomData<(E, U)>,
+    _phantom: PhantomData<E>,
 }
 
-impl<C, E, U> From<(Config, C)> for RedStoneConfigImpl<C, E, U> {
+impl<C, E> From<(Config, C)> for RedStoneConfigImpl<C, E> {
     fn from(value: (Config, C)) -> Self {
         Self {
             inner: value.0,
@@ -74,14 +72,12 @@ impl<C, E, U> From<(Config, C)> for RedStoneConfigImpl<C, E, U> {
     }
 }
 
-impl<C, E, U> RedStoneConfig for RedStoneConfigImpl<C, E, U>
+impl<C, E> RedStoneConfig for RedStoneConfigImpl<C, E>
 where
     C: Crypto,
     E: Environment,
-    U: U256,
 {
     type Environment = E;
-    type U256 = U;
 
     fn config(&self) -> &Config {
         &self.inner

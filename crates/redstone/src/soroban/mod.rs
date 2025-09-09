@@ -15,8 +15,7 @@ use crate::{
 };
 
 /// Implementation of `RedstoneConfig` specialized for operations on the soroban (stellar).
-pub type SorobanRedStoneConfig<'a> =
-    RedStoneConfigImpl<SorobanCrypto<'a>, SorobanEnv, alloy_primitives::U256>;
+pub type SorobanRedStoneConfig<'a> = RedStoneConfigImpl<SorobanCrypto<'a>, SorobanEnv>;
 
 pub type SorobanEnv = StdEnv;
 
