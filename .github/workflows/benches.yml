@@ -27,4 +27,4 @@ jobs:
         with:
           cwd: "./crates/redstone"
           branchName: ${{ github.base_ref }}
-          features: "bench,alloy"
+          features: "bench"
