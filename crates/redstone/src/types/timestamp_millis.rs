@@ -36,4 +36,8 @@ impl TimestampMillis {
     pub fn is_same_or_after(&self, other: Self) -> bool {
         self.0 >= other.0
     }
+
+    pub fn is_after(&self, other: Self) -> bool {
+        self.0 > other.0
+    }
 }

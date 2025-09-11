@@ -4,7 +4,8 @@
 //! * [verify_untrusted_update] - for untrusted updaters
 //! * [verify_trusted_update] - for trusted updaters
 //! * [verify_signers_config] - verify integrity of the config
-//! * [UpdateTimestampVerifier] - for verifying timestamps with static dispatch between Trusted/Untrusted source.
+//! * [verify_data_staleness] - verify if data on chain is stale
+//! * [UpdateTimestampVerifier] - for verifying timestamps with static dispatch between Trusted/Untrusted source
 
 use crate::{
     network::error::Error, utils::slice::check_no_duplicates, SignerAddress, TimestampMillis,
@@ -128,6 +129,26 @@ pub fn verify_untrusted_update(
 }
 
 /// Verifies if:
+/// * Data is still within its time-to-live period
+/// * Current time has not exceeded the staleness threshold (write_time + data_ttl)
+pub fn verify_data_staleness(
+    write_time: TimestampMillis,
+    time_now: TimestampMillis,
+    data_ttl: TimestampMillis,
+) -> Result<(), Error> {
+    let staleness_threshold = write_time.add(data_ttl);
+    if staleness_threshold.is_same_or_before(time_now) {
+        return Err(Error::DataStaleness {
+            time_now,
+            write_time,
+            staleness_threshold,
+        });
+    }
+
+    Ok(())
+}
+
+/// Verifies if:
 /// * signer list is non empty and contains at least `threshold` of elements.
 fn verify_signer_count_in_threshold(signers: &[SignerAddress], threshold: u8) -> Result<(), Error> {
     if signers.len() < threshold as usize || signers.is_empty() {
@@ -167,7 +188,9 @@ pub fn verify_signers_config(signers: &[SignerAddress], threshold: u8) -> Result
 #[cfg(test)]
 mod tests {
     use crate::{
-        contract::verification::{verify_trusted_update, verify_untrusted_update},
+        contract::verification::{
+            verify_data_staleness, verify_trusted_update, verify_untrusted_update,
+        },
         network::error::Error,
     };
 
@@ -255,5 +278,110 @@ mod tests {
                 1.into()
             ))
         );
+    }
+
+    #[test]
+    fn data_is_fresh_when_within_ttl() {
+        let write_time = 1000.into();
+        let data_ttl = 500.into();
+        let time_now = 1200.into();
+
+        let result = verify_data_staleness(write_time, time_now, data_ttl);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn data_is_stale_when_exactly_at_threshold() {
+        let write_time = 1000.into();
+        let data_ttl = 500.into();
+        let time_now = 1500.into();
+
+        let result = verify_data_staleness(write_time, time_now, data_ttl);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn data_is_stale_when_past_threshold() {
+        let write_time = 1000.into();
+        let data_ttl = 500.into();
+        let time_now = 1600.into();
+
+        let result = verify_data_staleness(write_time, time_now, data_ttl);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn error_contains_correct_timestamps() {
+        let write_time = 1000.into();
+        let data_ttl = 500.into();
+        let time_now = 1500.into();
+        let staleness_threshold = 1500.into();
+
+        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let expected_error = Error::DataStaleness {
+            time_now,
+            write_time,
+            staleness_threshold,
+        };
+
+        assert_eq!(result.unwrap_err(), expected_error);
+    }
+
+    #[test]
+    fn zero_ttl_makes_data_immediately_stale() {
+        let write_time = 1000.into();
+        let data_ttl = 0.into();
+        let time_now = 1000.into();
+
+        let result = verify_data_staleness(write_time, time_now, data_ttl);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn large_ttl_keeps_data_fresh() {
+        let write_time = 1000.into();
+        let data_ttl = (u64::MAX / 2).into();
+        let time_now = 5000.into();
+
+        let result = verify_data_staleness(write_time, time_now, data_ttl);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn data_fresh_immediately_after_write() {
+        let write_time = 1000.into();
+        let data_ttl = 500.into();
+        let time_now = 1000.into();
+
+        let result = verify_data_staleness(write_time, time_now, data_ttl);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn boundary_condition_one_millisecond_before_expiry() {
+        let write_time = 1000.into();
+        let data_ttl = 500.into();
+        let time_now = 1499.into();
+
+        let result = verify_data_staleness(write_time, time_now, data_ttl);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn boundary_condition_one_millisecond_after_expiry() {
+        let write_time = 1000.into();
+        let data_ttl = 500.into();
+        let time_now = 1501.into();
+
+        let result = verify_data_staleness(write_time, time_now, data_ttl);
+
+        assert!(result.is_err());
     }
 }
