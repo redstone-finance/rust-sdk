@@ -178,7 +178,7 @@ mod tests {
                 Value::from(1u32),
                 Value::from(2u32),
                 Value::from(3u32),
-                Value::from(4_u32),
+                Value::from(4u32),
             ],
             Value::from(2u32),
         );
@@ -187,7 +187,7 @@ mod tests {
                 Value::from(1u32),
                 Value::from(2u32),
                 Value::from(4u32),
-                Value::from(4_u32),
+                Value::from(4u32),
             ],
             Value::from(3u32),
         );
@@ -196,7 +196,7 @@ mod tests {
                 Value::from(1u32),
                 Value::from(1u32),
                 Value::from(3u32),
-                Value::from(3_u32),
+                Value::from(3u32),
             ],
             Value::from(2u32),
         );
@@ -205,7 +205,7 @@ mod tests {
                 Value::from(1u32),
                 Value::from(1u32),
                 Value::from(3u32),
-                Value::from(4_u32),
+                Value::from(4u32),
             ],
             Value::from(2u32),
         );
@@ -214,7 +214,7 @@ mod tests {
                 Value::from(1u32),
                 Value::from(1u32),
                 Value::from(1u32),
-                Value::from(3_u32),
+                Value::from(3u32),
             ],
             Value::from(1u32),
         );
@@ -223,7 +223,7 @@ mod tests {
                 Value::from(1u32),
                 Value::from(3u32),
                 Value::from(3u32),
-                Value::from(3_u32),
+                Value::from(3u32),
             ],
             Value::from(3u32),
         );
@@ -232,7 +232,7 @@ mod tests {
                 Value::from(1u32),
                 Value::from(1u32),
                 Value::from(1u32),
-                Value::from(1_u32),
+                Value::from(1u32),
             ],
             Value::from(1u32),
         );
@@ -241,9 +241,9 @@ mod tests {
                 Value::from(1u32),
                 Value::from(2u32),
                 Value::from(3u32),
-                Value::from(4_u32),
-                Value::from(5_u32),
-                Value::from(6_u32),
+                Value::from(4u32),
+                Value::from(5u32),
+                Value::from(6u32),
             ],
             Value::from(3u32),
         );
