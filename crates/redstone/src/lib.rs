@@ -40,6 +40,7 @@ pub use core::FeedValue;
 pub use crypto::{Crypto, CryptoError};
 use network::Environment;
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
+pub use utils::median::Avg;
 
 use crate::core::config::Config;
 

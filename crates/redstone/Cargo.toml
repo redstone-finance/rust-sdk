@@ -3,12 +3,12 @@ authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"
 edition = "2021"
 name = "redstone"
-version = "3.0.0-pre2"
+version = "3.0.0-pre3"
 
 [features]
 default = ["default-crypto", "std"]
 
-std = ["alloy-primitives/std", "getrandom/std", "k256?/std", "sha3?/std"]
+std = ["getrandom/std", "k256?/std", "sha3?/std"]
 
 # default crypto implementations
 default-crypto = ["k256", "sha3"]
@@ -43,12 +43,12 @@ soroban = ["soroban-sdk"]
 bench = []
 
 [dependencies]
-alloy-primitives = { version = "=0.8.2", default-features = false }
 anchor-lang = { version = "0.31.1", optional = true, default-features = false }
 casper-contract = { version = "^4.0.0", default-features = false, features = [
 ], optional = true }
 casper-types = { version = "^4.0.2", default-features = false, features = [
 ], optional = true }
+hex-literal = { version = "0.4.1" }
 k256 = { version = "^0.13.4", default-features = false, features = [
     "ecdsa",
 ], optional = true }
