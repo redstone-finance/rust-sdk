@@ -4,7 +4,8 @@
 //! * [verify_untrusted_update] - for untrusted updaters
 //! * [verify_trusted_update] - for trusted updaters
 //! * [verify_signers_config] - verify integrity of the config
-//! * [UpdateTimestampVerifier] - for verifying timestamps with static dispatch between Trusted/Untrusted source.
+//! * [verify_data_staleness] - verify if data on chain is stale
+//! * [UpdateTimestampVerifier] - for verifying timestamps with static dispatch between Trusted/Untrusted source
 
 use crate::{
     network::error::Error, utils::slice::check_no_duplicates, SignerAddress, TimestampMillis,
@@ -128,6 +129,26 @@ pub fn verify_untrusted_update(
 }
 
 /// Verifies if:
+/// * Data is still within its time-to-live period
+/// * Current time has not exceeded the staleness threshold (write_time + data_ttl)
+pub fn verify_data_staleness(
+    write_time: TimestampMillis,
+    time_now: TimestampMillis,
+    data_ttl: TimestampMillis,
+) -> Result<(), Error> {
+    let staleness_threshold = write_time.add(data_ttl);
+    if staleness_threshold.is_same_or_before(time_now) {
+        return Err(Error::DataStaleness {
+            time_now,
+            write_time,
+            staleness_threshold,
+        });
+    }
+
+    Ok(())
+}
+
+/// Verifies if:
 /// * signer list is non empty and contains at least `threshold` of elements.
 fn verify_signer_count_in_threshold(signers: &[SignerAddress], threshold: u8) -> Result<(), Error> {
     if signers.len() < threshold as usize || signers.is_empty() {
@@ -167,7 +188,9 @@ pub fn verify_signers_config(signers: &[SignerAddress], threshold: u8) -> Result
 #[cfg(test)]
 mod tests {
     use crate::{
-        contract::verification::{verify_trusted_update, verify_untrusted_update},
+        contract::verification::{
+            verify_data_staleness, verify_trusted_update, verify_untrusted_update,
+        },
         network::error::Error,
     };
 
@@ -255,5 +278,120 @@ mod tests {
                 1.into()
             ))
         );
+    }
+    #[test]
+    fn data_is_fresh_when_within_ttl() {
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097200000.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn data_is_stale_when_exactly_at_threshold() {
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097800000.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn data_is_stale_when_past_threshold() {
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704098100000.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn error_contains_correct_timestamps() {
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097800000.into();
+        let staleness_threshold = 1704097800000.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
+        let expected_error = Error::DataStaleness {
+            time_now,
+            write_time: wrote_at,
+            staleness_threshold,
+        };
+
+        assert_eq!(result.unwrap_err(), expected_error);
+    }
+
+    #[test]
+    fn zero_ttl_makes_data_immediately_stale() {
+        let wrote_at = 1704096000000.into();
+        let ttl_zero = 0.into();
+        let time_now = 1704096000000.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_zero);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn large_ttl_keeps_data_fresh() {
+        let wrote_at = 1704096000000.into();
+        let large_ttl = (u64::MAX / 2).into();
+        let time_now = 1704182400000.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, large_ttl);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn large_ttl_does_not_overflow() {
+        let wrote_at = 1704096000000.into();
+        let ttl_max = u64::MAX.into();
+        let time_now = 1704182400000.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_max);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn data_fresh_immediately_after_write() {
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704096000000.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn boundary_condition_one_millisecond_before_expiry() {
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097799999.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn boundary_condition_one_millisecond_after_expiry() {
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097800001.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
+
+        assert!(result.is_err());
     }
 }

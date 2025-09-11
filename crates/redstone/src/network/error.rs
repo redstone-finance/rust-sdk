@@ -166,6 +166,14 @@ pub enum Error {
     /// Indicates error of usize overflow.
     #[error("Usize overflow")]
     UsizeOverflow,
+
+    /// Indicates data on chain is stale.
+    #[error("Stale data: write time {write_time:?} valid till {staleness_threshold:?} time now: {time_now:?}, ")]
+    DataStaleness {
+        write_time: TimestampMillis,
+        staleness_threshold: TimestampMillis,
+        time_now: TimestampMillis,
+    },
 }
 
 impl From<CryptoError> for Error {
@@ -207,6 +215,7 @@ impl Error {
             Error::CurrentTimestampMustBeGreaterThanLatestUpdateTimestamp(_, _) => 1102,
             Error::NumberConversionFail => 1200,
             Error::UsizeOverflow => 1300,
+            Error::DataStaleness { .. } => 1400,
         }
     }
 }

@@ -112,6 +112,17 @@ pub fn scenario_missing_feed_in_payload() -> Scenario {
     )
 }
 
+pub fn scenario_one_missing_feed_in_payload() -> Scenario {
+    let sample = sample_eth_3sig();
+
+    Scenario::default().scenario_steps_from_sample(
+        sample,
+        InitTime::SetToSampleTime,
+        ContractUpdateSigner::Trusted,
+        Some(vec!["ETH", "BTC"]),
+    )
+}
+
 pub fn scenario_2_feed_update(threshold: Duration) -> Scenario {
     let more_than_threshold = threshold.add(Duration::from_secs(1));
     let first_sample = sample_btc_eth_3sig();
@@ -247,4 +258,40 @@ pub fn scenario_check_initalization() -> Scenario {
     Scenario::default()
         .then_initialize(sample.signers, DEFAULT_SIGNERS_THRESHOLD)
         .then_check_unique_threshold_count(DEFAULT_SIGNERS_THRESHOLD)
+}
+
+pub fn scenario_read_stale_data(data_ttl: Duration) -> Scenario {
+    let first_sample = sample_eth_3sig();
+
+    Scenario::default()
+        .scenario_steps_from_sample_with_initialization(
+            first_sample.clone(),
+            InitTime::SetToSampleTime,
+            ContractUpdateSigner::Trusted,
+            None,
+        )
+        .then_advance_clock(data_ttl)
+        .then_check_prices(
+            first_sample.feeds().iter().map(|s| s.as_str()).collect(),
+            vec![],
+            0,
+        )
+}
+
+pub fn scenario_read_data(data_ttl: Duration) -> Scenario {
+    let first_sample = sample_eth_3sig();
+
+    Scenario::default()
+        .scenario_steps_from_sample_with_initialization(
+            first_sample.clone(),
+            InitTime::SetToSampleTime,
+            ContractUpdateSigner::Trusted,
+            None,
+        )
+        .then_advance_clock(data_ttl - Duration::from_secs(1))
+        .then_check_prices(
+            first_sample.feeds().iter().map(|s| s.as_str()).collect(),
+            vec![],
+            0,
+        )
 }
