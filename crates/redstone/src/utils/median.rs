@@ -14,23 +14,16 @@ pub trait Avg {
 }
 
 trait Averageable:
-    Add<Output = Self> + Shr<Output = Self> + From<u8> + BitAnd<Output = Self> + Copy
+    Add<Output = Self> + Shr<u32, Output = Self> + BitAnd<u8, Output = Self> + Copy
 {
 }
 
-impl Averageable for i32 {}
+impl Averageable for Value {}
 
 impl<T> Avg for T
 where
     T: Averageable,
 {
-    fn avg(self, other: Self) -> Self {
-        let one = T::from(1);
-
-        self.shr(one) + other.shr(one) + (self.bitand(one) + other.bitand(one)).shr(one)
-    }
-}
-impl Avg for Value {
     fn avg(self, other: Self) -> Self {
         self.shr(1) + other.shr(1) + (self.bitand(1) + other.bitand(1)).shr(1)
     }
@@ -89,7 +82,10 @@ where
 #[cfg(test)]
 mod tests {
     use alloc::vec::Vec;
-    use core::fmt::Debug;
+    use core::{
+        fmt::Debug,
+        ops::{BitAnd, Shr},
+    };
 
     use itertools::Itertools;
     #[cfg(target_arch = "wasm32")]
@@ -98,6 +94,12 @@ mod tests {
     use crate::Value;
 
     use super::{Avg, Median};
+
+    impl Avg for i32 {
+        fn avg(self, other: Self) -> Self {
+            self.shr(1) + other.shr(1) + (self.bitand(1) + other.bitand(1)).shr(1)
+        }
+    }
 
     #[test]
     fn test_avg() {

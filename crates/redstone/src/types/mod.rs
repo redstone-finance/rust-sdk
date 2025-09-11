@@ -4,6 +4,8 @@ mod signer_address;
 mod timestamp_millis;
 mod value;
 use alloc::vec::Vec;
+#[cfg(test)]
+mod value_testing;
 
 pub use bytes::Bytes;
 pub use feed_id::FeedId;

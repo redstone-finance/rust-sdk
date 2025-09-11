@@ -1,6 +1,6 @@
 use core::{
     fmt::Display,
-    ops::{Add, BitAnd, Shr, Sub},
+    ops::{Add, BitAnd, Shr},
 };
 
 use alloc::vec::Vec;
@@ -13,51 +13,6 @@ use crate::types::{Sanitized, VALUE_SIZE};
 #[derive(Clone, Copy, PartialEq, Eq, Debug, PartialOrd, Ord)]
 #[cfg_attr(feature = "radix", derive(ScryptoSbor))]
 pub struct Value(pub [u8; VALUE_SIZE]);
-
-impl From<u8> for Value {
-    fn from(value: u8) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - 1] = value;
-
-        Value(buff)
-    }
-}
-
-impl From<u16> for Value {
-    fn from(value: u16) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - 2..].copy_from_slice(&value.to_be_bytes());
-
-        Value(buff)
-    }
-}
-
-impl From<u32> for Value {
-    fn from(value: u32) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - 4..].copy_from_slice(&value.to_be_bytes());
-
-        Value(buff)
-    }
-}
-
-impl From<u64> for Value {
-    fn from(value: u64) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - 8..].copy_from_slice(&value.to_be_bytes());
-
-        Value(buff)
-    }
-}
-
-impl From<u128> for Value {
-    fn from(value: u128) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - 16..].copy_from_slice(&value.to_be_bytes());
-
-        Value(buff)
-    }
-}
 
 impl Display for Value {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -101,27 +56,6 @@ impl From<Vec<u8>> for Value {
     }
 }
 
-impl Sub<u8> for Value {
-    type Output = Self;
-
-    fn sub(self, rhs: u8) -> Self::Output {
-        let mut result = self.0;
-        let mut borrow = false;
-        let mut remaining = rhs;
-
-        for i in (0..VALUE_SIZE).rev() {
-            let (intermediate, overflow1) = result[i].overflowing_sub(remaining);
-            let (final_byte, overflow2) = intermediate.overflowing_sub(borrow as u8);
-
-            result[i] = final_byte;
-            borrow = overflow1 || overflow2;
-            remaining = 0;
-        }
-
-        Value(result)
-    }
-}
-
 impl BitAnd<u8> for Value {
     type Output = Self;
 
@@ -142,8 +76,10 @@ impl Shr<u32> for Value {
             return Value([0u8; VALUE_SIZE]);
         }
 
-        let byte_shift = (rhs / 8) as usize;
-        let bit_shift = (rhs % 8) as u8;
+        let byte_size = 8;
+
+        let byte_shift = (rhs / byte_size as u32) as usize;
+        let bit_shift = (rhs % byte_size as u32) as u8;
         let mut result = [0u8; VALUE_SIZE];
 
         if bit_shift == 0 {
@@ -155,7 +91,7 @@ impl Shr<u32> for Value {
                 result[i] = self.0[source_idx] >> bit_shift;
 
                 if source_idx > 0 {
-                    result[i] |= self.0[source_idx - 1] << (8 - bit_shift);
+                    result[i] |= self.0[source_idx - 1] << (byte_size - bit_shift);
                 }
             }
         }
