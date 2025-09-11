@@ -2,50 +2,22 @@ use core::ops::Sub;
 
 use crate::{types::VALUE_SIZE, Value};
 
-impl From<u8> for Value {
-    fn from(value: u8) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - size_of::<u8>()] = value;
+macro_rules! impl_from_uint {
+    ($($t:ty),* $(,)?) => {
+        $(
+            impl From<$t> for Value {
+                fn from(value: $t) -> Self {
+                    let mut buff = [0; VALUE_SIZE];
+                    buff[VALUE_SIZE - size_of::<$t>()..].copy_from_slice(&value.to_be_bytes());
 
-        Value(buff)
-    }
+                    Value(buff)
+                }
+            }
+        )*
+    };
 }
 
-impl From<u16> for Value {
-    fn from(value: u16) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - size_of::<u16>()..].copy_from_slice(&value.to_be_bytes());
-
-        Value(buff)
-    }
-}
-
-impl From<u32> for Value {
-    fn from(value: u32) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - size_of::<u32>()..].copy_from_slice(&value.to_be_bytes());
-
-        Value(buff)
-    }
-}
-
-impl From<u64> for Value {
-    fn from(value: u64) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - size_of::<u64>()..].copy_from_slice(&value.to_be_bytes());
-
-        Value(buff)
-    }
-}
-
-impl From<u128> for Value {
-    fn from(value: u128) -> Self {
-        let mut buff = [0; VALUE_SIZE];
-        buff[VALUE_SIZE - size_of::<u128>()..].copy_from_slice(&value.to_be_bytes());
-
-        Value(buff)
-    }
-}
+impl_from_uint!(u8, u16, u32, u64, u128);
 
 impl Sub<u8> for Value {
     type Output = Self;
