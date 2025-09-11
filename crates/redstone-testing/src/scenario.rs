@@ -47,6 +47,9 @@ enum Action {
     CheckUniqueContractUpdateSignerCount {
         expected: u8,
     },
+    ReadPrices {
+        feed_ids: Vec<String>,
+    },
 }
 
 pub enum InitTime {
@@ -150,6 +153,14 @@ impl Scenario {
         self
     }
 
+    pub fn then_read_prices(mut self, feed_ids: Vec<&str>) -> Self {
+        self.actions.push(Action::ReadPrices {
+            feed_ids: feed_ids.iter().map(|feed| feed.to_string()).collect(),
+        });
+
+        self
+    }
+
     pub fn run<P: PriceAdapterRunEnv>(self, mut price_adapter: P) {
         for action in self.actions {
             match action {
@@ -235,6 +246,16 @@ impl Scenario {
                     let unique_signer_count = price_adapter.unique_signer_threshold();
 
                     assert_eq!(unique_signer_count, expected);
+                }
+                Action::ReadPrices { feed_ids } => {
+                    assert!(price_adapter
+                        .read_prices(
+                            feed_ids
+                                .iter()
+                                .map(|feed| feed.as_bytes().to_vec())
+                                .collect(),
+                        )
+                        .is_some());
                 }
             };
         }

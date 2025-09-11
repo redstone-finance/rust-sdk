@@ -26,7 +26,7 @@ impl TimestampMillis {
     }
 
     pub fn add(&self, other: impl Into<Self>) -> Self {
-        Self(self.0 + other.into().0)
+        Self(self.0.saturating_add(other.into().0))
     }
 
     pub fn is_same_or_before(&self, other: Self) -> bool {
@@ -35,9 +35,5 @@ impl TimestampMillis {
 
     pub fn is_same_or_after(&self, other: Self) -> bool {
         self.0 >= other.0
-    }
-
-    pub fn is_after(&self, other: Self) -> bool {
-        self.0 > other.0
     }
 }

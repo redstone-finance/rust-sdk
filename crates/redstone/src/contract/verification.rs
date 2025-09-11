@@ -279,51 +279,50 @@ mod tests {
             ))
         );
     }
-
     #[test]
     fn data_is_fresh_when_within_ttl() {
-        let write_time = 1000.into();
-        let data_ttl = 500.into();
-        let time_now = 1200.into();
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097200000.into();
 
-        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
 
         assert!(result.is_ok());
     }
 
     #[test]
     fn data_is_stale_when_exactly_at_threshold() {
-        let write_time = 1000.into();
-        let data_ttl = 500.into();
-        let time_now = 1500.into();
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097800000.into();
 
-        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
 
         assert!(result.is_err());
     }
 
     #[test]
     fn data_is_stale_when_past_threshold() {
-        let write_time = 1000.into();
-        let data_ttl = 500.into();
-        let time_now = 1600.into();
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704098100000.into();
 
-        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
 
         assert!(result.is_err());
     }
 
     #[test]
     fn error_contains_correct_timestamps() {
-        let write_time = 1000.into();
-        let data_ttl = 500.into();
-        let time_now = 1500.into();
-        let staleness_threshold = 1500.into();
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097800000.into();
+        let staleness_threshold = 1704097800000.into();
 
-        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
         let expected_error = Error::DataStaleness {
             time_now,
-            write_time,
+            write_time: wrote_at,
             staleness_threshold,
         };
 
@@ -332,55 +331,66 @@ mod tests {
 
     #[test]
     fn zero_ttl_makes_data_immediately_stale() {
-        let write_time = 1000.into();
-        let data_ttl = 0.into();
-        let time_now = 1000.into();
+        let wrote_at = 1704096000000.into();
+        let ttl_zero = 0.into();
+        let time_now = 1704096000000.into();
 
-        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let result = verify_data_staleness(wrote_at, time_now, ttl_zero);
 
         assert!(result.is_err());
     }
 
     #[test]
     fn large_ttl_keeps_data_fresh() {
-        let write_time = 1000.into();
-        let data_ttl = (u64::MAX / 2).into();
-        let time_now = 5000.into();
+        let wrote_at = 1704096000000.into();
+        let large_ttl = (u64::MAX / 2).into();
+        let time_now = 1704182400000.into();
 
-        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let result = verify_data_staleness(wrote_at, time_now, large_ttl);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn large_ttl_does_not_overflow() {
+        let wrote_at = 1704096000000.into();
+        let ttl_max = u64::MAX.into();
+        let time_now = 1704182400000.into();
+
+        let result = verify_data_staleness(wrote_at, time_now, ttl_max);
 
         assert!(result.is_ok());
     }
 
     #[test]
     fn data_fresh_immediately_after_write() {
-        let write_time = 1000.into();
-        let data_ttl = 500.into();
-        let time_now = 1000.into();
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704096000000.into();
 
-        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
 
         assert!(result.is_ok());
     }
 
     #[test]
     fn boundary_condition_one_millisecond_before_expiry() {
-        let write_time = 1000.into();
-        let data_ttl = 500.into();
-        let time_now = 1499.into();
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097799999.into();
 
-        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
 
         assert!(result.is_ok());
     }
 
     #[test]
     fn boundary_condition_one_millisecond_after_expiry() {
-        let write_time = 1000.into();
-        let data_ttl = 500.into();
-        let time_now = 1501.into();
+        let wrote_at = 1704096000000.into();
+        let ttl_30min = 1800000.into();
+        let time_now = 1704097800001.into();
 
-        let result = verify_data_staleness(write_time, time_now, data_ttl);
+        let result = verify_data_staleness(wrote_at, time_now, ttl_30min);
 
         assert!(result.is_err());
     }
