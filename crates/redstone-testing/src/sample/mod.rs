@@ -8,7 +8,7 @@ use crate::package_signers::Signers;
 macro_rules! hashmap {
     ($( $key:expr => $val:expr ),*) => {{
         let mut map = ::std::collections::HashMap::new();
-        $( map.insert($key.to_string(), Value::from($val)); )*
+        $( map.insert($key.to_string(), Value::from($val.to_be_bytes().to_vec())); )*
         map
     }};
 }
