@@ -261,37 +261,29 @@ pub fn scenario_check_initalization() -> Scenario {
 }
 
 pub fn scenario_read_stale_data(data_ttl: Duration) -> Scenario {
-    let first_sample = sample_eth_3sig();
+    let sample = sample_eth_3sig();
 
     Scenario::default()
         .scenario_steps_from_sample_with_initialization(
-            first_sample.clone(),
+            sample.clone(),
             InitTime::SetToSampleTime,
             ContractUpdateSigner::Trusted,
             None,
         )
         .then_advance_clock(data_ttl)
-        .then_check_prices(
-            first_sample.feeds().iter().map(|s| s.as_str()).collect(),
-            vec![],
-            0,
-        )
+        .then_read_prices(sample.feeds().iter().map(|s| s.as_str()).collect())
 }
 
 pub fn scenario_read_data(data_ttl: Duration) -> Scenario {
-    let first_sample = sample_eth_3sig();
+    let sample = sample_eth_3sig();
 
     Scenario::default()
         .scenario_steps_from_sample_with_initialization(
-            first_sample.clone(),
+            sample.clone(),
             InitTime::SetToSampleTime,
             ContractUpdateSigner::Trusted,
             None,
         )
         .then_advance_clock(data_ttl - Duration::from_secs(1))
-        .then_check_prices(
-            first_sample.feeds().iter().map(|s| s.as_str()).collect(),
-            vec![],
-            0,
-        )
+        .then_read_prices(sample.feeds().iter().map(|s| s.as_str()).collect())
 }
