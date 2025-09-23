@@ -91,9 +91,8 @@ mod tests {
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
-    use crate::Value;
-
     use super::{Avg, Median};
+    use crate::Value;
 
     impl Avg for i32 {
         fn avg(self, other: Self) -> Self {

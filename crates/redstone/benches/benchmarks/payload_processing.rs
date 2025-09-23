@@ -5,9 +5,7 @@ use redstone::{
     network::Dummy,
     RedStoneConfigImpl,
 };
-use redstone_utils::hex::hex_to_bytes;
-use redstone_utils::hex::make_hex_value_from_string;
-
+use redstone_utils::hex::{hex_to_bytes, make_hex_value_from_string};
 use samples::*;
 
 fn create_config(sample: &Sample) -> RedStoneConfigImpl<DefaultCrypto, Dummy> {

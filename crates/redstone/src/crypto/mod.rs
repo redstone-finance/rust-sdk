@@ -81,6 +81,7 @@ fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
 #[allow(dead_code)] // this is test template for crypto implementations
 pub mod recovery_key_tests {
     use alloc::{borrow::ToOwned, string::ToString};
+
     use redstone_utils::hex::hex_to_bytes;
 
     use crate::{Crypto, CryptoError};

@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-
 use core::iter::Iterator;
 
 pub struct Matrix<T> {

@@ -1,9 +1,8 @@
+use alloc::vec::Vec;
 use core::{
     fmt::Display,
     ops::{Add, BitAnd, Shr},
 };
-
-use alloc::vec::Vec;
 
 #[cfg(feature = "radix")]
 use scrypto::prelude::*;

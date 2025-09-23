@@ -144,6 +144,7 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
 mod tests {
     use alloc::{borrow::ToOwned, string::ToString, vec::Vec};
     use core::ops::Shr;
+
     use redstone_utils::hex::{hex_to_bytes, sample_payload_bytes, sample_payload_hex};
 
     use crate::{

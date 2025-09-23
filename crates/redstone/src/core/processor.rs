@@ -8,7 +8,6 @@ use crate::{
     protocol::{payload::Payload, PayloadDecoder},
     Bytes, RedStoneConfig,
 };
-
 #[cfg(feature = "bench")]
 use crate::{network::error::Error, Crypto};
 
@@ -76,14 +75,13 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
 
 #[cfg(test)]
 mod tests {
-    use redstone_utils::hex::make_hex_value_from_string;
-    use redstone_utils::iter_into::IterInto;
+    use redstone_utils::{hex::make_hex_value_from_string, iter_into::IterInto};
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
-    use crate::core::aggregator::FeedValue;
     use crate::{
         core::{
+            aggregator::FeedValue,
             config::Config,
             processor::make_processor_result,
             processor_result::ValidatedPayload,
