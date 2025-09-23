@@ -97,8 +97,8 @@ pub fn sample_eth_2sig() -> Sample {
         values: hashmap![
             "ETH" => 12345_u128
         ],
-        timestamp: 1744563500000,
-        system_timestamp: 1744563500000,
+        timestamp: 1744563670000,
+        system_timestamp: 1744563670000,
         signers: Signers::Avax,
     }
 }
