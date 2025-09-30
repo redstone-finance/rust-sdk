@@ -296,6 +296,7 @@ impl Scenario {
         signer: ContractUpdateSigner,
         feeds_overwrite: Option<Vec<&str>>,
         values_overwrite: Option<Vec<Value>>,
+        timestamp_overwrite: Option<u64>,
     ) -> Self {
         let scenario = match init_time {
             InitTime::No => self,
@@ -323,9 +324,14 @@ impl Scenario {
             _ => values,
         };
 
+        let timestamp = match timestamp_overwrite {
+            Some(t) => t,
+            _ => sample.timestamp,
+        };
+
         scenario
             .then_write_prices(feeds.clone(), sample.content, signer)
-            .then_check_prices(feeds, values, sample.timestamp)
+            .then_check_prices(feeds, values, timestamp)
     }
 
     pub fn scenario_steps_from_sample_with_initialization(
@@ -335,6 +341,7 @@ impl Scenario {
         signer: ContractUpdateSigner,
         feeds_overwrite: Option<Vec<&str>>,
         values_overwrite: Option<Vec<Value>>,
+        timestamp_overwrite: Option<u64>,
     ) -> Self {
         self.then_initialize(sample.signers, DEFAULT_SIGNERS_THRESHOLD)
             .scenario_steps_from_sample(
@@ -343,6 +350,7 @@ impl Scenario {
                 signer,
                 feeds_overwrite,
                 values_overwrite,
+                timestamp_overwrite,
             )
     }
 }
