@@ -9,6 +9,7 @@ pub trait PriceAdapterRunEnv {
     fn unique_signer_threshold(&self) -> u8;
     fn initialize(&mut self, _signers: Vec<Vec<u8>>, _unique_signer_threshold: u8) {}
     fn read_timestamp(&mut self, feed_id: Option<&str>) -> u64;
+    fn read_write_timestamp(&mut self, feed_id: Vec<u8>) -> u64;
     fn read_prices(&mut self, feed_ids: Vec<Vec<u8>>) -> Option<Vec<Value>>;
     fn read_prices_and_timestamp(&mut self, feed_ids: Vec<Vec<u8>>) -> (Vec<Value>, u64);
     fn process_payload(
