@@ -50,6 +50,10 @@ enum Action {
     ReadPrices {
         feed_ids: Vec<String>,
     },
+    CheckWriteTime {
+        feed_ids: Vec<String>,
+        expected_timestamp: u64,
+    },
 }
 
 pub enum InitTime {
@@ -161,6 +165,19 @@ impl Scenario {
         self
     }
 
+    pub fn then_check_write_timestamp(
+        mut self,
+        feed_ids: Vec<String>,
+        expected_timestamp: u64,
+    ) -> Self {
+        self.actions.push(Action::CheckWriteTime {
+            feed_ids,
+            expected_timestamp,
+        });
+
+        self
+    }
+
     pub fn run<P: PriceAdapterRunEnv>(self, mut price_adapter: P) {
         for action in self.actions {
             match action {
@@ -257,6 +274,17 @@ impl Scenario {
                         )
                         .is_some());
                 }
+                Action::CheckWriteTime {
+                    feed_ids,
+                    expected_timestamp,
+                } => {
+                    for feed in feed_ids {
+                        assert_eq!(
+                            price_adapter.read_write_timestamp(feed.as_bytes().to_vec()),
+                            expected_timestamp
+                        );
+                    }
+                }
             };
         }
     }
@@ -267,6 +295,7 @@ impl Scenario {
         init_time: InitTime,
         signer: ContractUpdateSigner,
         feeds_overwrite: Option<Vec<&str>>,
+        values_overwrite: Option<Vec<Value>>,
     ) -> Self {
         let scenario = match init_time {
             InitTime::No => self,
@@ -289,6 +318,11 @@ impl Scenario {
             ),
         };
 
+        let values = match values_overwrite {
+            Some(v) => v,
+            _ => values,
+        };
+
         scenario
             .then_write_prices(feeds.clone(), sample.content, signer)
             .then_check_prices(feeds, values, sample.timestamp)
@@ -300,8 +334,15 @@ impl Scenario {
         init_time: InitTime,
         signer: ContractUpdateSigner,
         feeds_overwrite: Option<Vec<&str>>,
+        values_overwrite: Option<Vec<Value>>,
     ) -> Self {
         self.then_initialize(sample.signers, DEFAULT_SIGNERS_THRESHOLD)
-            .scenario_steps_from_sample(sample, init_time, signer, feeds_overwrite)
+            .scenario_steps_from_sample(
+                sample,
+                init_time,
+                signer,
+                feeds_overwrite,
+                values_overwrite,
+            )
     }
 }
