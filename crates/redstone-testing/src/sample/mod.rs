@@ -12,9 +12,10 @@ macro_rules! hashmap {
         map
     }};
 }
-// for chains where time is in seconds we need to round up to 1_000.
+
+// for chains where time is in seconds we need to round up to 1_000;
 pub const SAMPLE_SYSTEM_TIMESTAMP_OLD: u64 = 1_707_738_000;
-pub const SAMPLE_SYSTEM_TIMESTAMP: u64 = 1_725_975_000;
+pub const SAMPLE_SYSTEM_TIMESTAMP: u64 = 1_725_975_6000;
 pub const SAMPLE_SYSTEM_TIMESTAMP_2: u64 = 1_725_976_000;
 
 pub const DEFAULT_SIGNERS_THRESHOLD: u8 = 3;
