@@ -31,9 +31,9 @@ The direct path should look like:
 
 - Redstone crate documentation [here](./crates/redstone/README.md)
   - RedstoneConfig is abstraction required as configuration for the RedStone protocol
-    [here](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/trait.RedStoneConfig.html).
+    [here](https://docs.redstone.finance/rust/redstone/rust_sdk_3/redstone/trait.RedStoneConfig.html).
   - Process Payload function is the main processor of the RedStone payload
-    [here](https://docs.redstone.finance/rust/redstone/rust_sdk_2/redstone/core/processor/fn.process_payload.html).
+    [here](https://docs.redstone.finance/rust/redstone/rust_sdk_3/redstone/core/processor/fn.process_payload.html).
 - General [RedStone Blockchain Oracles docs](https://docs.redstone.finance/docs/get-started/data-formatting-processing/)
   - Especially [The push model docs](https://docs.redstone.finance/docs/get-started/models/redstone-push/)
 
