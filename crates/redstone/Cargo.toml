@@ -3,7 +3,7 @@ authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"
 edition = "2021"
 name = "redstone"
-version = "3.0.0-pre3"
+version = "3.0.0-pre4"
 
 [features]
 default = ["default-crypto", "std"]
