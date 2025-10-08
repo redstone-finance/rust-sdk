@@ -54,13 +54,9 @@ pub trait Crypto {
             return Err(CryptoError::InvalidSignatureLen(signature.len()));
         }
         check_signature_malleability(signature)?;
-        let recovery_byte = signature[64]; // 65-byte representation
+        let recovery_byte = check_recovery_byte(signature[64])?; // 65-byte representation
         let msg_hash = self.keccak256(message);
-        let key = self.recover_public_key(
-            recovery_byte - (if recovery_byte >= 27 { 27 } else { 0 }),
-            &signature[..64],
-            msg_hash,
-        )?;
+        let key = self.recover_public_key(recovery_byte, &signature[..64], msg_hash)?;
         let key_hash = self.keccak256(&key.as_ref()[1..]); // skip first uncompressed-key byte
 
         Ok(key_hash.as_ref()[12..].to_vec().into()) // last 20 bytes
@@ -75,6 +71,16 @@ fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
     }
 
     Ok(())
+}
+
+fn check_recovery_byte(recovery_byte: u8) -> Result<u8, CryptoError> {
+    let normalized = match recovery_byte {
+        0 | 1 => recovery_byte,
+        27 | 28 => recovery_byte - 27,
+        _ => return Err(CryptoError::RecoveryByte(recovery_byte)),
+    };
+
+    Ok(normalized)
 }
 
 #[cfg(test)]
