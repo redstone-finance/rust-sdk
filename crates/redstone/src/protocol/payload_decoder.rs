@@ -15,7 +15,7 @@ use crate::{
         marker::trim_redstone_marker,
         payload::Payload,
     },
-    utils::trim::{Trim, TryTrim},
+    utils::trim::TryTrim,
     TimestampMillis,
 };
 
@@ -47,14 +47,12 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
     }
 
     fn trim_metadata(&self, payload: &mut Vec<u8>) -> Result<usize, Error> {
-        let unsigned_metadata_size = payload
-            .try_trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS)?
-            .try_into()?;
-        let _: Vec<u8> = payload.trim_end(unsigned_metadata_size);
+        let unsigned_metadata_size: u64 = payload.try_trim_end(UNSIGNED_METADATA_BYTE_SIZE_BS)?;
+        let _: Vec<u8> = payload.try_trim_end(unsigned_metadata_size.try_into()?)?;
 
-        let data_package_count = payload.try_trim_end(DATA_PACKAGES_COUNT_BS)?.try_into()?;
+        let data_package_count: u64 = payload.try_trim_end(DATA_PACKAGES_COUNT_BS)?;
 
-        Ok(data_package_count)
+        Ok(data_package_count.try_into()?)
     }
 
     fn trim_data_packages(
@@ -73,12 +71,12 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
     }
 
     fn trim_data_package(&mut self, payload: &mut Vec<u8>) -> Result<DataPackage, Error> {
-        let signature: Vec<u8> = payload.trim_end(SIGNATURE_BS);
+        let signature: Vec<u8> = payload.try_trim_end(SIGNATURE_BS)?;
         let mut tmp = payload.clone();
 
-        let data_point_count = payload.try_trim_end(DATA_POINTS_COUNT_BS)?;
-        let value_size = payload.try_trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS)?;
-        let timestamp = payload.try_trim_end(TIMESTAMP_BS)?;
+        let data_point_count: u64 = payload.try_trim_end(DATA_POINTS_COUNT_BS)?;
+        let value_size: u64 = payload.try_trim_end(DATA_POINT_VALUE_BYTE_SIZE_BS)?;
+        let timestamp: u64 = payload.try_trim_end(TIMESTAMP_BS)?;
 
         let size: u64 = data_point_count
             * (value_size + TryInto::<u64>::try_into(DATA_FEED_ID_BS)?)
@@ -86,7 +84,7 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
             + TryInto::<u64>::try_into(TIMESTAMP_BS)?
             + TryInto::<u64>::try_into(DATA_POINTS_COUNT_BS)?;
 
-        let signable_bytes: Vec<_> = tmp.trim_end(size.try_into()?);
+        let signable_bytes: Vec<_> = tmp.try_trim_end(size.try_into()?)?;
 
         let signer_address = self.crypto.recover_address(signable_bytes, signature).ok();
 
@@ -113,21 +111,21 @@ impl<'a, C: Crypto> PayloadDecoder<'a, C> {
         let mut data_points = Vec::with_capacity(count);
 
         for _ in 0..count {
-            let data_point = Self::trim_data_point(payload, value_size);
+            let data_point = Self::trim_data_point(payload, value_size)?;
             data_points.push(data_point);
         }
 
         Ok(data_points)
     }
 
-    fn trim_data_point(payload: &mut Vec<u8>, value_size: usize) -> DataPoint {
-        let value: Vec<_> = payload.trim_end(value_size);
-        let feed_id = payload.trim_end(DATA_FEED_ID_BS);
+    fn trim_data_point(payload: &mut Vec<u8>, value_size: usize) -> Result<DataPoint, Error> {
+        let value: Vec<_> = payload.try_trim_end(value_size)?;
+        let feed_id = payload.try_trim_end(DATA_FEED_ID_BS)?;
 
-        DataPoint {
+        Ok(DataPoint {
             value: value.into(),
             feed_id,
-        }
+        })
     }
 
     #[inline(always)]
@@ -295,7 +293,7 @@ mod tests {
         }
     }
 
-    #[should_panic(expected = "SizeNotSupported(0)")]
+    #[should_panic(expected = "BufferOverflow")]
     #[test]
     fn test_trim_data_packages_bigger_number() {
         test_trim_data_packages_of(3, "");

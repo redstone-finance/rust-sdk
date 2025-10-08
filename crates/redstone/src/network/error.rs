@@ -174,6 +174,10 @@ pub enum Error {
         staleness_threshold: TimestampMillis,
         time_now: TimestampMillis,
     },
+
+    /// Indicates error of overflowing buffor.
+    #[error("buffer overflow")]
+    BufferOverflow,
 }
 
 impl From<CryptoError> for Error {
@@ -216,6 +220,7 @@ impl Error {
             Error::NumberConversionFail => 1200,
             Error::UsizeOverflow => 1300,
             Error::DataStaleness { .. } => 1400,
+            Error::BufferOverflow => 1500,
         }
     }
 }
