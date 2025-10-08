@@ -175,7 +175,7 @@ pub enum Error {
         time_now: TimestampMillis,
     },
 
-    /// Indicates error of overflowing buffor.
+    /// Indicates error of overflowing buffer.
     #[error("buffer overflow")]
     BufferOverflow,
 }
