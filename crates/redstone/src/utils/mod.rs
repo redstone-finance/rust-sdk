@@ -1,4 +1,3 @@
-pub mod filter;
 pub mod median;
 pub mod slice;
 pub mod trim;

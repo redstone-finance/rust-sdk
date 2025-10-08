@@ -73,24 +73,6 @@ impl Config {
         )
     }
 
-    /// Creates config with default signer_count_threshold equal 2 if not specified otherwise.
-    ///
-    /// It uses as default 2 distinct feed_ids.
-    pub(crate) fn test_with_signer_count_threshold_block_timestamp_signers(
-        signer_count_threshold: Option<u8>,
-        block_timestamp: TimestampMillis,
-        signers: Vec<&str>,
-    ) -> Self {
-        Self::test(
-            signer_count_threshold,
-            signers,
-            vec!["ETH", "BTC"],
-            Some(block_timestamp),
-            None,
-            None,
-        )
-    }
-
     /// Creates config with default signer_count_threshold equal 2 if not specified otherwise, and feed_ids.
     pub(crate) fn test(
         signer_count_threshold: Option<u8>,
