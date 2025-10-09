@@ -94,6 +94,7 @@ impl Config {
     #[inline]
     fn verify_feed_id_list(&self) -> Result<(), Error> {
         self.verify_feed_id_list_empty()?;
+        self.verify_feed_id_validity()?;
         check_no_duplicates(&self.feed_ids).map_err(Error::ConfigReoccurringFeedId)
     }
 
@@ -101,6 +102,17 @@ impl Config {
     fn verify_feed_id_list_empty(&self) -> Result<(), Error> {
         if self.feed_ids.is_empty() {
             return Err(Error::ConfigEmptyFeedIds);
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn verify_feed_id_validity(&self) -> Result<(), Error> {
+        for feed_id in &self.feed_ids {
+            if feed_id.is_zero() {
+                return Err(Error::ConfigInvalidFeedId(*feed_id));
+            }
         }
 
         Ok(())

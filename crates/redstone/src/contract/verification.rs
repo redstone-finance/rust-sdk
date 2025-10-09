@@ -175,12 +175,26 @@ fn verify_signer_count_not_exceeded(signers: &[SignerAddress]) -> Result<(), Err
 }
 
 /// Verifies if:
+/// * signer list does not contain invalid address.
+fn verify_signers_validity(signers: &[SignerAddress]) -> Result<(), Error> {
+    for signer in signers {
+        if signer.is_zero() {
+            return Err(Error::ConfigInvalidSignerAddress(*signer));
+        }
+    }
+
+    Ok(())
+}
+
+/// Verifies if:
 /// * signer list contains no duplicates
 /// * signer list is non empty and contains at least `threshold` of elements.
 /// * signer list is not larger than max u8 value.
+/// * signer list does not contain invalid address.
 pub fn verify_signers_config(signers: &[SignerAddress], threshold: u8) -> Result<(), Error> {
     verify_signer_count_in_threshold(signers, threshold)?;
     verify_signer_count_not_exceeded(signers)?;
+    verify_signers_validity(signers)?;
 
     check_no_duplicates(signers).map_err(Error::ConfigReoccurringSigner)
 }

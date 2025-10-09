@@ -116,6 +116,13 @@ pub enum Error {
     #[error("Wrong configuration signer count, got {0} signers, allowed maximum is {1}")]
     ConfigExceededSignerCount(usize, usize),
 
+    /// ConfigInvalidSignerAddress occurs
+    /// when there is at least one invalid signer present in configuration.
+    ///
+    /// Includes SignerAddress that is invalid.
+    #[error("Wrong configuration, invalid signer {}", .0.as_hex_str())]
+    ConfigInvalidSignerAddress(SignerAddress),
+
     /// Indicates that a SignerAddress is reoccurring on the config signer list.
     ///
     /// Includes SignerAddress that is reoccurring.
@@ -125,6 +132,10 @@ pub enum Error {
     /// Indicates that the list doesn't contain FeedIds.
     #[error("Empty configuration feed ids list")]
     ConfigEmptyFeedIds,
+
+    /// Indicates that the list contains invalid FeedId.
+    #[error("Wrong configuration, contains invalid feed id {}", .0.as_hex_str())]
+    ConfigInvalidFeedId(FeedId),
 
     /// Indicates that a FeedId is reoccurring on the config feed_ids list.
     ///
@@ -199,8 +210,10 @@ impl Error {
             Error::ReoccurringFeedId(_) => 513,
             Error::ConfigInsufficientSignerCount(_, _) => 514,
             Error::ConfigExceededSignerCount(_, _) => 515,
+            Error::ConfigInvalidSignerAddress(_) => 521,
             Error::ConfigReoccurringSigner(_) => 516,
             Error::ConfigEmptyFeedIds => 517,
+            Error::ConfigInvalidFeedId(_) => 522,
             Error::ConfigReoccurringFeedId(_) => 518,
             Error::TimestampDifferentThanOthers(_, _) => 519,
             Error::SignerNotRecognized(_) => 520,

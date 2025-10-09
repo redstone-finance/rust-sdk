@@ -16,6 +16,10 @@ impl FeedId {
     pub fn to_array(&self) -> [u8; VALUE_SIZE] {
         self.0
     }
+
+    pub fn is_zero(&self) -> bool {
+        self.0 == [0; VALUE_SIZE]
+    }
 }
 
 impl From<FeedId> for [u8; VALUE_SIZE] {
