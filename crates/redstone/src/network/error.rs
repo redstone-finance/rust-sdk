@@ -133,6 +133,10 @@ pub enum Error {
     #[error("Empty configuration feed ids list")]
     ConfigEmptyFeedIds,
 
+    /// Indicates that the list contains too many FeedIds.
+    #[error("Wrong configuration, got {0} signers, allowed maximum is {1}")]
+    ConfigExceededFeedIds(usize, usize),
+
     /// Indicates that the list contains invalid FeedId.
     #[error("Wrong configuration, contains invalid feed id {}", .0.as_hex_str())]
     ConfigInvalidFeedId(FeedId),
@@ -213,7 +217,8 @@ impl Error {
             Error::ConfigInvalidSignerAddress(_) => 521,
             Error::ConfigReoccurringSigner(_) => 516,
             Error::ConfigEmptyFeedIds => 517,
-            Error::ConfigInvalidFeedId(_) => 522,
+            Error::ConfigExceededFeedIds(_, _) => 522,
+            Error::ConfigInvalidFeedId(_) => 523,
             Error::ConfigReoccurringFeedId(_) => 518,
             Error::TimestampDifferentThanOthers(_, _) => 519,
             Error::SignerNotRecognized(_) => 520,
