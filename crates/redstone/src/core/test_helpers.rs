@@ -15,10 +15,10 @@ pub(crate) const TEST_BLOCK_TIMESTAMP: u64 = 2000000000000;
 pub(crate) const MAX_TIMESTAMP_DELAY_MS: u64 = 15 * 60 * 1000; // 15 minutes in milliseconds
 pub(crate) const MAX_TIMESTAMP_AHEAD_MS: u64 = 3 * 60 * 1000; // 3 minutes in milliseconds
 
-pub(crate) const TEST_SIGNER_ADDRESS_1: &str = "1ea62d73edF8ac05dfcea1a34b9796e937a29eFF";
-pub(crate) const TEST_SIGNER_ADDRESS_2: &str = "109b4a318a4f5ddcbca6349b45f881b4137deafb";
+pub(crate) const TEST_SIGNER_ADDRESS_1: &str = "1EA62d73edF8ac05dfcea1a34b9796e937a29eFF";
+pub(crate) const TEST_SIGNER_ADDRESS_2: &str = "109B4a318a4f5ddcbca6349b45f881b4137deafb";
 pub(crate) const TEST_SIGNER_ADDRESS_3: &str = "01c9827101a57ac9e9fb7034510e19afcf9c0207";
-pub(crate) const TEST_SIGNER_ADDRESS_4: &str = "264dee744b727613cb76e0cb2f97cd6eda95b39e";
+pub(crate) const TEST_SIGNER_ADDRESS_4: &str = "264DEE744b727613cb76e0cb2f97cd6eda95b39e";
 
 pub(crate) const ETH: &str = "ETH";
 pub(crate) const BTC: &str = "BTC";

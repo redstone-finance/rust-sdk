@@ -7,7 +7,6 @@ use crate::types::{Sanitized, VALUE_SIZE};
 
 /// Type describing address of signer. Typically pubkey of length 20 bytes;
 /// As of right now we dont expect larger keys than 32 bytes.
-/// The address is normalized to contain only lowercase letters (A-F) -> (a-f).
 #[derive(Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Debug)]
 #[cfg_attr(feature = "radix", derive(ScryptoSbor))]
 pub struct SignerAddress([u8; VALUE_SIZE]);
@@ -20,12 +19,7 @@ impl AsRef<[u8]> for SignerAddress {
 
 impl SignerAddress {
     pub fn new(raw_address: [u8; VALUE_SIZE]) -> Self {
-        Self(
-            raw_address
-                .to_ascii_lowercase()
-                .try_into()
-                .expect("We know the length eq 32"),
-        )
+        Self(raw_address)
     }
 
     pub fn is_zero(&self) -> bool {
