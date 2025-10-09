@@ -113,6 +113,7 @@ pub mod recovery_key_tests {
         test_recover_address_1b(crypto);
         test_recover_address_1c(crypto);
         test_signature_malleability(crypto);
+        test_invalid_recovery_id(crypto);
     }
 
     fn test_recover_public_key_v27<T>(crypto: &mut T)
@@ -146,6 +147,19 @@ pub mod recovery_key_tests {
         );
 
         assert_eq!(Ok(hex_to_bytes(ADDRESS_V27.into()).into()), address);
+    }
+
+    pub fn test_invalid_recovery_id<T, K>(crypto: &mut T)
+    where
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
+    {
+        let result = crypto.recover_address(
+            hex_to_bytes(MESSAGE.into()),
+            hex_to_bytes(SIG_V27.to_owned() + "1d"),
+        );
+
+        assert_eq!(Err(CryptoError::RecoveryByte(29)), result);
     }
 
     pub fn test_recover_address_1c<T, K>(crypto: &mut T)
