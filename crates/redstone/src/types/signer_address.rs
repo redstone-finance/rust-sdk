@@ -27,6 +27,10 @@ impl SignerAddress {
                 .expect("We know the length eq 32"),
         )
     }
+
+    pub fn is_zero(&self) -> bool {
+        self.0 == [0; VALUE_SIZE]
+    }
 }
 
 impl From<Vec<u8>> for SignerAddress {

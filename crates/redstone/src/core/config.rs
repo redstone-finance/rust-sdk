@@ -8,6 +8,9 @@ use crate::{
     FeedId, SignerAddress, TimestampMillis,
 };
 
+/// MAX_FEED_ID_COUNT describes maximum number of FeedIds in Config.
+const MAX_FEED_ID_COUNT: usize = u8::MAX as usize;
+
 /// Configuration for a RedStone payload processor.
 ///
 /// Specifies the parameters necessary for the verification and aggregation of values
@@ -94,6 +97,8 @@ impl Config {
     #[inline]
     fn verify_feed_id_list(&self) -> Result<(), Error> {
         self.verify_feed_id_list_empty()?;
+        self.verify_feed_id_count_not_exceeded()?;
+        self.verify_feed_id_validity()?;
         check_no_duplicates(&self.feed_ids).map_err(Error::ConfigReoccurringFeedId)
     }
 
@@ -101,6 +106,29 @@ impl Config {
     fn verify_feed_id_list_empty(&self) -> Result<(), Error> {
         if self.feed_ids.is_empty() {
             return Err(Error::ConfigEmptyFeedIds);
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn verify_feed_id_count_not_exceeded(&self) -> Result<(), Error> {
+        if self.feed_ids.len() > MAX_FEED_ID_COUNT {
+            return Err(Error::ConfigExceededSignerCount(
+                self.feed_ids.len(),
+                MAX_FEED_ID_COUNT,
+            ));
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn verify_feed_id_validity(&self) -> Result<(), Error> {
+        for feed_id in &self.feed_ids {
+            if feed_id.is_zero() {
+                return Err(Error::ConfigInvalidFeedId(*feed_id));
+            }
         }
 
         Ok(())
