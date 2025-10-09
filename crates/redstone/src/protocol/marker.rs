@@ -3,11 +3,11 @@ use alloc::vec::Vec;
 use crate::{
     network::error::Error,
     protocol::constants::{REDSTONE_MARKER, REDSTONE_MARKER_BS},
-    utils::trim::Trim,
+    utils::trim::TryTrim,
 };
 
 pub fn trim_redstone_marker(payload: &mut Vec<u8>) -> Result<(), Error> {
-    let marker: Vec<u8> = payload.trim_end(REDSTONE_MARKER_BS);
+    let marker: Vec<u8> = payload.try_trim_end(REDSTONE_MARKER_BS)?;
 
     if marker != REDSTONE_MARKER {
         return Err(Error::WrongRedStoneMarker(marker));
@@ -82,9 +82,6 @@ mod tests {
         let res = trim_redstone_marker(&mut hex_to_bytes(
             PAYLOAD_TAIL[PAYLOAD_TAIL.len() - 2 * (REDSTONE_MARKER_BS - 1)..].into(),
         ));
-        assert_eq!(
-            res,
-            Err(Error::WrongRedStoneMarker(vec![0, 2, 237, 87, 1, 30, 0, 0]))
-        )
+        assert_eq!(res, Err(Error::BufferOverflow))
     }
 }
