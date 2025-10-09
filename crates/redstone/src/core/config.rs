@@ -114,7 +114,7 @@ impl Config {
     #[inline]
     fn verify_feed_id_count_not_exceeded(&self) -> Result<(), Error> {
         if self.feed_ids.len() > MAX_FEED_ID_COUNT {
-            return Err(Error::ConfigExceededFeedIds(
+            return Err(Error::ConfigExceededFeedIdsLength(
                 self.feed_ids.len(),
                 MAX_FEED_ID_COUNT,
             ));
@@ -198,7 +198,7 @@ mod tests {
                 "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
             ]
             .iter_into(),
-            feed_ids: vec![""].iter_into(),
+            feed_ids: vec!["\0\0\0"].iter_into(),
             block_timestamp: 2000000000000.into(),
             max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
             max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
@@ -230,7 +230,7 @@ mod tests {
 
         assert_eq!(
             result,
-            Err(Error::ConfigExceededFeedIds(
+            Err(Error::ConfigExceededFeedIdsLength(
                 MAX_FEED_ID_COUNT + 1,
                 MAX_FEED_ID_COUNT,
             ))
