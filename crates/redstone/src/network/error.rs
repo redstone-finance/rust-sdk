@@ -134,7 +134,7 @@ pub enum Error {
     ConfigEmptyFeedIds,
 
     /// Indicates that the list contains too many FeedIds.
-    #[error("Wrong configuration, got {0} signers, allowed maximum is {1}")]
+    #[error("Wrong configuration, got {0} feedIds, allowed maximum is {1}")]
     ConfigExceededFeedIds(usize, usize),
 
     /// Indicates that the list contains invalid FeedId.

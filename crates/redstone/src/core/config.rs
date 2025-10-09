@@ -114,7 +114,7 @@ impl Config {
     #[inline]
     fn verify_feed_id_count_not_exceeded(&self) -> Result<(), Error> {
         if self.feed_ids.len() > MAX_FEED_ID_COUNT {
-            return Err(Error::ConfigExceededSignerCount(
+            return Err(Error::ConfigExceededFeedIds(
                 self.feed_ids.len(),
                 MAX_FEED_ID_COUNT,
             ));
@@ -125,13 +125,10 @@ impl Config {
 
     #[inline]
     fn verify_feed_id_validity(&self) -> Result<(), Error> {
-        for feed_id in &self.feed_ids {
-            if feed_id.is_zero() {
-                return Err(Error::ConfigInvalidFeedId(*feed_id));
-            }
-        }
-
-        Ok(())
+        self.feed_ids
+            .iter()
+            .find(|x| x.is_zero())
+            .map_or(Ok(()), |feed_id| Err(Error::ConfigInvalidFeedId(*feed_id)))
     }
 
     #[inline]
@@ -193,6 +190,54 @@ mod tests {
     }
 
     #[test]
+    fn test_config_bad_feed_id() {
+        let config = Config {
+            signer_count_threshold: 2,
+            signers: vec![
+                "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
+                "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
+            ]
+            .iter_into(),
+            feed_ids: vec![""].iter_into(),
+            block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
+        };
+
+        let result = config.verify_feed_id_list();
+
+        assert_eq!(result, Err(Error::ConfigInvalidFeedId(vec![].into())));
+    }
+
+    #[test]
+    fn test_config_too_many_feed_ids() {
+        let config = Config {
+            signer_count_threshold: 2,
+            signers: vec![
+                "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
+                "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
+            ]
+            .iter_into(),
+            feed_ids: (0..MAX_FEED_ID_COUNT + 1)
+                .map(|i| vec![(i / 256) as u8, (i % 256) as u8].into())
+                .collect(),
+            block_timestamp: 2000000000000.into(),
+            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
+        };
+
+        let result = config.verify_feed_id_list();
+
+        assert_eq!(
+            result,
+            Err(Error::ConfigExceededFeedIds(
+                MAX_FEED_ID_COUNT + 1,
+                MAX_FEED_ID_COUNT,
+            ))
+        );
+    }
+
+    #[test]
     fn test_config_empty_feed_ids() {
         let config = Config {
             signer_count_threshold: 2,
@@ -207,9 +252,9 @@ mod tests {
             max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
-        let resutlt = config.verify_feed_id_list();
+        let result = config.verify_feed_id_list();
 
-        assert_eq!(resutlt, Err(Error::ConfigEmptyFeedIds));
+        assert_eq!(result, Err(Error::ConfigEmptyFeedIds));
     }
 
     #[test]
@@ -228,10 +273,10 @@ mod tests {
             max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
-        let resutlt = config.verify_feed_id_list();
+        let result = config.verify_feed_id_list();
 
         assert_eq!(
-            resutlt,
+            result,
             Err(Error::ConfigReoccurringFeedId(make_hex_value_from_string(
                 repeated_feed_id
             )))
@@ -270,9 +315,9 @@ mod tests {
             max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
-        let resutlt = config.verify_signer_list();
+        let result = config.verify_signer_list();
 
-        assert_eq!(resutlt, Err(Error::ConfigInsufficientSignerCount(0, 0)));
+        assert_eq!(result, Err(Error::ConfigInsufficientSignerCount(0, 0)));
     }
 
     #[test]
@@ -293,9 +338,9 @@ mod tests {
             max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
-        let resutlt = config.verify_signer_list();
+        let result = config.verify_signer_list();
 
-        assert_eq!(resutlt, Err(Error::ConfigInsufficientSignerCount(5, 6)));
+        assert_eq!(result, Err(Error::ConfigInsufficientSignerCount(5, 6)));
     }
 
     #[test]
@@ -319,10 +364,10 @@ mod tests {
             max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
-        let resutlt = config.verify_signer_list();
+        let result = config.verify_signer_list();
 
         assert_eq!(
-            resutlt,
+            result,
             Err(Error::ConfigReoccurringSigner(
                 hex_to_bytes(repeated.into()).into()
             ))
@@ -330,7 +375,7 @@ mod tests {
     }
 
     #[test]
-    fn test_config_to_many_signers() {
+    fn test_config_too_many_signers() {
         let signer_exceeded_count: usize = 257;
         let mut signers: Vec<SignerAddress> = Vec::with_capacity(signer_exceeded_count);
         for _ in 0..signer_exceeded_count {
@@ -346,9 +391,9 @@ mod tests {
             max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
         };
 
-        let resutlt = config.verify_signer_list();
+        let result = config.verify_signer_list();
 
-        assert_eq!(resutlt, Err(Error::ConfigExceededSignerCount(257, 255)));
+        assert_eq!(result, Err(Error::ConfigExceededSignerCount(257, 255)));
     }
 
     fn helper_generate_random_hex(size: usize) -> Vec<u8> {
