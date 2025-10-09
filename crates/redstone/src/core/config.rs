@@ -169,7 +169,7 @@ mod tests {
     };
 
     use super::*;
-    use crate::core::test_helpers::MAX_TIMESTAMP_DELAY_MS;
+    use crate::{core::test_helpers::MAX_TIMESTAMP_DELAY_MS, types::VALUE_SIZE};
 
     #[test]
     fn test_config_correct_feed_ids() -> Result<(), Error> {
@@ -191,22 +191,24 @@ mod tests {
 
     #[test]
     fn test_config_bad_feed_id() {
-        let config = Config {
-            signer_count_threshold: 2,
-            signers: vec![
-                "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
-                "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
-            ]
-            .iter_into(),
-            feed_ids: vec!["\0\0\0"].iter_into(),
-            block_timestamp: 2000000000000.into(),
-            max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
-            max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
-        };
+        for i in 0..VALUE_SIZE {
+            let config = Config {
+                signer_count_threshold: 2,
+                signers: vec![
+                    "dd34329d2fc551bea8ee480c2d35d09b75cea39e",
+                    "582ad60bedebfc21cfee1e1cb025cd2c77fc2bf4",
+                ]
+                .iter_into(),
+                feed_ids: vec!["\0".repeat(i).as_str()].iter_into(),
+                block_timestamp: 2000000000000.into(),
+                max_timestamp_delay_ms: MAX_TIMESTAMP_AHEAD_MS.into(),
+                max_timestamp_ahead_ms: MAX_TIMESTAMP_DELAY_MS.into(),
+            };
 
-        let result = config.verify_feed_id_list();
+            let result = config.verify_feed_id_list();
 
-        assert_eq!(result, Err(Error::ConfigInvalidFeedId(vec![].into())));
+            assert_eq!(result, Err(Error::ConfigInvalidFeedId(vec![].into())));
+        }
     }
 
     #[test]
