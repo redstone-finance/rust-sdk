@@ -54,13 +54,9 @@ pub trait Crypto {
             return Err(CryptoError::InvalidSignatureLen(signature.len()));
         }
         check_signature_malleability(signature)?;
-        let recovery_byte = signature[64]; // 65-byte representation
+        let recovery_byte = check_recovery_byte(signature[64])?; // 65-byte representation
         let msg_hash = self.keccak256(message);
-        let key = self.recover_public_key(
-            recovery_byte - (if recovery_byte >= 27 { 27 } else { 0 }),
-            &signature[..64],
-            msg_hash,
-        )?;
+        let key = self.recover_public_key(recovery_byte, &signature[..64], msg_hash)?;
         let key_hash = self.keccak256(&key.as_ref()[1..]); // skip first uncompressed-key byte
 
         Ok(key_hash.as_ref()[12..].to_vec().into()) // last 20 bytes
@@ -75,6 +71,16 @@ fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
     }
 
     Ok(())
+}
+
+fn check_recovery_byte(recovery_byte: u8) -> Result<u8, CryptoError> {
+    let normalized = match recovery_byte {
+        0 | 1 => recovery_byte,
+        27 | 28 => recovery_byte - 27,
+        _ => return Err(CryptoError::RecoveryByte(recovery_byte)),
+    };
+
+    Ok(normalized)
 }
 
 #[cfg(test)]
@@ -107,6 +113,7 @@ pub mod recovery_key_tests {
         test_recover_address_1b(crypto);
         test_recover_address_1c(crypto);
         test_signature_malleability(crypto);
+        test_invalid_recovery_id(crypto);
     }
 
     fn test_recover_public_key_v27<T>(crypto: &mut T)
@@ -140,6 +147,19 @@ pub mod recovery_key_tests {
         );
 
         assert_eq!(Ok(hex_to_bytes(ADDRESS_V27.into()).into()), address);
+    }
+
+    pub fn test_invalid_recovery_id<T, K>(crypto: &mut T)
+    where
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
+    {
+        let result = crypto.recover_address(
+            hex_to_bytes(MESSAGE.into()),
+            hex_to_bytes(SIG_V27.to_owned() + "1d"),
+        );
+
+        assert_eq!(Err(CryptoError::RecoveryByte(29)), result);
     }
 
     pub fn test_recover_address_1c<T, K>(crypto: &mut T)

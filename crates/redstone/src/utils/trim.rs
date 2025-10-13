@@ -1,13 +1,8 @@
+use core::cmp::Ordering;
+
 use alloc::vec::Vec;
 
 use crate::{network::error::Error, FeedId};
-
-pub trait Trim<T>
-where
-    Self: Sized,
-{
-    fn trim_end(&mut self, len: usize) -> T;
-}
 
 pub trait TryTrim<T>
 where
@@ -16,27 +11,27 @@ where
     fn try_trim_end(&mut self, len: usize) -> Result<T, Error>;
 }
 
-impl Trim<Vec<u8>> for Vec<u8> {
-    fn trim_end(&mut self, len: usize) -> Self {
-        if len >= self.len() {
-            core::mem::take(self)
-        } else {
-            self.split_off(self.len() - len)
-        }
+impl TryTrim<Vec<u8>> for Vec<u8> {
+    fn try_trim_end(&mut self, len: usize) -> Result<Self, Error> {
+        Ok(match len.cmp(&self.len()) {
+            Ordering::Less => self.split_off(self.len() - len),
+            Ordering::Equal => core::mem::take(self),
+            Ordering::Greater => return Err(Error::BufferOverflow),
+        })
     }
 }
 
-impl Trim<FeedId> for Vec<u8> {
-    fn trim_end(&mut self, len: usize) -> FeedId {
-        let v: Vec<_> = self.trim_end(len);
+impl TryTrim<FeedId> for Vec<u8> {
+    fn try_trim_end(&mut self, len: usize) -> Result<FeedId, Error> {
+        let v: Vec<_> = self.try_trim_end(len)?;
 
-        v.into()
+        Ok(v.into())
     }
 }
 
 impl TryTrim<u64> for Vec<u8> {
     fn try_trim_end(&mut self, len: usize) -> Result<u64, Error> {
-        let y: Vec<u8> = self.trim_end(len);
+        let y: Vec<u8> = self.try_trim_end(len)?;
         let y: Vec<u8> = y.into_iter().skip_while(|&b| b == 0).collect();
 
         if y.len() > 8 {
@@ -59,7 +54,7 @@ mod tests {
     use crate::{
         network::error::Error,
         protocol::constants::{REDSTONE_MARKER, REDSTONE_MARKER_BS},
-        utils::trim::{Trim, TryTrim},
+        utils::trim::TryTrim,
         FeedId,
     };
 
@@ -71,8 +66,8 @@ mod tests {
 
     #[test]
     fn test_trim_end_number() {
-        let (rest, result): (_, FeedId) = test_trim_end(3);
-        assert_eq!(result, REDSTONE_MARKER[6..].to_vec().into());
+        let (rest, result): (_, Result<FeedId, _>) = test_try_trim_end(3);
+        assert_eq!(result, Ok(REDSTONE_MARKER[6..].to_vec().into()));
         assert_eq!(rest.as_slice(), &REDSTONE_MARKER[..6]);
 
         let (_, result) = test_try_trim_end(3);
@@ -81,8 +76,8 @@ mod tests {
 
     #[test]
     fn test_trim_end_number_null() {
-        let (rest, result): (_, FeedId) = test_trim_end(0);
-        assert_eq!(result, vec![0].into());
+        let (rest, result): (_, Result<FeedId, _>) = test_try_trim_end(0);
+        assert_eq!(result, Ok(vec![0].into()));
         assert_eq!(rest.as_slice(), &REDSTONE_MARKER);
 
         let (_, result) = test_try_trim_end(0);
@@ -91,8 +86,8 @@ mod tests {
         let (_, result) = test_try_trim_end(0);
         assert_eq!(result, Ok(0));
 
-        let (_, result): (_, Vec<u8>) = test_trim_end(0);
-        assert_eq!(result, Vec::<u8>::new());
+        let (_, result): (_, Result<Vec<u8>, _>) = test_try_trim_end(0);
+        assert_eq!(result, Ok(Vec::<u8>::new()));
     }
 
     #[test]
@@ -100,12 +95,11 @@ mod tests {
         test_trim_end_whole_size(REDSTONE_MARKER_BS);
         test_trim_end_whole_size(REDSTONE_MARKER_BS - 1);
         test_trim_end_whole_size(REDSTONE_MARKER_BS - 2);
-        test_trim_end_whole_size(REDSTONE_MARKER_BS + 1);
     }
 
     fn test_trim_end_whole_size(size: usize) {
-        let (rest, result): (_, FeedId) = test_trim_end(size);
-        assert_eq!(result, REDSTONE_MARKER.to_vec().into());
+        let (rest, result): (_, Result<FeedId, _>) = test_try_trim_end(size);
+        assert_eq!(result.unwrap(), REDSTONE_MARKER.to_vec().into());
         assert_eq!(
             rest.as_slice().len(),
             REDSTONE_MARKER_BS - size.min(REDSTONE_MARKER_BS)
@@ -120,8 +114,20 @@ mod tests {
             assert_eq!(result, Ok(823907890102272));
         }
 
-        let (_rest, result): (_, Vec<u8>) = test_trim_end(size);
-        assert_eq!(result.as_slice().len(), size.min(REDSTONE_MARKER_BS));
+        let (_rest, result): (_, Result<Vec<u8>, _>) = test_try_trim_end(size);
+        assert_eq!(
+            result.unwrap().as_slice().len(),
+            size.min(REDSTONE_MARKER_BS)
+        );
+    }
+
+    #[test]
+    fn test_trim_buffer_overflow() {
+        let mut buffer = vec![0, 1, 2];
+
+        let res: Result<Vec<_>, _> = buffer.try_trim_end(buffer.len() + 1);
+
+        assert_eq!(res, Err(Error::BufferOverflow));
     }
 
     #[test]
@@ -147,15 +153,6 @@ mod tests {
                 vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9].into()
             ))
         );
-    }
-
-    fn test_trim_end<T>(size: usize) -> (Vec<u8>, T)
-    where
-        Vec<u8>: Trim<T>,
-    {
-        let mut bytes = redstone_marker_bytes();
-        let rest = bytes.trim_end(size);
-        (bytes, rest)
     }
 
     fn test_try_trim_end<T>(size: usize) -> (Vec<u8>, Result<T, Error>)
