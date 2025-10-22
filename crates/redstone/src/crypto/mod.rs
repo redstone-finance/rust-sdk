@@ -9,6 +9,10 @@ const SIGNATURE_SIZE_BS: usize = 65;
 const SIGNATURE_COMPONENT_SIZE: usize = 32;
 const SIGNATURE_S_OFFSET: usize = SIGNATURE_COMPONENT_SIZE;
 const SIGNATURE_RS_SIZE: usize = 2 * SIGNATURE_COMPONENT_SIZE;
+const SIGNATURE_RECOVERY_BYTE_IDX: usize = SIGNATURE_SIZE_BS - 1;
+const UNCOMPRESSED_PUBLIC_KEY_PREFIX_SIZE: usize = 1;
+const ADDRESS_HASH_OFFSET: usize = 12;
+
 const ECDSA_N_DIV_2: [u8; SIGNATURE_COMPONENT_SIZE] =
     hex_literal::hex!("7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0");
 
@@ -26,6 +30,7 @@ pub enum CryptoError {
     #[error("Invalid signature length: {0}")]
     InvalidSignatureLen(usize),
 }
+
 impl CryptoError {
     pub fn code(&self) -> u16 {
         match self {
@@ -59,19 +64,19 @@ pub trait Crypto {
             return Err(CryptoError::InvalidSignatureLen(signature.len()));
         }
 
-        check_signature_bounds(signature)?;
         check_signature_malleability(signature)?;
-        let recovery_byte = check_recovery_byte(signature[64])?; // 65-byte representation
+        let recovery_byte = check_recovery_byte(signature[SIGNATURE_RECOVERY_BYTE_IDX])?;
 
         let msg_hash = self.keccak256(message);
-        let key = self.recover_public_key(recovery_byte, &signature[..64], msg_hash)?;
-        let key_hash = self.keccak256(&key.as_ref()[1..]); // skip first uncompressed-key byte
+        let key =
+            self.recover_public_key(recovery_byte, &signature[..SIGNATURE_RS_SIZE], msg_hash)?;
+        let key_hash = self.keccak256(&key.as_ref()[UNCOMPRESSED_PUBLIC_KEY_PREFIX_SIZE..]);
 
-        Ok(key_hash.as_ref()[12..].to_vec().into()) // last 20 bytes
+        Ok(key_hash.as_ref()[ADDRESS_HASH_OFFSET..].to_vec().into())
     }
 }
 
-fn check_signature_bounds(sig: &[u8]) -> Result<(), CryptoError> {
+fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
     let r: [u8; SIGNATURE_COMPONENT_SIZE] = sig[..SIGNATURE_S_OFFSET]
         .try_into()
         .expect("Slice is of length 32");
@@ -82,20 +87,9 @@ fn check_signature_bounds(sig: &[u8]) -> Result<(), CryptoError> {
     let r_is_zero = r == [0u8; SIGNATURE_COMPONENT_SIZE];
     let s_is_zero = s == [0u8; SIGNATURE_COMPONENT_SIZE];
     let r_exceeds_n = r >= ECDSA_N;
+    let s_strictly_exceeds_n_div_2 = s > ECDSA_N_DIV_2;
 
-    if r_is_zero || s_is_zero || r_exceeds_n {
-        return Err(CryptoError::Signature(sig.to_vec()));
-    }
-
-    Ok(())
-}
-
-fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
-    let s: [u8; SIGNATURE_COMPONENT_SIZE] = sig[SIGNATURE_S_OFFSET..SIGNATURE_RS_SIZE]
-        .try_into()
-        .expect("Slice is of length 32");
-
-    if s > ECDSA_N_DIV_2 {
+    if r_is_zero || s_is_zero || r_exceeds_n || s_strictly_exceeds_n_div_2 {
         return Err(CryptoError::Signature(sig.to_vec()));
     }
 
