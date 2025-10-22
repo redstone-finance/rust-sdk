@@ -7,8 +7,8 @@ use crate::{network::as_str::AsHexStr, Bytes, SignerAddress};
 
 const SIGNATURE_SIZE_BS: usize = 65;
 const SIGNATURE_COMPONENT_SIZE: usize = 32;
-const SIGNATURE_S_OFFSET: usize = 32;
-const SIGNATURE_RS_SIZE: usize = 64;
+const SIGNATURE_S_OFFSET: usize = SIGNATURE_COMPONENT_SIZE;
+const SIGNATURE_RS_SIZE: usize = 2 * SIGNATURE_COMPONENT_SIZE;
 const ECDSA_N_DIV_2: [u8; SIGNATURE_COMPONENT_SIZE] =
     hex_literal::hex!("7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0");
 
