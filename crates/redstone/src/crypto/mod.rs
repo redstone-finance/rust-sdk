@@ -5,10 +5,19 @@ use thiserror::Error;
 
 use crate::{network::as_str::AsHexStr, Bytes, SignerAddress};
 
-const ECDSA_N_DIV_2: [u8; 32] =
+const SIGNATURE_SIZE_BS: usize = 65;
+const SIGNATURE_COMPONENT_SIZE: usize = 32;
+const SIGNATURE_S_OFFSET: usize = SIGNATURE_COMPONENT_SIZE;
+const SIGNATURE_RS_SIZE: usize = 2 * SIGNATURE_COMPONENT_SIZE;
+const SIGNATURE_RECOVERY_BYTE_IDX: usize = SIGNATURE_SIZE_BS - 1;
+const UNCOMPRESSED_PUBLIC_KEY_PREFIX_SIZE: usize = 1;
+const ADDRESS_HASH_OFFSET: usize = 12;
+
+const ECDSA_N_DIV_2: [u8; SIGNATURE_COMPONENT_SIZE] =
     hex_literal::hex!("7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0");
 
-const SIGNATURE_SIZE_BS: usize = 65;
+const ECDSA_N: [u8; SIGNATURE_COMPONENT_SIZE] =
+    hex_literal::hex!("ffffffffffffffffffffffffffffffffbaaedce6af48a03bbfd25e8cd0364141");
 
 #[derive(Clone, PartialEq, Eq, Debug, Error)]
 pub enum CryptoError {
@@ -21,6 +30,7 @@ pub enum CryptoError {
     #[error("Invalid signature length: {0}")]
     InvalidSignatureLen(usize),
 }
+
 impl CryptoError {
     pub fn code(&self) -> u16 {
         match self {
@@ -53,26 +63,38 @@ pub trait Crypto {
         if signature.len() != SIGNATURE_SIZE_BS {
             return Err(CryptoError::InvalidSignatureLen(signature.len()));
         }
-        check_signature_malleability(signature)?;
-        let recovery_byte = check_recovery_byte(signature[64])?; // 65-byte representation
-        let msg_hash = self.keccak256(message);
-        let key = self.recover_public_key(recovery_byte, &signature[..64], msg_hash)?;
-        let key_hash = self.keccak256(&key.as_ref()[1..]); // skip first uncompressed-key byte
 
-        Ok(key_hash.as_ref()[12..].to_vec().into()) // last 20 bytes
+        check_signature_malleability(signature)?;
+        let recovery_byte = check_recovery_byte(signature[SIGNATURE_RECOVERY_BYTE_IDX])?;
+
+        let msg_hash = self.keccak256(message);
+        let key =
+            self.recover_public_key(recovery_byte, &signature[..SIGNATURE_RS_SIZE], msg_hash)?;
+        let key_hash = self.keccak256(&key.as_ref()[UNCOMPRESSED_PUBLIC_KEY_PREFIX_SIZE..]);
+
+        Ok(key_hash.as_ref()[ADDRESS_HASH_OFFSET..].to_vec().into())
     }
 }
 
 fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
-    let s: [u8; 32] = sig[32..64].try_into().expect("Slice is of length 32");
+    let r: [u8; SIGNATURE_COMPONENT_SIZE] = sig[..SIGNATURE_S_OFFSET]
+        .try_into()
+        .expect("Slice is of length 32");
+    let s: [u8; SIGNATURE_COMPONENT_SIZE] = sig[SIGNATURE_S_OFFSET..SIGNATURE_RS_SIZE]
+        .try_into()
+        .expect("Slice is of length 32");
 
-    if s > ECDSA_N_DIV_2 {
+    let r_is_zero = r == [0u8; SIGNATURE_COMPONENT_SIZE];
+    let s_is_zero = s == [0u8; SIGNATURE_COMPONENT_SIZE];
+    let r_exceeds_n = r >= ECDSA_N;
+    let s_strictly_exceeds_n_div_2 = s > ECDSA_N_DIV_2;
+
+    if r_is_zero || s_is_zero || r_exceeds_n || s_strictly_exceeds_n_div_2 {
         return Err(CryptoError::Signature(sig.to_vec()));
     }
 
     Ok(())
 }
-
 fn check_recovery_byte(recovery_byte: u8) -> Result<u8, CryptoError> {
     let normalized = match recovery_byte {
         0 | 1 => recovery_byte,
@@ -114,6 +136,9 @@ pub mod recovery_key_tests {
         test_recover_address_1c(crypto);
         test_signature_malleability(crypto);
         test_invalid_recovery_id(crypto);
+        test_signature_r_zero(crypto);
+        test_signature_s_zero(crypto);
+        test_signature_r_exceeds_n(crypto);
     }
 
     fn test_recover_public_key_v27<T>(crypto: &mut T)
@@ -187,6 +212,57 @@ pub mod recovery_key_tests {
         hex_to_bytes("6307247862e106f0d4b3cde75805ababa67325953145aa05bdd219d90a741e0eeba79b756bf3af6db6c26a8ed3810e3c584379476fd83096218e9deb95a7617e1b".to_string());
 
         let result = crypto.recover_address(&msg, &signature);
+        assert_eq!(result, Err(CryptoError::Signature(signature)));
+    }
+
+    pub fn test_signature_r_zero<T, K>(crypto: &mut T)
+    where
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
+    {
+        let msg = hex_to_bytes(MESSAGE.into());
+        let signature = hex_to_bytes(
+            "0000000000000000000000000000000000000000000000000000000000000000\
+            475195641dae43318e194c3d9e5fc308773d6fdf5e197e02644dfd9ca3d19e3e1b"
+                .to_string(),
+        );
+
+        let result = crypto.recover_address(&msg, &signature);
+
+        assert_eq!(result, Err(CryptoError::Signature(signature)));
+    }
+
+    pub fn test_signature_s_zero<T, K>(crypto: &mut T)
+    where
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
+    {
+        let msg = hex_to_bytes(MESSAGE.into());
+        let signature = hex_to_bytes(
+            "475195641dae43318e194c3d9e5fc308773d6fdf5e197e02644dfd9ca3d19e3e\
+            00000000000000000000000000000000000000000000000000000000000000001b"
+                .to_string(),
+        );
+
+        let result = crypto.recover_address(&msg, &signature);
+
+        assert_eq!(result, Err(CryptoError::Signature(signature)));
+    }
+
+    pub fn test_signature_r_exceeds_n<T, K>(crypto: &mut T)
+    where
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
+    {
+        let msg = hex_to_bytes(MESSAGE.into());
+        let signature = hex_to_bytes(
+            "ffffffffffffffffffffffffffffffffbaaedce6af48a03bbfd25e8cd0364141\
+            475195641dae43318e194c3d9e5fc308773d6fdf5e197e02644dfd9ca3d19e3e1b"
+                .to_string(),
+        );
+
+        let result = crypto.recover_address(&msg, &signature);
+
         assert_eq!(result, Err(CryptoError::Signature(signature)));
     }
 
