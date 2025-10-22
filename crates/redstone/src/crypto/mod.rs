@@ -8,6 +8,9 @@ use crate::{network::as_str::AsHexStr, Bytes, SignerAddress};
 const ECDSA_N_DIV_2: [u8; 32] =
     hex_literal::hex!("7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0");
 
+const ECDSA_N: [u8; 32] =
+    hex_literal::hex!("ffffffffffffffffffffffffffffffffbaaedce6af48a03bbfd25e8cd0364141");
+
 const SIGNATURE_SIZE_BS: usize = 65;
 
 #[derive(Clone, PartialEq, Eq, Debug, Error)]
@@ -53,14 +56,32 @@ pub trait Crypto {
         if signature.len() != SIGNATURE_SIZE_BS {
             return Err(CryptoError::InvalidSignatureLen(signature.len()));
         }
+
+        check_signature_bounds(signature)?;
         check_signature_malleability(signature)?;
         let recovery_byte = check_recovery_byte(signature[64])?; // 65-byte representation
+
         let msg_hash = self.keccak256(message);
         let key = self.recover_public_key(recovery_byte, &signature[..64], msg_hash)?;
         let key_hash = self.keccak256(&key.as_ref()[1..]); // skip first uncompressed-key byte
 
         Ok(key_hash.as_ref()[12..].to_vec().into()) // last 20 bytes
     }
+}
+
+fn check_signature_bounds(sig: &[u8]) -> Result<(), CryptoError> {
+    let r: [u8; 32] = sig[..32].try_into().expect("Slice is of length 32");
+    let s: [u8; 32] = sig[32..64].try_into().expect("Slice is of length 32");
+
+    let r_is_zero = r == [0u8; 32];
+    let s_is_zero = s == [0u8; 32];
+    let r_exceeds_n = r >= ECDSA_N;
+
+    if r_is_zero || s_is_zero || r_exceeds_n {
+        return Err(CryptoError::Signature(sig.to_vec()));
+    }
+
+    Ok(())
 }
 
 fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
@@ -114,6 +135,9 @@ pub mod recovery_key_tests {
         test_recover_address_1c(crypto);
         test_signature_malleability(crypto);
         test_invalid_recovery_id(crypto);
+        test_signature_r_zero(crypto);
+        test_signature_s_zero(crypto);
+        test_signature_r_exceeds_n(crypto);
     }
 
     fn test_recover_public_key_v27<T>(crypto: &mut T)
@@ -187,6 +211,57 @@ pub mod recovery_key_tests {
         hex_to_bytes("6307247862e106f0d4b3cde75805ababa67325953145aa05bdd219d90a741e0eeba79b756bf3af6db6c26a8ed3810e3c584379476fd83096218e9deb95a7617e1b".to_string());
 
         let result = crypto.recover_address(&msg, &signature);
+        assert_eq!(result, Err(CryptoError::Signature(signature)));
+    }
+
+    pub fn test_signature_r_zero<T, K>(crypto: &mut T)
+    where
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
+    {
+        let msg = hex_to_bytes(MESSAGE.into());
+        let signature = hex_to_bytes(
+            "0000000000000000000000000000000000000000000000000000000000000000\
+            475195641dae43318e194c3d9e5fc308773d6fdf5e197e02644dfd9ca3d19e3e1b"
+                .to_string(),
+        );
+
+        let result = crypto.recover_address(&msg, &signature);
+
+        assert_eq!(result, Err(CryptoError::Signature(signature)));
+    }
+
+    pub fn test_signature_s_zero<T, K>(crypto: &mut T)
+    where
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
+    {
+        let msg = hex_to_bytes(MESSAGE.into());
+        let signature = hex_to_bytes(
+            "475195641dae43318e194c3d9e5fc308773d6fdf5e197e02644dfd9ca3d19e3e\
+            00000000000000000000000000000000000000000000000000000000000000001b"
+                .to_string(),
+        );
+
+        let result = crypto.recover_address(&msg, &signature);
+
+        assert_eq!(result, Err(CryptoError::Signature(signature)));
+    }
+
+    pub fn test_signature_r_exceeds_n<T, K>(crypto: &mut T)
+    where
+        T: Crypto<KeccakOutput = K>,
+        K: AsRef<[u8]>,
+    {
+        let msg = hex_to_bytes(MESSAGE.into());
+        let signature = hex_to_bytes(
+            "ffffffffffffffffffffffffffffffffbaaedce6af48a03bbfd25e8cd0364141\
+            475195641dae43318e194c3d9e5fc308773d6fdf5e197e02644dfd9ca3d19e3e1b"
+                .to_string(),
+        );
+
+        let result = crypto.recover_address(&msg, &signature);
+
         assert_eq!(result, Err(CryptoError::Signature(signature)));
     }
 
