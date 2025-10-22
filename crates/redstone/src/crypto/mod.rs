@@ -12,6 +12,9 @@ const ECDSA_N: [u8; 32] =
     hex_literal::hex!("ffffffffffffffffffffffffffffffffbaaedce6af48a03bbfd25e8cd0364141");
 
 const SIGNATURE_SIZE_BS: usize = 65;
+const SIGNATURE_COMPONENT_SIZE: usize = 32;
+const SIGNATURE_S_OFFSET: usize = 32;
+const SIGNATURE_RS_SIZE: usize = 64;
 
 #[derive(Clone, PartialEq, Eq, Debug, Error)]
 pub enum CryptoError {
@@ -70,11 +73,15 @@ pub trait Crypto {
 }
 
 fn check_signature_bounds(sig: &[u8]) -> Result<(), CryptoError> {
-    let r: [u8; 32] = sig[..32].try_into().expect("Slice is of length 32");
-    let s: [u8; 32] = sig[32..64].try_into().expect("Slice is of length 32");
+    let r: [u8; SIGNATURE_COMPONENT_SIZE] = sig[..SIGNATURE_S_OFFSET]
+        .try_into()
+        .expect("Slice is of length 32");
+    let s: [u8; SIGNATURE_COMPONENT_SIZE] = sig[SIGNATURE_S_OFFSET..SIGNATURE_RS_SIZE]
+        .try_into()
+        .expect("Slice is of length 32");
 
-    let r_is_zero = r == [0u8; 32];
-    let s_is_zero = s == [0u8; 32];
+    let r_is_zero = r == [0u8; SIGNATURE_COMPONENT_SIZE];
+    let s_is_zero = s == [0u8; SIGNATURE_COMPONENT_SIZE];
     let r_exceeds_n = r >= ECDSA_N;
 
     if r_is_zero || s_is_zero || r_exceeds_n {
@@ -85,7 +92,9 @@ fn check_signature_bounds(sig: &[u8]) -> Result<(), CryptoError> {
 }
 
 fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
-    let s: [u8; 32] = sig[32..64].try_into().expect("Slice is of length 32");
+    let s: [u8; SIGNATURE_COMPONENT_SIZE] = sig[SIGNATURE_S_OFFSET..SIGNATURE_RS_SIZE]
+        .try_into()
+        .expect("Slice is of length 32");
 
     if s > ECDSA_N_DIV_2 {
         return Err(CryptoError::Signature(sig.to_vec()));
@@ -93,7 +102,6 @@ fn check_signature_malleability(sig: &[u8]) -> Result<(), CryptoError> {
 
     Ok(())
 }
-
 fn check_recovery_byte(recovery_byte: u8) -> Result<u8, CryptoError> {
     let normalized = match recovery_byte {
         0 | 1 => recovery_byte,
