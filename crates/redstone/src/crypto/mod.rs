@@ -17,7 +17,7 @@ const ECDSA_N_DIV_2: [u8; SIGNATURE_COMPONENT_SIZE] =
     hex_literal::hex!("7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0");
 
 const ECDSA_N: [u8; SIGNATURE_COMPONENT_SIZE] =
-    hex_literal::hex!("ffffffffffffffffffffffffffffffffbaaedce6af48a03bbfd25e8cd0364141");
+    hex_literal::hex!("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
 
 #[derive(Clone, PartialEq, Eq, Debug, Error)]
 pub enum CryptoError {
