@@ -43,6 +43,8 @@ use network::Environment;
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 pub use utils::median::Avg;
 
+use alloc::vec::Vec;
+
 use crate::{core::config::Config, network::error::Error};
 
 /// Trait for connector config constants that can be used to build RedStone configs.
@@ -53,7 +55,7 @@ pub trait ConfigFactory<X, C: Crypto> {
     fn signer_count_threshold(&self) -> u8;
     
     /// Converts the signers to a vector of SignerAddress.
-    fn redstone_signers(&self) -> alloc::vec::Vec<SignerAddress>;
+    fn redstone_signers(&self) -> Vec<SignerAddress>;
     
     /// Maximum delay of the package against the current block timestamp (in milliseconds).
     fn max_timestamp_delay_ms(&self) -> u64;
@@ -63,7 +65,7 @@ pub trait ConfigFactory<X, C: Crypto> {
 
     fn crypto(x: X) -> C;
 
-    fn build_config<E: Environment>(&self, x: X, feeds: alloc::vec::Vec<FeedId>, block_timestamp: TimestampMillis) -> Result<RedStoneConfigImpl<C, E>, Error> {
+    fn build_config<E: Environment>(&self, x: X, feeds: Vec<FeedId>, block_timestamp: TimestampMillis) -> Result<RedStoneConfigImpl<C, E>, Error> {
         let config = Config::try_new(
             self.signer_count_threshold(),
             self.redstone_signers(),
