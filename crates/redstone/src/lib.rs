@@ -53,19 +53,24 @@ use crate::{core::config::Config, network::error::Error};
 pub trait ConfigFactory<X, C: Crypto> {
     /// The minimum number of signers required for validation.
     fn signer_count_threshold(&self) -> u8;
-    
+
     /// Converts the signers to a vector of SignerAddress.
     fn redstone_signers(&self) -> Vec<SignerAddress>;
-    
+
     /// Maximum delay of the package against the current block timestamp (in milliseconds).
     fn max_timestamp_delay_ms(&self) -> u64;
-    
+
     /// Maximum ahead of time of the package against current block timestamp (in milliseconds).
     fn max_timestamp_ahead_ms(&self) -> u64;
 
     fn crypto(x: X) -> C;
 
-    fn build_config<E: Environment>(&self, x: X, feeds: Vec<FeedId>, block_timestamp: TimestampMillis) -> Result<RedStoneConfigImpl<C, E>, Error> {
+    fn build_config<E: Environment>(
+        &self,
+        x: X,
+        feeds: Vec<FeedId>,
+        block_timestamp: TimestampMillis,
+    ) -> Result<RedStoneConfigImpl<C, E>, Error> {
         let config = Config::try_new(
             self.signer_count_threshold(),
             self.redstone_signers(),
