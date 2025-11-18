@@ -45,6 +45,23 @@ pub use utils::median::Avg;
 
 use crate::core::config::Config;
 
+/// Trait for connector config constants that can be used to build RedStone configs.
+/// This allows connectors to define simple constant configs without implementing
+/// the full RedStoneConfig trait themselves.
+pub trait ConfigConstants {
+    /// The minimum number of signers required for validation.
+    fn signer_count_threshold(&self) -> u8;
+    
+    /// Converts the signers to a vector of SignerAddress.
+    fn redstone_signers(&self) -> alloc::vec::Vec<SignerAddress>;
+    
+    /// Maximum delay of the package against the current block timestamp (in milliseconds).
+    fn max_timestamp_delay_ms(&self) -> u64;
+    
+    /// Maximum ahead of time of the package against current block timestamp (in milliseconds).
+    fn max_timestamp_ahead_ms(&self) -> u64;
+}
+
 /// Configuration for the redstone protocol.
 /// Pluggable with custom environments and possible specialized crypto operations.
 pub trait RedStoneConfig {

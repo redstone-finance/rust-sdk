@@ -13,9 +13,10 @@ use anchor_lang::{
 };
 
 use crate::{
+    core::config::Config as RedstoneConfig,
     crypto::{Crypto, CryptoError},
     network::{error::Error, StdEnv},
-    RedStoneConfigImpl,
+    ConfigConstants, FeedId, RedStoneConfigImpl, TimestampMillis,
 };
 
 impl From<Error> for AnchorLangError {
@@ -69,6 +70,25 @@ impl Crypto for SolanaCrypto {
 
         Ok(uncompressed_key.into())
     }
+}
+
+/// Helper function to build a SolanaRedStoneConfig from a ConfigConstants implementation.
+/// This simplifies the creation of RedStone configs in connector code.
+pub fn build_solana_config(
+    config_constants: &impl ConfigConstants,
+    feed_id: FeedId,
+    block_timestamp: TimestampMillis,
+) -> Result<SolanaRedStoneConfig, Error> {
+    let config = RedstoneConfig::try_new(
+        config_constants.signer_count_threshold(),
+        config_constants.redstone_signers(),
+        alloc::vec![feed_id],
+        block_timestamp,
+        Some(config_constants.max_timestamp_delay_ms().into()),
+        Some(config_constants.max_timestamp_ahead_ms().into()),
+    )?;
+
+    Ok((config, SolanaCrypto).into())
 }
 
 #[cfg(test)]
