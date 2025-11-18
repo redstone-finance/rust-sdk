@@ -8,11 +8,10 @@ pub mod helpers;
 use soroban_sdk::{crypto::Hash, Bytes as SorobanBytes, BytesN as SorobanBytesN, Env};
 
 use crate::{
-    core::config::Config as RedstoneConfig,
     crypto::{Crypto, CryptoError},
-    network::{error::Error, StdEnv},
+    network::StdEnv,
     types::Bytes,
-    ConfigConstants, FeedId, RedStoneConfigImpl, TimestampMillis,
+    RedStoneConfigImpl,
 };
 
 /// Implementation of `RedstoneConfig` specialized for operations on the soroban (stellar).
@@ -79,27 +78,6 @@ impl Crypto for SorobanCrypto<'_> {
 
         Ok(Bytes::from(bytes))
     }
-}
-
-/// Helper function to build a SorobanRedStoneConfig from a ConfigConstants implementation.
-/// This simplifies the creation of RedStone configs in connector code.
-pub fn build_soroban_config<'a>(
-    config_constants: &impl ConfigConstants,
-    env: &'a Env,
-    feed_ids: alloc::vec::Vec<FeedId>,
-    block_timestamp: TimestampMillis,
-) -> Result<SorobanRedStoneConfig<'a>, Error> {
-    let crypto = SorobanCrypto::new(env);
-    let config = RedstoneConfig::try_new(
-        config_constants.signer_count_threshold(),
-        config_constants.redstone_signers(),
-        feed_ids,
-        block_timestamp,
-        Some(config_constants.max_timestamp_delay_ms().into()),
-        Some(config_constants.max_timestamp_ahead_ms().into()),
-    )?;
-
-    Ok((config, crypto).into())
 }
 
 #[cfg(test)]

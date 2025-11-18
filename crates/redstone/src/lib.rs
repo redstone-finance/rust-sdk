@@ -43,12 +43,12 @@ use network::Environment;
 pub use types::{Bytes, FeedId, SignerAddress, TimestampMillis, Value};
 pub use utils::median::Avg;
 
-use crate::core::config::Config;
+use crate::{core::config::Config, network::error::Error};
 
 /// Trait for connector config constants that can be used to build RedStone configs.
 /// This allows connectors to define simple constant configs without implementing
 /// the full RedStoneConfig trait themselves.
-pub trait ConfigConstants {
+pub trait ConfigFactory<X, C: Crypto> {
     /// The minimum number of signers required for validation.
     fn signer_count_threshold(&self) -> u8;
     
@@ -60,6 +60,21 @@ pub trait ConfigConstants {
     
     /// Maximum ahead of time of the package against current block timestamp (in milliseconds).
     fn max_timestamp_ahead_ms(&self) -> u64;
+
+    fn crypto(x: X) -> C;
+
+    fn build_config<E: Environment>(&self, x: X, feeds: alloc::vec::Vec<FeedId>, block_timestamp: TimestampMillis) -> Result<RedStoneConfigImpl<C, E>, Error> {
+        let config = Config::try_new(
+            self.signer_count_threshold(),
+            self.redstone_signers(),
+            feeds,
+            block_timestamp,
+            Some(self.max_timestamp_delay_ms().into()),
+            Some(self.max_timestamp_ahead_ms().into()),
+        )?;
+        let crypto = Self::crypto(x);
+        Ok((config, crypto).into())
+    }
 }
 
 /// Configuration for the redstone protocol.
