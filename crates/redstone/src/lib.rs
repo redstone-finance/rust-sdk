@@ -63,8 +63,10 @@ pub trait ConfigFactory<T, C: Crypto> {
     /// Maximum ahead of time of the package against current block timestamp (in milliseconds).
     fn max_timestamp_ahead_ms(&self) -> u64;
 
+    /// Create a new crypto instance given generic initialization data.
     fn crypto(init: T) -> C;
 
+    /// Provided factory method to build a RedStone config.
     fn build_config<E: Environment>(
         &self,
         init: T,
