@@ -50,7 +50,7 @@ use crate::{core::config::Config, network::error::Error};
 /// Trait for connector config constants that can be used to build RedStone configs.
 /// This allows connectors to define simple constant configs without implementing
 /// the full RedStoneConfig trait themselves.
-pub trait ConfigFactory<T, C: Crypto> {
+pub trait ConfigFactory<CryptoParams, C: Crypto> {
     /// The minimum number of signers required for validation.
     fn signer_count_threshold(&self) -> u8;
 
@@ -64,12 +64,12 @@ pub trait ConfigFactory<T, C: Crypto> {
     fn max_timestamp_ahead_ms(&self) -> u64;
 
     /// Create a new crypto instance given generic initialization data.
-    fn crypto(init: T) -> C;
+    fn make_crypto(params: CryptoParams) -> C;
 
     /// Provided factory method to build a RedStone config.
     fn redstone_config<E: Environment>(
         &self,
-        init: T,
+        params: CryptoParams,
         feeds: Vec<FeedId>,
         block_timestamp: TimestampMillis,
     ) -> Result<RedStoneConfigImpl<C, E>, Error> {
@@ -81,7 +81,7 @@ pub trait ConfigFactory<T, C: Crypto> {
             Some(self.max_timestamp_delay_ms().into()),
             Some(self.max_timestamp_ahead_ms().into()),
         )?;
-        let crypto = Self::crypto(init);
+        let crypto = Self::make_crypto(params);
         Ok((config, crypto).into())
     }
 }
