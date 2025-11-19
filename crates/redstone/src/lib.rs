@@ -67,7 +67,7 @@ pub trait ConfigFactory<T, C: Crypto> {
     fn crypto(init: T) -> C;
 
     /// Provided factory method to build a RedStone config.
-    fn build_config<E: Environment>(
+    fn redstone_config<E: Environment>(
         &self,
         init: T,
         feeds: Vec<FeedId>,
