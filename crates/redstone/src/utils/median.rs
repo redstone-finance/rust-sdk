@@ -55,7 +55,7 @@ where
 
                 let mid = len / 2;
 
-                if len % 2 == 0 {
+                if len.is_multiple_of(2) {
                     values[mid - 1].avg(values[mid])
                 } else {
                     values[mid]
