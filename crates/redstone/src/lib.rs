@@ -36,7 +36,7 @@ use ::core::marker::PhantomData;
 #[cfg(feature = "default-crypto")]
 pub mod default_ext;
 
-pub use core::FeedValue;
+pub use core::FeedResult;
 
 pub use crypto::{Crypto, CryptoError};
 use network::Environment;

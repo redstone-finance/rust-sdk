@@ -5,7 +5,7 @@ pub mod processor;
 pub mod processor_result;
 pub mod validator;
 
-pub use aggregator::FeedValue;
+pub use aggregator::FeedResult;
 #[cfg(feature = "bench")]
 pub use processor::decode_payload;
 pub use processor::process_payload;

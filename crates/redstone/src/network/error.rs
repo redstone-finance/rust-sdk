@@ -193,6 +193,10 @@ pub enum Error {
     /// Indicates error of overflowing buffer.
     #[error("buffer overflow")]
     BufferOverflow,
+
+    /// Invalid value of 0.
+    #[error("Zero data point for feed {}", .0.as_hex_str())]
+    ZeroDataPoint(FeedId),
 }
 
 impl From<CryptoError> for Error {
@@ -239,6 +243,7 @@ impl Error {
             Error::UsizeOverflow => 1300,
             Error::DataStaleness { .. } => 1400,
             Error::BufferOverflow => 1500,
+            Error::ZeroDataPoint(_) => 1600,
         }
     }
 }
