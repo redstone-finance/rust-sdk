@@ -63,9 +63,9 @@ impl Config {
     /// * `feed_ids` - Identifiers for the data feeds from which values are aggregated.
     /// * `block_timestamp` - The current block time in timestamp format, used for verifying data timeliness.
     /// * `max_timestamp_delay_ms` - Maximum delay of the package against the current block timestamp.
-    ///    If None is provided then default config value is used.
+    ///   If None is provided then default config value is used.
     /// * `max_timestamp_ahead_ms` - Maximum ahead of time of the package against current block timestamp.
-    ///    If None is provided then default config value is used.
+    ///   If None is provided then default config value is used.
     ///
     /// # Returns
     ///

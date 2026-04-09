@@ -75,16 +75,15 @@ fn make_processor_result<Env: Environment>(config: &Config, payload: Payload) ->
 
 #[cfg(test)]
 mod tests {
-    use redstone_utils::{hex::make_hex_value_from_string, iter_into::IterInto};
+    use alloc::vec::Vec;
+    use redstone_utils::hex::make_hex_value_from_string;
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test as test;
 
     use crate::{
         core::{
-            aggregator::FeedValue,
             config::Config,
             processor::make_processor_result,
-            processor_result::ValidatedPayload,
             test_helpers::{
                 BTC, ETH, TEST_BLOCK_TIMESTAMP, TEST_SIGNER_ADDRESS_1, TEST_SIGNER_ADDRESS_2,
             },
@@ -125,26 +124,22 @@ mod tests {
         let result = make_processor_result::<StdEnv>(
             &Config::test_with_signer_count_threshold_or_default(None),
             Payload { data_packages },
-        );
+        )
+        .unwrap();
 
-        assert_eq!(
-            result,
-            Ok(ValidatedPayload {
-                timestamp: (TEST_BLOCK_TIMESTAMP + 400).into(),
-                values: vec![
-                    FeedValue {
-                        value: 12u32.into(),
-                        feed: make_hex_value_from_string(ETH)
-                    },
-                    FeedValue {
-                        value: 31u32.into(),
-                        feed: make_hex_value_from_string(BTC)
-                    }
-                ]
-                .iter_into()
-            })
-        );
+        assert_eq!(result.timestamp, (TEST_BLOCK_TIMESTAMP + 400).into());
+
+        let ok: Vec<_> = result
+            .values
+            .iter()
+            .filter_map(|r| r.result.as_ref().ok().map(|v| (r.feed, *v)))
+            .collect();
+
+        assert_eq!(ok.len(), 2);
+        assert_eq!(ok[0], (make_hex_value_from_string(ETH), 12u128.into()));
+        assert_eq!(ok[1], (make_hex_value_from_string(BTC), 31u128.into()));
     }
+
     #[test]
     fn test_make_processor_one_bad_feed() {
         let data_packages = vec![
@@ -171,19 +166,19 @@ mod tests {
         let result = make_processor_result::<StdEnv>(
             &Config::test_with_signer_count_threshold_or_default(None),
             Payload { data_packages },
-        );
+        )
+        .unwrap();
 
-        assert_eq!(
-            result,
-            Ok(ValidatedPayload {
-                timestamp: (TEST_BLOCK_TIMESTAMP + 400).into(),
-                values: vec![FeedValue {
-                    value: 31u32.into(),
-                    feed: make_hex_value_from_string(BTC)
-                }]
-                .iter_into()
-            })
-        );
+        assert_eq!(result.timestamp, (TEST_BLOCK_TIMESTAMP + 400).into());
+
+        let eth_feed = make_hex_value_from_string(ETH);
+        let btc_feed = make_hex_value_from_string(BTC);
+
+        let eth_result = result.values.iter().find(|r| r.feed == eth_feed).unwrap();
+        assert!(eth_result.result.is_err());
+
+        let btc_result = result.values.iter().find(|r| r.feed == btc_feed).unwrap();
+        assert_eq!(*btc_result.result.as_ref().unwrap(), 31u128.into());
     }
 
     #[test]
@@ -204,25 +199,20 @@ mod tests {
         let result = make_processor_result::<StdEnv>(
             &Config::test_with_signer_count_threshold_or_default(None),
             Payload { data_packages },
-        );
+        )
+        .unwrap();
 
-        assert_eq!(
-            result,
-            Ok(ValidatedPayload {
-                timestamp: (TEST_BLOCK_TIMESTAMP + 5).into(),
-                values: vec![
-                    FeedValue {
-                        value: 11u32.into(),
-                        feed: make_hex_value_from_string(ETH)
-                    },
-                    FeedValue {
-                        value: 31u32.into(),
-                        feed: make_hex_value_from_string(BTC)
-                    }
-                ]
-                .iter_into()
-            })
-        );
+        assert_eq!(result.timestamp, (TEST_BLOCK_TIMESTAMP + 5).into());
+
+        let ok: Vec<_> = result
+            .values
+            .iter()
+            .filter_map(|r| r.result.as_ref().ok().map(|v| (r.feed, *v)))
+            .collect();
+
+        assert_eq!(ok.len(), 2);
+        assert_eq!(ok[0], (make_hex_value_from_string(ETH), 11u128.into()));
+        assert_eq!(ok[1], (make_hex_value_from_string(BTC), 31u128.into()));
     }
 
     #[test]
@@ -240,7 +230,7 @@ mod tests {
             ),
             DataPackage::test_multi_data_point(
                 vec![(BTC, 34), (ETH, 12)],
-                TEST_SIGNER_ADDRESS_2, // REPETITION OF A SIGNER
+                TEST_SIGNER_ADDRESS_2,
                 (TEST_BLOCK_TIMESTAMP).into(),
             ),
             DataPackage::test_multi_data_point(
@@ -265,7 +255,7 @@ mod tests {
     fn test_make_processor_result_for_multi_datapoint_with_datapoint_repetition() {
         let data_packages = vec![
             DataPackage::test_multi_data_point(
-                vec![(ETH, 10), (BTC, 31), (BTC, 33)], // REPETITION IN DATAPOINTS HERE.
+                vec![(ETH, 10), (BTC, 31), (BTC, 33)],
                 TEST_SIGNER_ADDRESS_2,
                 (TEST_BLOCK_TIMESTAMP).into(),
             ),
