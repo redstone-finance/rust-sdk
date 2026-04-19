@@ -4,12 +4,10 @@
 
 use alloc::string::ToString;
 
-use anchor_lang::{
-    error::{AnchorError, Error as AnchorLangError},
-    solana_program::{
-        keccak::hash,
-        secp256k1_recover::{secp256k1_recover, Secp256k1RecoverError},
-    },
+use anchor_lang::error::{AnchorError, Error as AnchorLangError};
+use solana_program::{
+    keccak::hash,
+    secp256k1_recover::{secp256k1_recover, Secp256k1RecoverError},
 };
 
 use crate::{
