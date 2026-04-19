@@ -3,7 +3,7 @@ authors = ["RedStone <https://redstone.finance>"]
 description = "A Rust implementation of deserializing&decrypting RedStone payload"
 edition = "2021"
 name = "redstone"
-version = "4.0.0-pre1"
+version = "4.0.0-pre2"
 
 [features]
 default = ["default-crypto", "std"]
@@ -34,7 +34,7 @@ crypto_secp256k1 = [
 crypto_k256 = ["k256/alloc", "k256/ecdsa", "k256/sha256"]
 
 # A variant of decrypting the message-signers using Solana library.
-solana = ["anchor-lang"]
+solana = ["anchor-lang", "solana-program"]
 
 # A variant of decrypting the message-signers using Soroban library.
 soroban = ["soroban-sdk"]
@@ -43,7 +43,8 @@ soroban = ["soroban-sdk"]
 bench = []
 
 [dependencies]
-anchor-lang = { version = "0.31.1", optional = true, default-features = false }
+anchor-lang = { version = "1.0.0", optional = true, default-features = false }
+solana-program = { version = "3.0.0", optional = true, default-features = false }
 casper-contract = { version = "^4.0.0", default-features = false, features = [
 ], optional = true }
 casper-types = { version = "^4.0.2", default-features = false, features = [
