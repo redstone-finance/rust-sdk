@@ -58,9 +58,10 @@ Processor module contains the main processor of the RedStone payload [here](http
   - The result of `process_payload` [here](https://docs.redstone.finance/rust/redstone/rust_sdk_3/redstone/core/processor_result/type.ProcessorResult.html)
     returns success or an error:
     - Success contains a validated payload [here](https://docs.redstone.finance/rust/redstone/rust_sdk_3/redstone/core/processor_result/struct.ValidatedPayload.html)
-      containing a `min_timestamp` in [ ms ] which is the minimum timestamp encountered during processing and `values` (`Vec<Value>`)
-      where Value [here](https://docs.redstone.finance/rust/redstone/rust_sdk_3/redstone/struct.Value.html)
-      Each element in this vector represents a processed value corresponding to the passed data_feed item in the Config
+      containing a `timestamp` in [ ms ] which is the single timestamp shared by every data package in the payload
+      (all data packages must carry the exact same timestamp, or the whole payload is rejected) and `values` (`Vec<FeedValue>`)
+      where FeedValue [here](https://docs.redstone.finance/rust/redstone/rust_sdk_3/redstone/core/struct.FeedValue.html) pairs a `FeedId` with a `Value`.
+      Each element in this vector represents a processed value corresponding to a data_feed item in the Config
 
 ## Contract
 
